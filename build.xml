@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Giriatk" default="default" basedir=".">
+    <description>Builds, tests, and runs the project Giriatk.</description>
+    <import file="nbproject/build-impl.xml"/>
+    <target name="-post-jar">
+        <copy file="${basedir}/run.bat" todir="${dist.dir}" failonerror="false"/>
+        <copy file="${basedir}/database.sql" todir="${dist.dir}" failonerror="false"/>
+        <mkdir dir="${dist.dir}/config"/>
+        <copy todir="${dist.dir}/config" failonerror="false">
+            <fileset dir="${basedir}/config"/>
+        </copy>
+    </target>
+</project>

@@ -1,0 +1,2199 @@
+<mxfile host="app.diagrams.net" modified="2026-09-29T12:00:00.000Z" agent="GiriATK Architecture Tool ANSI Standard" version="24.7.5">
+  <diagram id="diag_master_all" name="★ Master Program Flowchart (Sistem Terpadu)">
+    <mxGraphModel dx="1600" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3200" pageHeight="3800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="m_hdr" value="&lt;b&gt;MASTER PROGRAM FLOWCHART (SISTEM TERPADU END-TO-END)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px;font-weight:normal;color:#94A3B8;&quot;&gt;Aplikasi Kasir POS, Manajemen Inventaris, Antrian Jasa Cetak &amp; Laporan Keuangan — GiriATK &amp; Print&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#F8FAFC;fontSize=15;align=center;arcSize=8;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="25" width="1000" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="m_start" value="MULAI (Start App)
+Giriatk.main()" style="ellipse;whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#047857;fontColor=#FFFFFF;fontStyle=1;fontSize=12;shadow=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="400" y="120" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m_prep_boot" value="PREPARATION (Inisialisasi Sistem &amp; Environment):
+[Import &amp; Dependensi]:
+• java.sql.*, javax.swing.*, com.formdev.flatlaf.*, giriatk.model.*, giriatk.service.*
+[Deklarasi &amp; Inisialisasi]:
+• Properties props = load(&#x27;config/db.properties&#x27;)
+• Connection conn = null, User sessionUser = null
+• UIManager.put(&#x27;Button.arc&#x27;, 8), UIManager.put(&#x27;defaultFont&#x27;, Theme.text)" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontSize=11;align=left;spacingLeft=14;" vertex="1" parent="1">
+          <mxGeometry x="300" y="210" width="380" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="m_sub_conn" value="Subroutine: Db.bootstrap()
+Koneksi ke Database MySQL (copygiri)" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#E0E7FF;strokeColor=#6366F1;fontColor=#312E81;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="340" y="350" width="300" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m_db_conn" value="Database MySQL
+copygiri" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="670" y="337" width="140" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m_dec_conn" value="Koneksi DB
+Berhasil?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="415" y="435" width="150" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="m_err_db" value="Dialog Error:
+&#x27;Koneksi Database Gagal&#x27;
+Periksa db.properties" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="670" y="445" width="170" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="m_exit_db" value="SELESAI (Exit)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#DC2626;strokeColor=#B91C1C;fontColor=#FFFFFF;fontStyle=1;fontSize=12;shadow=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="880" y="452" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m_sub_schema" value="Subroutine: Schema.init() &amp; Seeder
+• Create Table IF NOT EXISTS (9 Tabel)
+• Seed user root (owner &amp; kasir)" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#E0E7FF;strokeColor=#6366F1;fontColor=#312E81;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="325" y="545" width="330" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m_proc_login" value="Inisialisasi &amp; Tampilkan LoginFrame
+SwingUtilities.invokeLater()" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="345" y="630" width="290" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m_prep_login" value="PREPARATION (Otentikasi Form):
+[IPO Context]:
+• Input: txtUsername (String), txtPassword (char[])
+• Process: BCrypt Verify, Session.login(user)
+• Output: Session.user, Dispose LoginFrame, Launch MainFrame
+[Deklarasi Variabel]:
+• String u = &#x27;&#x27;, p = &#x27;&#x27;, hash = &#x27;&#x27;
+• User authUser = null; Role role = null" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontSize=11;align=left;spacingLeft=14;" vertex="1" parent="1">
+          <mxGeometry x="300" y="705" width="380" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="m_inp_login" value="User Input Username &amp; Password
+Klik &#x27;MASUK KE SISTEM&#x27; / Tekan Enter" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="340" y="845" width="300" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m_dec_empty" value="Username &amp;
+Password Diisi?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="415" y="925" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m_err_empty" value="Set lblError:
+&#x27;Username dan password
+wajib diisi&#x27;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="670" y="935" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m_sub_auth" value="Subroutine: AuthService.login(u, p)
+UserDao.findByUsername(u)" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#E0E7FF;strokeColor=#6366F1;fontColor=#312E81;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="340" y="1030" width="300" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m_db_user_auth" value="Tabel users
+SELECT * WHERE
+username = ?" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="670" y="1017" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m_dec_auth" value="User Ada &amp;
+Password BCrypt
+Cocok?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="410" y="1110" width="160" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="m_err_auth" value="Set lblError:
+&#x27;Username atau password salah&#x27;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="670" y="1122" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m_dec_aktif" value="Status Akun
+Aktif?
+(isAktif == true)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="415" y="1220" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m_err_aktif" value="Set lblError:
+&#x27;Akun sedang dinonaktifkan&#x27;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="670" y="1230" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m_proc_session" value="1. Rehash Password jika perlu
+2. Set user.setPassword(null)
+3. Session.login(user) &amp; Dispose LoginFrame
+4. Buka MainFrame Controller" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;fontColor=#14532D;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="330" y="1325" width="320" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="m_dec_role" value="Role Akses
+Pengguna?
+(Session.isOwner())" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="415" y="1420" width="150" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="m_role_kasir" value="MODE KASIR:
+Register: Dashboard, POS Kasir,
+Antrian Jasa, Riwayat, Stok View" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#3B82F6;fontColor=#1E3A8A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="250" y="1530" width="220" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="m_role_owner" value="MODE OWNER:
+Register: Akses Penuh + Laporan,
+Kelola User, Restock, Backup DB" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAF5FF;strokeColor=#A855F7;fontColor=#581C87;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="510" y="1530" width="220" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="m_main_frame" value="Tampilkan Dashboard Panel Utama
+showPage(&#x27;dashboard&#x27;) &amp; Start Timer Clock" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="345" y="1625" width="290" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m_inp_nav" value="User Memilih Aksi Sidebar Navigasi:
+(POS / Antrian / Stok / Laporan / User / Backup / Logout / Exit)" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="310" y="1700" width="360" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m_dec_nav" value="Pilihan Aksi
+Menu?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="415" y="1780" width="150" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="c_to_pos" value="(A)" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#FFFFFF;fontStyle=1;fontSize=12;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="220" y="1890" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c_to_q" value="(B)" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#FFFFFF;fontStyle=1;fontSize=12;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="1890" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c_to_stok" value="(C)" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#FFFFFF;fontStyle=1;fontSize=12;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="420" y="1890" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c_to_lap" value="(D)" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#FFFFFF;fontStyle=1;fontSize=12;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="1890" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c_to_usr" value="(E)" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#FFFFFF;fontStyle=1;fontSize=12;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1890" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c_to_set" value="(F)" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#FFFFFF;fontStyle=1;fontSize=12;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="720" y="1890" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="m_act_logout" value="Konfirmasi Keluar -&gt; Session.logout()
+Dispose MainFrame -&gt; Buka LoginFrame" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="330" y="1960" width="320" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m_act_exit" value="SELESAI (Exit)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#DC2626;strokeColor=#B91C1C;fontColor=#FFFFFF;fontStyle=1;fontSize=12;shadow=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="700" y="1960" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c_from_pos" value="(A)" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#FFFFFF;fontStyle=1;fontSize=12;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="120" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_prep" value="PREPARATION (Transaksi POS &amp; Keranjang):
+[IPO Context]:
+• Input: txtCariKatalog, QtyStepper, txtBayar, txtPelanggan, chkBuatAntrian
+• Process: Subtotal=Σ(Harga*Qty), Total=Subtotal-Diskon, Validasi Stok, ACID Commit
+• Output: Struk Transaksi, Potong Stok DB, Buat Tiket Antrian
+[Deklarasi Variabel]:
+• List&lt;TransaksiItem&gt; keranjang = []
+• List&lt;Katalog&gt; katalogData = []
+• BigDecimal subtotal = 0, total = 0, bayar = 0, kembali = 0
+• boolean modeBarang = true, buatAntrian = true
+• String kodeNota = &#x27;&#x27;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontSize=11;align=left;spacingLeft=14;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="185" width="420" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_sub_katalog" value="Subroutine: reloadKatalog()
+Query Item Aktif dari MySQL" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#E0E7FF;strokeColor=#6366F1;fontColor=#312E81;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="345" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_db_kat" value="Tabel barang &amp;
+Tabel layanan
+WHERE aktif = 1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1410" y="330" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_inp_item" value="User Cari Item &amp; Klik &#x27;Tambah&#x27; / Double-Click" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="425" width="260" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_dec_exist" value="Item Sudah Ada
+di Keranjang?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1195" y="500" width="150" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_dec_stok_e" value="Tipe BARANG &amp;
+existing.qty &gt;=
+stok_fisik?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="605" width="160" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_dec_stok_n" value="Tipe BARANG &amp;
+stok_fisik &lt;= 0?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1380" y="605" width="160" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_warn_stok" value="Peringatan:
+&#x27;Stok barang habis / tidak cukup&#x27;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="760" y="617" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_proc_inc" value="existing.qty = existing.qty + 1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;fontColor=#14532D;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="715" width="190" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_proc_new" value="keranjang.add(new TransaksiItem(item, qty=1))" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;fontColor=#14532D;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1330" y="715" width="260" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_sub_refresh" value="Subroutine: refreshKeranjang()
+• Subtotal = Σ (Harga × Qty)
+• Total Tagihan = Subtotal - Diskon
+• Jika ada item JASA: tampilkan txtPelanggan &amp; chkBuatAntrian" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#E0E7FF;strokeColor=#6366F1;fontColor=#312E81;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="1070" y="785" width="400" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_inp_checkout" value="Input txtBayar / Klik Quick Cash (Pas, 10k, 20k, 50k, 100k)
+Input txtPelanggan (jika ada jasa)
+Klik &#x27;PROSES TRANSAKSI &amp; CETAK&#x27;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1070" y="885" width="400" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_dec_val_pay" value="Keranjang Isi &amp;
+Bayar &gt;= Total?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1195" y="975" width="150" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_err_val" value="Peringatan:
+&#x27;Keranjang kosong ATAU
+Uang bayar kurang!&#x27;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="987" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_tx_acid_start" value="TRANSAKSI SERVICE (TransaksiService.simpan):
+Mulai Transaksi Database: conn.setAutoCommit(false)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="1085" width="380" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_sub_val_stock_db" value="1. validasiStok(conn, transaksi)
+Cek stok barang di DB (stok &gt;= qty)" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#E0E7FF;strokeColor=#6366F1;fontColor=#312E81;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="1160" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_db_lock_stok" value="Tabel barang
+SELECT stok
+WHERE id = ?" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1460" y="1145" width="140" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_proc_ins_header" value="2. Generate Kode Nota Otomatis (TRX-yyyyMMdd-XXXX)
+3. INSERT INTO transaksi VALUES (kode, total, bayar, kembali, ...)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#0F172A;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1070" y="1235" width="400" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_db_tx" value="Tabel transaksi
+INSERT Header" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="1222" width="140" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_proc_ins_items" value="4. Loop Item Keranjang:
+• INSERT INTO transaksi_item VALUES (...)
+• Jika Tipe == BARANG: UPDATE barang SET stok = stok - qty" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#0F172A;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1070" y="1315" width="400" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_db_items" value="Tabel transaksi_item
+&amp; Tabel barang" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="1307" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_proc_ins_queue" value="5. Jika buatAntrian == true &amp; Tipe == JASA:
+• INSERT INTO antrian (status=&#x27;MENUNGGU&#x27;, waktu_masuk=NOW())" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAF5FF;strokeColor=#A855F7;fontColor=#581C87;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1070" y="1405" width="400" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_db_q" value="Tabel antrian
+INSERT Status=&#x27;MENUNGGU&#x27;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="1392" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_dec_db_err" value="Ada Error /
+SQLException?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1195" y="1485" width="150" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_err_rollback" value="conn.rollback()
+Pesan: &#x27;Gagal simpan transaksi&#x27;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="1497" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_proc_commit" value="conn.commit() &amp; conn.setAutoCommit(true)
+Transaksi Berhasil Permanen di Database" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;fontColor=#14532D;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="1595" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="pos_doc_struk" value="Struk Transaksi:
+[Kode Nota] [Total] [Bayar] [Kembali]
+Reset Keranjang &amp; Reload Katalog" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="1670" width="280" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="c_pos_done" value="(G)" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#FFFFFF;fontStyle=1;fontSize=12;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="1765" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c_from_q" value="(B)" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#FFFFFF;fontStyle=1;fontSize=12;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1950" y="120" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="q_prep" value="PREPARATION (Antrian Cetak &amp; State Machine):
+[IPO Context]:
+• Input: TabFilter, Dropdown Status Antrian, Dialog Antrian
+• Process: FSM Transition Validation, DB Status Update
+• Output: Update Counter KPI, Refresh Tabel Antrian
+[Deklarasi Variabel]:
+• String filter = &#x27;AKTIF&#x27;
+• List&lt;Antrian&gt; data = []
+• StatusAntrian oldSt = null, newSt = null
+• int cntMenunggu = 0, cntProses = 0, cntSelesai = 0" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontSize=11;align=left;spacingLeft=14;" vertex="1" parent="1">
+          <mxGeometry x="1760" y="185" width="400" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="q_sub_load" value="Subroutine: reload()
+Query Antrian &amp; Hitung Counter KPI" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#E0E7FF;strokeColor=#6366F1;fontColor=#312E81;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="1845" y="335" width="230" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="q_db_read" value="Tabel antrian
+SELECT a.*, l.nama
+FROM antrian a ..." style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="2110" y="320" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="q_inp_action" value="User Memilih Aksi di Antrian:
+(Filter Tab / Tambah Manual / Edit / Ubah Status / Hapus)" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1780" y="410" width="360" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="q_dec_act" value="Pilihan Aksi?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1885" y="485" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="q_act_filter" value="Ganti Filter TabBar:
+[Semua Aktif] [Menunggu] [Diproses]
+[Siap Diambil] [Riwayat] [Semua]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#3B82F6;fontColor=#1E3A8A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1660" y="585" width="230" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="q_act_add" value="AntrianDialog:
+Input Pelanggan, Layanan, Qty, Deskripsi
+INSERT INTO antrian" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#FAF5FF;strokeColor=#A855F7;fontColor=#581C87;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="1930" y="585" width="250" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="q_fsm_box" value="STATE MACHINE TRANSISI STATUS:
+1. MENUNGGU -&gt; PROSES (Mulai cetak)
+2. PROSES -&gt; SELESAI (Set waktu_selesai = NOW())
+3. SELESAI -&gt; DIAMBIL (Diserahkan ke pelanggan)
+* Ditolak jika status dimundurkan / sudah diambil" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#0F172A;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1760" y="675" width="400" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="q_dec_fsm" value="Transisi Status
+Diizinkan?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1885" y="785" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="q_err_fsm" value="Peringatan:
+&#x27;Status tidak bisa dimundurkan / terkunci&#x27;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="2090" y="795" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="q_sub_update" value="Subroutine: AntrianDao.updateStatus()
+UPDATE antrian SET status = ?, waktu_selesai = ..." style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#DCFCE7;strokeColor=#16A34A;fontColor=#14532D;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="1780" y="885" width="360" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="q_db_write" value="Tabel antrian
+UPDATE status" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="2170" y="870" width="140" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="q_proc_refresh" value="Reload Data &amp; Refresh Counter KPI Telemetry" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1820" y="960" width="280" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="c_q_done" value="(H)" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#FFFFFF;fontStyle=1;fontSize=12;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1940" y="1030" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c_from_stok" value="(C)" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#FFFFFF;fontStyle=1;fontSize=12;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="2650" y="120" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="inv_prep" value="PREPARATION (Inventaris, Barang &amp; Restock ACID):
+[IPO Context]:
+• Input: Form Barang, Form Kategori, Form Restock
+• Process: Validasi Kode Unik, Restock ACID Transaction
+• Output: Update Master DB, Deteksi Stok Minimum
+[Deklarasi Variabel]:
+• List&lt;Barang&gt; listBarang = []
+• List&lt;Kategori&gt; listKategori = []
+• List&lt;Restock&gt; listRestock = []
+• Restock restockData = null; int qty = 0" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontSize=11;align=left;spacingLeft=14;" vertex="1" parent="1">
+          <mxGeometry x="2460" y="185" width="400" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="inv_dec_tab" value="Pilih Sub-Tab
+Inventaris?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="2585" y="335" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="inv_tab_b" value="Tab Barang: Tambah / Edit / Hapus Barang
+Validasi Kode Unik, Harga, Stok Minimum" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#3B82F6;fontColor=#1E3A8A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="2370" y="440" width="250" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="inv_tab_k" value="Tab Kategori: Master Kelompok Barang
+INSERT / UPDATE / DELETE kategori" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="2650" y="440" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="inv_inp_restock" value="Tab Restock (Owner Only):
+Input: Barang, Qty (&gt;0), Harga Beli, Supplier, Catatan" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="2530" y="525" width="300" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="inv_dec_restock_val" value="Qty &gt; 0 &amp;
+Barang Valid?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="2595" y="610" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="inv_err_restock" value="Peringatan:
+&#x27;Jumlah restock harus &gt; 0&#x27;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="2790" y="620" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="inv_sub_restock_acid" value="RestockService.simpan() (ACID Transaction):
+1. conn.setAutoCommit(false)
+2. INSERT INTO restock VALUES (...)
+3. UPDATE barang SET stok = stok + qty
+4. Jika harga_beli &gt; 0: UPDATE barang SET harga_beli = ?
+5. conn.commit()" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#DCFCE7;strokeColor=#16A34A;fontColor=#14532D;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="2480" y="715" width="380" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="inv_db_tables" value="Tabel restock &amp;
+Tabel barang" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="2890" y="725" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="inv_proc_alert" value="Deteksi Otomatis Stok Minimum:
+Jika stok &lt;= stok_minimum -&gt; Tandai &#x27;MENIPIS&#x27;/&#x27;HABIS&#x27;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="2480" y="840" width="380" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c_inv_done" value="(I)" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#FFFFFF;fontStyle=1;fontSize=12;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="2650" y="915" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c_from_lap" value="(D)" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#FFFFFF;fontStyle=1;fontSize=12;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="2450" y="1100" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c_from_usr" value="(E)" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#FFFFFF;fontStyle=1;fontSize=12;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="2650" y="1100" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c_from_set" value="(F)" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#FFFFFF;fontStyle=1;fontSize=12;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="2850" y="1100" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="mgmt_prep" value="PREPARATION (Manajemen Owner, Laporan &amp; Backup):
+[IPO Context]:
+• Input: Periode Filter, Form User, Form Profil, Trigger Backup
+• Process: Laba Calculation, BCrypt Hash, SQL Dump Generator
+• Output: Chart Penjualan, Excel (.xlsx), SQL Backup File (.sql)
+[Deklarasi Variabel]:
+• Periode p = Periode.HARIAN; LocalDate fromDate, toDate
+• BigDecimal omzet = 0, laba = 0; Path backupPath = null" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontSize=11;align=left;spacingLeft=14;" vertex="1" parent="1">
+          <mxGeometry x="2450" y="1170" width="420" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="lap_sub_calc" value="LaporanDao.hitungMetrik():
+• Omzet = Σ Total
+• Estimasi Laba = Σ (Subtotal - (Harga Beli × Qty))
+• Render TrendChart &amp; 4 Tab Laporan
+• Ekspor Spreadsheet Excel (.xlsx / CSV)" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#EFF6FF;strokeColor=#3B82F6;fontColor=#1E3A8A;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="2320" y="1320" width="300" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="lap_db_read" value="Tabel transaksi &amp;
+Tabel transaksi_item" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="2120" y="1322" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="usr_sub_mgmt" value="UserService.simpan() &amp; hapus():
+• Validasi username unik &amp; password min 4 char (BCrypt)
+• PROTEKSI: Dilarang menghapus/nonaktifkan Owner terakhir!
+• INSERT / UPDATE / DELETE users" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#FAF5FF;strokeColor=#A855F7;fontColor=#581C87;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="2650" y="1320" width="320" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="usr_db_table" value="Tabel users" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="3000" y="1322" width="130" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="bak_sub_engine" value="BackupService.backup(Path):
+1. conn.getMetaData().getTables() -&gt; Baca seluruh tabel
+2. Loop tabel -&gt; SELECT * FROM [table]
+3. Generate DML INSERT INTO [table] (...) VALUES (...)
+4. Tulis file SQL UTF-8: &#x27;giriatk_backup_yyyyMMdd.sql&#x27;" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="2480" y="1435" width="390" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="bak_db_all" value="Seluruh Basis Data
+(9 Tabel MySQL)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="2900" y="1442" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="bak_doc_sql" value="File Dump SQL:
+backup.sql" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#DCFCE7;strokeColor=#16A34A;fontColor=#14532D;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="2900" y="1545" width="140" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="c_mgmt_done" value="(J)" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#FFFFFF;fontStyle=1;fontSize=12;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="2650" y="1620" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c_return_loop" value="(K)" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#FFFFFF;fontStyle=1;fontSize=12;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="2040" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="me1" edge="1" source="m_start" target="m_prep_boot" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me2" edge="1" source="m_prep_boot" target="m_sub_conn" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me2_db" edge="1" source="m_sub_conn" target="m_db_conn" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me3" edge="1" source="m_sub_conn" target="m_dec_conn" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me4_no" value="Gagal" edge="1" source="m_dec_conn" target="m_err_db" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me4_exit" edge="1" source="m_err_db" target="m_exit_db" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me4_ok" value="Sukses" edge="1" source="m_dec_conn" target="m_sub_schema" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me5" edge="1" source="m_sub_schema" target="m_proc_login" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me6" edge="1" source="m_proc_login" target="m_prep_login" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me7" edge="1" source="m_prep_login" target="m_inp_login" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me8" edge="1" source="m_inp_login" target="m_dec_empty" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me9_no" value="Kosong" edge="1" source="m_dec_empty" target="m_err_empty" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me9_loop" edge="1" source="m_err_empty" target="m_inp_login" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="860" y="965" />
+              <mxPoint x="860" y="872" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me9_ok" value="Diisi" edge="1" source="m_dec_empty" target="m_sub_auth" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me10_db" edge="1" source="m_sub_auth" target="m_db_user_auth" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me10" edge="1" source="m_sub_auth" target="m_dec_auth" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me11_no" value="Salah" edge="1" source="m_dec_auth" target="m_err_auth" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me11_loop" edge="1" source="m_err_auth" target="m_inp_login" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="880" y="1152" />
+              <mxPoint x="880" y="872" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me11_ok" value="Valid" edge="1" source="m_dec_auth" target="m_dec_aktif" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me12_no" value="Nonaktif" edge="1" source="m_dec_aktif" target="m_err_aktif" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me12_loop" edge="1" source="m_err_aktif" target="m_inp_login" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="900" y="1260" />
+              <mxPoint x="900" y="872" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me12_ok" value="Aktif" edge="1" source="m_dec_aktif" target="m_proc_session" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me13" edge="1" source="m_proc_session" target="m_dec_role" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me14_k" value="KASIR" edge="1" source="m_dec_role" target="m_role_kasir" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="360" y="1462" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me14_o" value="OWNER" edge="1" source="m_dec_role" target="m_role_owner" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="620" y="1462" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me15_k" edge="1" source="m_role_kasir" target="m_main_frame" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="360" y="1650" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me15_o" edge="1" source="m_role_owner" target="m_main_frame" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="620" y="1650" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me16" edge="1" source="m_main_frame" target="m_inp_nav" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me17" edge="1" source="m_inp_nav" target="m_dec_nav" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me18_pos" value="POS Kasir" edge="1" source="m_dec_nav" target="c_to_pos" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="240" y="1822" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me18_q" value="Antrian" edge="1" source="m_dec_nav" target="c_to_q" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="340" y="1822" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me18_stk" value="Stok" edge="1" source="m_dec_nav" target="c_to_stok" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="440" y="1822" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me18_lap" value="Laporan" edge="1" source="m_dec_nav" target="c_to_lap" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="540" y="1822" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me18_usr" value="User" edge="1" source="m_dec_nav" target="c_to_usr" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="640" y="1822" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me18_set" value="Setting" edge="1" source="m_dec_nav" target="c_to_set" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="1822" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me19_lo" value="Logout" edge="1" source="m_dec_nav" target="m_act_logout" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me19_ex" value="Exit" edge="1" source="m_dec_nav" target="m_act_exit" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="775" y="1822" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me20_lo_back" edge="1" source="m_act_logout" target="m_proc_login" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="180" y="1985" />
+              <mxPoint x="180" y="655" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pe1" edge="1" source="c_from_pos" target="pos_prep" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe2" edge="1" source="pos_prep" target="pos_sub_katalog" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe2_db" edge="1" source="pos_sub_katalog" target="pos_db_kat" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe3" edge="1" source="pos_sub_katalog" target="pos_inp_item" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe4" edge="1" source="pos_inp_item" target="pos_dec_exist" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe5_e" value="Sudah Ada" edge="1" source="pos_dec_exist" target="pos_dec_stok_e" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1080" y="542" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pe5_n" value="Belum Ada" edge="1" source="pos_dec_exist" target="pos_dec_stok_n" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1460" y="542" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pe6_w1" value="Kurang" edge="1" source="pos_dec_stok_e" target="pos_warn_stock" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe6_w2" value="Habis" edge="1" source="pos_dec_stok_n" target="pos_warn_stock" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1580" y="647" />
+              <mxPoint x="1580" y="580" />
+              <mxPoint x="855" y="580" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pe7_e" value="Cukup" edge="1" source="pos_dec_stok_e" target="pos_proc_inc" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe7_n" value="Cukup" edge="1" source="pos_dec_stok_n" target="pos_proc_new" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe8_a" edge="1" source="pos_proc_inc" target="pos_sub_refresh" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1115" y="760" />
+              <mxPoint x="1200" y="760" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pe8_b" edge="1" source="pos_proc_new" target="pos_sub_refresh" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1460" y="760" />
+              <mxPoint x="1340" y="760" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pe9" edge="1" source="pos_sub_refresh" target="pos_inp_checkout" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe10" edge="1" source="pos_inp_checkout" target="pos_dec_val_pay" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe11_no" value="Tidak Valid" edge="1" source="pos_dec_val_pay" target="pos_err_val" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe11_loop" edge="1" source="pos_err_val" target="pos_inp_checkout" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1600" y="1017" />
+              <mxPoint x="1600" y="917" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pe11_ok" value="Valid" edge="1" source="pos_dec_val_pay" target="pos_tx_acid_start" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe12" edge="1" source="pos_tx_acid_start" target="pos_sub_val_stock_db" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe12_db" edge="1" source="pos_sub_val_stock_db" target="pos_db_lock_stok" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe13" edge="1" source="pos_sub_val_stock_db" target="pos_proc_ins_header" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe13_db" edge="1" source="pos_proc_ins_header" target="pos_db_tx" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe14" edge="1" source="pos_proc_ins_header" target="pos_proc_ins_items" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe14_db" edge="1" source="pos_proc_ins_items" target="pos_db_items" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe15" edge="1" source="pos_proc_ins_items" target="pos_proc_ins_queue" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe15_db" edge="1" source="pos_proc_ins_queue" target="pos_db_q" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe16" edge="1" source="pos_proc_ins_queue" target="pos_dec_db_err" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe17_err" value="Error" edge="1" source="pos_dec_db_err" target="pos_err_rollback" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe17_ok" value="Sukses" edge="1" source="pos_dec_db_err" target="pos_proc_commit" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe18" edge="1" source="pos_proc_commit" target="pos_doc_struk" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe19" edge="1" source="pos_doc_struk" target="c_pos_done" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe20_loop" edge="1" source="c_pos_done" target="m_inp_nav" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1270" y="1850" />
+              <mxPoint x="490" y="1850" />
+              <mxPoint x="490" y="1755" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qe1" edge="1" source="c_from_q" target="q_prep" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qe2" edge="1" source="q_prep" target="q_sub_load" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qe2_db" edge="1" source="q_sub_load" target="q_db_read" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qe3" edge="1" source="q_sub_load" target="q_inp_action" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qe4" edge="1" source="q_inp_action" target="q_dec_act" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qe5_f" value="Filter" edge="1" source="q_dec_act" target="q_act_filter" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1775" y="525" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qe5_a" value="Tambah" edge="1" source="q_dec_act" target="q_act_add" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2055" y="525" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qe5_s" value="Ubah Status" edge="1" source="q_dec_act" target="q_fsm_box" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qe6_f" edge="1" source="q_act_filter" target="q_proc_refresh" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1775" y="982" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qe6_a" edge="1" source="q_act_add" target="q_sub_update" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2055" y="840" />
+              <mxPoint x="1960" y="840" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qe7_fsm" edge="1" source="q_fsm_box" target="q_dec_fsm" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qe8_no" value="Ditolak" edge="1" source="q_dec_fsm" target="q_err_fsm" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qe8_ok" value="Diizinkan" edge="1" source="q_dec_fsm" target="q_sub_update" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qe9_db" edge="1" source="q_sub_update" target="q_db_write" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qe10" edge="1" source="q_sub_update" target="q_proc_refresh" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qe11" edge="1" source="q_proc_refresh" target="c_q_done" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qe12_loop" edge="1" source="c_q_done" target="m_inp_nav" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1960" y="1850" />
+              <mxPoint x="490" y="1850" />
+              <mxPoint x="490" y="1755" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ie1" edge="1" source="c_from_stok" target="inv_prep" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ie2" edge="1" source="inv_prep" target="inv_dec_tab" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ie3_b" value="Barang" edge="1" source="inv_dec_tab" target="inv_tab_b" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2495" y="375" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ie3_k" value="Kategori" edge="1" source="inv_dec_tab" target="inv_tab_k" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2770" y="375" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ie3_r" value="Restock" edge="1" source="inv_dec_tab" target="inv_inp_restock" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ie4_r" edge="1" source="inv_inp_restock" target="inv_dec_restock_val" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ie5_no" value="Tidak Valid" edge="1" source="inv_dec_restock_val" target="inv_err_restock" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ie5_ok" value="Valid" edge="1" source="inv_dec_restock_val" target="inv_sub_restock_acid" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ie6_db" edge="1" source="inv_sub_restock_acid" target="inv_db_tables" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ie7_a" edge="1" source="inv_tab_b" target="inv_proc_alert" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2495" y="780" />
+              <mxPoint x="2550" y="780" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ie7_b" edge="1" source="inv_sub_restock_acid" target="inv_proc_alert" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ie8" edge="1" source="inv_proc_alert" target="c_inv_done" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ie9_loop" edge="1" source="c_inv_done" target="m_inp_nav" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2670" y="1850" />
+              <mxPoint x="490" y="1850" />
+              <mxPoint x="490" y="1755" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me_c1" edge="1" source="c_from_lap" target="mgmt_prep" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2470" y="1145" />
+              <mxPoint x="2550" y="1145" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me_c2" edge="1" source="c_from_usr" target="mgmt_prep" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me_c3" edge="1" source="c_from_set" target="mgmt_prep" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2870" y="1145" />
+              <mxPoint x="2750" y="1145" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me_lap" edge="1" source="mgmt_prep" target="lap_sub_calc" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2550" y="1300" />
+              <mxPoint x="2470" y="1300" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me_lap_db" edge="1" source="lap_sub_calc" target="lap_db_read" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me_usr" edge="1" source="mgmt_prep" target="usr_sub_mgmt" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2750" y="1300" />
+              <mxPoint x="2810" y="1300" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me_usr_db" edge="1" source="usr_sub_mgmt" target="usr_db_table" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me_bak" edge="1" source="mgmt_prep" target="bak_sub_engine" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me_bak_db" edge="1" source="bak_sub_engine" target="bak_db_all" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me_bak_doc" edge="1" source="bak_sub_engine" target="bak_doc_sql" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="me_done1" edge="1" source="lap_sub_calc" target="c_mgmt_done" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2470" y="1580" />
+              <mxPoint x="2670" y="1580" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me_done2" edge="1" source="usr_sub_mgmt" target="c_mgmt_done" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2810" y="1580" />
+              <mxPoint x="2670" y="1580" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me_done3" edge="1" source="bak_doc_sql" target="c_mgmt_done" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2970" y="1640" />
+              <mxPoint x="2670" y="1640" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="me_mgmt_loop" edge="1" source="c_mgmt_done" target="m_inp_nav" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2670" y="1850" />
+              <mxPoint x="490" y="1850" />
+              <mxPoint x="490" y="1755" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="diag_mod_auth" name="Modul 1: Inisialisasi &amp; Otentikasi Role">
+    <mxGraphModel dx="1600" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="2700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="m1_hdr" value="&lt;b&gt;MODUL 1: INISIALISASI SISTEM, DATABASE BOOTSTRAP &amp; OTENTIKASI MULTI-ROLE&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px;font-weight:normal;color:#94A3B8;&quot;&gt;Giriatk.java, Db.java, Schema.java, DatabaseSeeder.java, AuthService.java, LoginFrame.java, MainFrame.java&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#F8FAFC;fontSize=15;align=center;arcSize=8;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="25" width="900" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_start" value="MULAI (Start App)
+Giriatk.main()" style="ellipse;whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#047857;fontColor=#FFFFFF;fontStyle=1;fontSize=12;shadow=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="910" y="115" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_prep" value="PREPARATION (Inisialisasi Sistem &amp; Environment):
+[Import &amp; Dependensi]:
+• java.sql.*, javax.swing.*, com.formdev.flatlaf.FlatDarkLaf
+• giriatk.config.*, giriatk.model.*, giriatk.service.*, giriatk.util.*
+[Deklarasi &amp; Inisialisasi Variabel]:
+• Properties props = new Properties(); Connection conn = null
+• User sessionUser = null; boolean isOwner = false
+• UIManager UI Tokens: Button.arc=8, ScrollBar.width=10, Theme.text font" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontSize=11;align=left;spacingLeft=14;" vertex="1" parent="1">
+          <mxGeometry x="800" y="205" width="400" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_proc_laf" value="Set Look &amp; Feel FlatDarkLaf
+UIManager.setLookAndFeel(new FlatDarkLaf())" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="860" y="355" width="280" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_sub_db" value="Subroutine: Db.bootstrap()
+Load config/db.properties &amp; Buka Pool Koneksi" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#E0E7FF;strokeColor=#6366F1;fontColor=#312E81;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="840" y="430" width="320" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_db_mysql" value="Database MySQL
+copygiri" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="417" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_dec_db" value="Koneksi DB
+Berhasil?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="925" y="515" width="150" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_err_db" value="Dialog Error:
+&#x27;Koneksi Database Gagal&#x27;
+Periksa db.properties" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="525" width="180" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_exit_db" value="SELESAI (Exit)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#DC2626;strokeColor=#B91C1C;fontColor=#FFFFFF;fontStyle=1;fontSize=12;shadow=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1410" y="532" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_sub_schema" value="Subroutine: Schema.init() &amp; DatabaseSeeder.seed()
+• Cek &amp; CREATE TABLE IF NOT EXISTS (9 Tabel Utama)
+• Seed user default: owner/owner123, kasir/kasir123" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#E0E7FF;strokeColor=#6366F1;fontColor=#312E81;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="810" y="630" width="380" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_proc_login_ui" value="Buka Layar Form Otentikasi (LoginFrame)
+SwingUtilities.invokeLater(() -&gt; new LoginFrame())" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="840" y="720" width="320" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_prep_login" value="PREPARATION (Form Otentikasi Login):
+[IPO Context]:
+• Input: txtUsername (String), txtPassword (char[])
+• Process: Trim text, BCrypt.checkpw(), Session.login(user)
+• Output: Session.user global instance, Buka MainFrame
+[Deklarasi Variabel]:
+• String u = &#x27;&#x27;, p = &#x27;&#x27;, hash = &#x27;&#x27;
+• User foundUser = null; Role userRole = null" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontSize=11;align=left;spacingLeft=14;" vertex="1" parent="1">
+          <mxGeometry x="800" y="795" width="400" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_inp_cred" value="User Menginput Username &amp; Password
+Klik Tombol &#x27;MASUK KE SISTEM&#x27; / Tekan Enter" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="830" y="940" width="340" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_dec_empty" value="Username &amp;
+Password Diisi?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="925" y="1025" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_err_empty" value="Set lblError:
+&#x27;Username dan password wajib diisi&#x27;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="1035" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_sub_auth" value="Subroutine: AuthService.login(username, password)
+UserDao.findByUsername(username)" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#E0E7FF;strokeColor=#6366F1;fontColor=#312E81;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="830" y="1130" width="340" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_db_user" value="Tabel users
+SELECT * WHERE
+username = ?" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="1117" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_dec_verify" value="User Ada &amp;
+Password Hash
+Cocok?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="920" y="1215" width="160" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_err_cred" value="Set lblError:
+&#x27;Username atau password salah&#x27;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="1227" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_dec_aktif" value="Status Akun
+Aktif?
+(user.isAktif())" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="925" y="1330" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_err_aktif" value="Set lblError:
+&#x27;Akun ini sedang dinonaktifkan&#x27;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="1340" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_proc_session" value="1. PasswordUtil.needsRehash() -&gt; Update Hash Baru jika perlu
+2. user.setPassword(null) (Keamanan Memori)
+3. Session.login(user) (Simpan ke Static Global Session)
+4. LoginFrame.dispose() &amp; Buka MainFrame" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;fontColor=#14532D;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="1435" width="400" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_dec_role" value="Role Akses
+Pengguna?
+(Session.isOwner())" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="925" y="1540" width="150" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_role_kasir" value="MODE KASIR:
+• Operasional: Dashboard, POS Kasir, Antrian, Riwayat
+• Inventaris: Stok &amp; Kategori (View Only)
+• Menu Manajemen Dinonaktifkan" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#3B82F6;fontColor=#1E3A8A;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="700" y="1655" width="270" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_role_owner" value="MODE OWNER (AKSES PENUH):
+• Seluruh Fitur Kasir +
+• Laporan Keuangan &amp; Ekspor Excel
+• Kelola Pengguna &amp; Reset Password
+• Manajemen Restock &amp; Master Layanan
+• Pengaturan Toko &amp; Backup Database SQL" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAF5FF;strokeColor=#A855F7;fontColor=#581C87;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="1655" width="290" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_proc_main" value="Tampilkan Dashboard Utama: showPage(&#x27;dashboard&#x27;)
+Start Live Clock Timer (Interval 1000ms)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="850" y="1780" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_inp_nav" value="User Memilih Aksi di Sidebar Menu Navigasi / Klik Logout / Exit" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="820" y="1855" width="360" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_dec_nav" value="Pilihan Aksi
+Menu?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="925" y="1930" width="150" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_off_pos" value="[TO MODUL 2: POS KASIR]" style="shape=offPageConnector;whiteSpace=wrap;html=1;fillColor=#2563EB;strokeColor=#1D4ED8;fontColor=#FFFFFF;fontStyle=1;fontSize=11;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="600" y="2045" width="190" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_off_q" value="[TO MODUL 3: ANTRIAN]" style="shape=offPageConnector;whiteSpace=wrap;html=1;fillColor=#2563EB;strokeColor=#1D4ED8;fontColor=#FFFFFF;fontStyle=1;fontSize=11;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="820" y="2045" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_off_stk" value="[TO MODUL 4: INVENTARIS]" style="shape=offPageConnector;whiteSpace=wrap;html=1;fillColor=#2563EB;strokeColor=#1D4ED8;fontColor=#FFFFFF;fontStyle=1;fontSize=11;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="2045" width="190" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_off_mgmt" value="[TO MODUL 5: MANAJEMEN]" style="shape=offPageConnector;whiteSpace=wrap;html=1;fillColor=#2563EB;strokeColor=#1D4ED8;fontColor=#FFFFFF;fontStyle=1;fontSize=11;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1230" y="2045" width="190" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_act_logout" value="Konfirmasi Logout -&gt; Session.logout()
+Dispose MainFrame -&gt; Buka LoginFrame" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="820" y="2130" width="360" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_act_exit" value="SELESAI (Exit Application)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#DC2626;strokeColor=#B91C1C;fontColor=#FFFFFF;fontStyle=1;fontSize=12;shadow=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="895" y="2210" width="210" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e1" edge="1" source="m1_start" target="m1_prep" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e2" edge="1" source="m1_prep" target="m1_proc_laf" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e3" edge="1" source="m1_proc_laf" target="m1_sub_db" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e3_db" edge="1" source="m1_sub_db" target="m1_db_mysql" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e4" edge="1" source="m1_sub_db" target="m1_dec_db" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e5_no" value="Gagal" edge="1" source="m1_dec_db" target="m1_err_db" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e5_exit" edge="1" source="m1_err_db" target="m1_exit_db" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e5_ok" value="Sukses" edge="1" source="m1_dec_db" target="m1_sub_schema" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e6" edge="1" source="m1_sub_schema" target="m1_proc_login_ui" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e7" edge="1" source="m1_proc_login_ui" target="m1_prep_login" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e8" edge="1" source="m1_prep_login" target="m1_inp_cred" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e9" edge="1" source="m1_inp_cred" target="m1_dec_empty" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e10_no" value="Kosong" edge="1" source="m1_dec_empty" target="m1_err_empty" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e10_loop" edge="1" source="m1_err_empty" target="m1_inp_cred" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1410" y="1065" />
+              <mxPoint x="1410" y="967" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m1_e10_ok" value="Diisi" edge="1" source="m1_dec_empty" target="m1_sub_auth" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e11_db" edge="1" source="m1_sub_auth" target="m1_db_user" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e11" edge="1" source="m1_sub_auth" target="m1_dec_verify" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e12_no" value="Salah" edge="1" source="m1_dec_verify" target="m1_err_cred" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e12_loop" edge="1" source="m1_err_cred" target="m1_inp_cred" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1430" y="1257" />
+              <mxPoint x="1430" y="967" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m1_e12_ok" value="Valid" edge="1" source="m1_dec_verify" target="m1_dec_aktif" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e13_no" value="Nonaktif" edge="1" source="m1_dec_aktif" target="m1_err_aktif" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e13_loop" edge="1" source="m1_err_aktif" target="m1_inp_cred" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1450" y="1370" />
+              <mxPoint x="1450" y="967" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m1_e13_ok" value="Aktif" edge="1" source="m1_dec_aktif" target="m1_proc_session" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e14" edge="1" source="m1_proc_session" target="m1_dec_role" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e15_k" value="KASIR" edge="1" source="m1_dec_role" target="m1_role_kasir" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="835" y="1582" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m1_e15_o" value="OWNER" edge="1" source="m1_dec_role" target="m1_role_owner" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1175" y="1582" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m1_e16_k" edge="1" source="m1_role_kasir" target="m1_proc_main" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="835" y="1750" />
+              <mxPoint x="950" y="1750" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m1_e16_o" edge="1" source="m1_role_owner" target="m1_proc_main" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1175" y="1765" />
+              <mxPoint x="1050" y="1765" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m1_e17" edge="1" source="m1_proc_main" target="m1_inp_nav" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e18" edge="1" source="m1_inp_nav" target="m1_dec_nav" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e19_pos" value="POS Kasir" edge="1" source="m1_dec_nav" target="m1_off_pos" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="695" y="1972" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m1_e19_q" value="Antrian" edge="1" source="m1_dec_nav" target="m1_off_q" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="910" y="1972" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m1_e19_stk" value="Stok" edge="1" source="m1_dec_nav" target="m1_off_stk" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1115" y="1972" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m1_e19_mgmt" value="Manajemen" edge="1" source="m1_dec_nav" target="m1_off_mgmt" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1325" y="1972" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m1_e20_lo" value="Logout" edge="1" source="m1_dec_nav" target="m1_act_logout" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m1_e20_back" edge="1" source="m1_act_logout" target="m1_proc_login_ui" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="640" y="2155" />
+              <mxPoint x="640" y="745" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m1_e21_ex" value="Exit" edge="1" source="m1_dec_nav" target="m1_act_exit" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1430" y="1972" />
+              <mxPoint x="1430" y="2235" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="diag_mod_pos" name="Modul 2: Terminal POS Kasir &amp; Transaksi ACID">
+    <mxGraphModel dx="1600" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="2700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="m2_hdr" value="&lt;b&gt;MODUL 2: TERMINAL TRANSAKSI KASIR (POS), VALIDASI STOK &amp; TRANSAKSI DATABASE ACID&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px;font-weight:normal;color:#94A3B8;&quot;&gt;TransaksiPanel.java, TransaksiService.java, TransaksiDao.java, BarangDao.java, AntrianDao.java&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#F8FAFC;fontSize=15;align=center;arcSize=8;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="25" width="900" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_from_auth" value="[FROM MODUL 1: NAVIGASI POS]" style="shape=offPageConnector;whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#1D4ED8;fontColor=#FFFFFF;fontStyle=1;fontSize=11;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="910" y="115" width="200" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_prep" value="PREPARATION (State Transaksi Kasir POS &amp; Keranjang):
+[IPO Context]:
+• Input: txtCariKatalog, QtyStepper (+/-), txtBayar, QuickCash Buttons, txtPelanggan, chkBuatAntrian
+• Process: Subtotal = Σ(Harga * Qty), Total = Subtotal - Diskon, Validasi Stok Fisik DB, ACID Commit
+• Output: Struk Transaksi, Potong Stok Barang di DB, Generate Tiket Antrian Cetak
+[Deklarasi Variabel]:
+• List&lt;TransaksiItem&gt; keranjang = new ArrayList&lt;&gt;()
+• List&lt;Katalog&gt; katalogData = new ArrayList&lt;&gt;()
+• BigDecimal subtotal = ZERO, total = ZERO, bayar = ZERO, kembali = ZERO
+• boolean modeBarang = true, buatAntrian = true; String kodeNota = &#x27;&#x27;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontSize=11;align=left;spacingLeft=14;" vertex="1" parent="1">
+          <mxGeometry x="790" y="200" width="440" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_sub_katalog" value="Subroutine: reloadKatalog()
+Ambil katalog barang &amp; jasa aktif dari DB" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#E0E7FF;strokeColor=#6366F1;fontColor=#312E81;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="880" y="370" width="260" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_db_katalog" value="Tabel barang &amp;
+Tabel layanan
+WHERE aktif = 1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="355" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_dec_mode" value="Pilih Mode
+Katalog?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="935" y="450" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_mode_b" value="Mode Barang &amp; ATK:
+Tampilkan kode, nama, harga jual &amp; stok fisik" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#3B82F6;fontColor=#1E3A8A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="730" y="550" width="260" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_mode_j" value="Mode Jasa Cetak:
+Tampilkan nama layanan, satuan &amp; harga satuan" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAF5FF;strokeColor=#A855F7;fontColor=#581C87;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="550" width="260" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_inp_add" value="User Mencari Item (txtCariKatalog)
+&amp; Klik Tombol &#x27;+ Tambah&#x27; / Double-Click Baris" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="860" y="635" width="300" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_dec_exist" value="Item Sudah Ada
+di Keranjang?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="935" y="715" width="150" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_dec_stk_e" value="Tipe BARANG &amp;
+existing.qty &gt;=
+stok_fisik?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="750" y="815" width="160" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_dec_stk_n" value="Tipe BARANG &amp;
+stok_fisik &lt;= 0?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="815" width="160" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_warn_stk" value="Dialog Peringatan:
+&#x27;Stok barang habis / tidak cukup&#x27;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="510" y="827" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_proc_inc" value="existing.setQty(existing.getQty() + 1)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;fontColor=#14532D;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="760" y="925" width="210" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_proc_new" value="keranjang.add(new TransaksiItem(item, qty=1))" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;fontColor=#14532D;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="925" width="270" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_sub_refresh" value="Subroutine: refreshKeranjang()
+• Subtotal = Σ (item.harga × item.qty)
+• Total Tagihan = Subtotal - Diskon
+• Periksa item JASA: jika ada, tampilkan txtPelanggan &amp; chkBuatAntrian" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#E0E7FF;strokeColor=#6366F1;fontColor=#312E81;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="800" y="995" width="420" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_inp_pay" value="User Mengisi Pembayaran:
+• Ketik txtBayar atau Klik Quick Cash (Pas, 10k, 20k, 50k, 100k)
+• Input Nama Pelanggan (jika ada jasa cetak)
+• Klik &#x27;PROSES TRANSAKSI &amp; CETAK&#x27;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="800" y="1105" width="420" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_dec_val" value="Keranjang Isi &amp;
+Bayar &gt;= Total?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="935" y="1205" width="150" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_err_val" value="Dialog Peringatan:
+&#x27;Keranjang kosong ATAU
+Jumlah bayar kurang!&#x27;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="1217" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_proc_tx_acid" value="TRANSAKSI SERVICE ENGINE (TransaksiService.simpan):
+Mulai Transaksi Database: conn.setAutoCommit(false)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="810" y="1315" width="400" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_sub_val_db" value="1. validasiStok(conn, transaksi)
+Kueri stok fisik di DB: SELECT stok FROM barang WHERE id = ?" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#E0E7FF;strokeColor=#6366F1;fontColor=#312E81;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="835" y="1395" width="350" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_db_stk" value="Tabel barang
+FOR UPDATE" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1230" y="1380" width="140" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_proc_tx_ins" value="2. Generate No Nota Otomatis (TRX-yyyyMMdd-XXXX)
+3. INSERT INTO transaksi (kode, total, bayar, kembali, user_id, tanggal)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#0F172A;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="1475" width="420" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_db_tx" value="Tabel transaksi
+INSERT Header" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="1462" width="140" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_proc_items_ins" value="4. Loop Item Keranjang:
+• INSERT INTO transaksi_item VALUES (...)
+• Jika Tipe == BARANG: UPDATE barang SET stok = stok - qty WHERE id = ?" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#0F172A;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="1555" width="420" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_db_items" value="Tabel transaksi_item
+&amp; Tabel barang" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="1547" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_proc_q_ins" value="5. Jika buatAntrian == true &amp; Tipe == JASA:
+• INSERT INTO antrian (transaksi_id, layanan_id, nama_pelanggan, status=&#x27;MENUNGGU&#x27;)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAF5FF;strokeColor=#A855F7;fontColor=#581C87;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="1645" width="420" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_db_q" value="Tabel antrian
+Status=&#x27;MENUNGGU&#x27;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="1632" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_dec_err" value="Ada Error /
+SQLException?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="935" y="1725" width="150" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_err_rollback" value="conn.rollback()
+Pesan: &#x27;Gagal simpan transaksi&#x27;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="1737" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_proc_commit" value="conn.commit() &amp; conn.setAutoCommit(true)
+Transaksi Sukses Permanen di Database" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;fontColor=#14532D;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="850" y="1835" width="320" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_doc_struk" value="Struk Transaksi Penjualan:
+[Kode Nota] [Total] [Bayar] [Kembali]
+Reset Keranjang &amp; Reload Data Katalog" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="850" y="1910" width="320" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_off_to_q" value="[TO MODUL 3: ANTRIAN CETAK]" style="shape=offPageConnector;whiteSpace=wrap;html=1;fillColor=#2563EB;strokeColor=#1D4ED8;fontColor=#FFFFFF;fontStyle=1;fontSize=11;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="750" y="2010" width="220" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_off_return" value="[RETURN TO MODUL 1: NAVIGASI]" style="shape=offPageConnector;whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#1D4ED8;fontColor=#FFFFFF;fontStyle=1;fontSize=11;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="2010" width="220" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e1" edge="1" source="m2_from_auth" target="m2_prep" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e2" edge="1" source="m2_prep" target="m2_sub_katalog" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e2_db" edge="1" source="m2_sub_katalog" target="m2_db_katalog" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e3" edge="1" source="m2_sub_katalog" target="m2_dec_mode" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e4_b" value="Barang" edge="1" source="m2_dec_mode" target="m2_mode_b" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="860" y="490" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2_e4_j" value="Jasa Cetak" edge="1" source="m2_dec_mode" target="m2_mode_j" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1160" y="490" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2_e5_b" edge="1" source="m2_mode_b" target="m2_inp_add" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="860" y="615" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2_e5_j" edge="1" source="m2_mode_j" target="m2_inp_add" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1160" y="615" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2_e6" edge="1" source="m2_inp_add" target="m2_dec_exist" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e7_e" value="Sudah Ada" edge="1" source="m2_dec_exist" target="m2_dec_stk_e" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="830" y="757" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2_e7_n" value="Belum Ada" edge="1" source="m2_dec_exist" target="m2_dec_stk_n" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1190" y="757" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2_e8_w1" value="Kurang" edge="1" source="m2_dec_stk_e" target="m2_warn_stk" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e8_w2" value="Habis" edge="1" source="m2_dec_stk_n" target="m2_warn_stk" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1310" y="857" />
+              <mxPoint x="1310" y="790" />
+              <mxPoint x="605" y="790" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2_e9_e" value="Cukup" edge="1" source="m2_dec_stk_e" target="m2_proc_inc" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e9_n" value="Cukup" edge="1" source="m2_dec_stk_n" target="m2_proc_new" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e10_a" edge="1" source="m2_proc_inc" target="m2_sub_refresh" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="865" y="975" />
+              <mxPoint x="950" y="975" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2_e10_b" edge="1" source="m2_proc_new" target="m2_sub_refresh" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1215" y="975" />
+              <mxPoint x="1070" y="975" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2_e11" edge="1" source="m2_sub_refresh" target="m2_inp_pay" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e12" edge="1" source="m2_inp_pay" target="m2_dec_val" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e13_no" value="Tidak Valid" edge="1" source="m2_dec_val" target="m2_err_val" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e13_loop" edge="1" source="m2_err_val" target="m2_inp_pay" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1470" y="1247" />
+              <mxPoint x="1470" y="1140" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2_e13_ok" value="Valid" edge="1" source="m2_dec_val" target="m2_proc_tx_acid" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e14" edge="1" source="m2_proc_tx_acid" target="m2_sub_val_db" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e14_db" edge="1" source="m2_sub_val_db" target="m2_db_stk" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e15" edge="1" source="m2_sub_val_db" target="m2_proc_tx_ins" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e15_db" edge="1" source="m2_proc_tx_ins" target="m2_db_tx" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e16" edge="1" source="m2_proc_tx_ins" target="m2_proc_items_ins" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e16_db" edge="1" source="m2_proc_items_ins" target="m2_db_items" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e17" edge="1" source="m2_proc_items_ins" target="m2_proc_q_ins" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e17_db" edge="1" source="m2_proc_q_ins" target="m2_db_q" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e18" edge="1" source="m2_proc_q_ins" target="m2_dec_err" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e19_err" value="Error" edge="1" source="m2_dec_err" target="m2_err_rollback" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e19_ok" value="Sukses" edge="1" source="m2_dec_err" target="m2_proc_commit" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e20" edge="1" source="m2_proc_commit" target="m2_doc_struk" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_e21_q" edge="1" source="m2_doc_struk" target="m2_off_to_q" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="860" y="1985" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2_e21_ret" edge="1" source="m2_doc_struk" target="m2_off_return" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1140" y="1985" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="diag_mod_queue" name="Modul 3: Antrian Jasa Cetak &amp; State Machine">
+    <mxGraphModel dx="1600" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="2600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="m3_hdr" value="&lt;b&gt;MODUL 3: MANAJEMEN ANTRIAN JASA CETAK &amp; SIKLUS HIDUP FINITE STATE MACHINE (FSM)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px;font-weight:normal;color:#94A3B8;&quot;&gt;AntrianPanel.java, AntrianDao.java, AntrianDialog.java — Siklus: MENUNGGU → PROSES → SELESAI → DIAMBIL&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#F8FAFC;fontSize=15;align=center;arcSize=8;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="25" width="900" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_from_nav" value="[FROM MODUL 1: NAVIGASI ANTRIAN]" style="shape=offPageConnector;whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#1D4ED8;fontColor=#FFFFFF;fontStyle=1;fontSize=11;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="115" width="220" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_from_pos" value="[FROM MODUL 2: TIKET POS]" style="shape=offPageConnector;whiteSpace=wrap;html=1;fillColor=#2563EB;strokeColor=#1D4ED8;fontColor=#FFFFFF;fontStyle=1;fontSize=11;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="115" width="200" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_prep" value="PREPARATION (Monitoring Antrian Jasa &amp; State Machine):
+[IPO Context]:
+• Input: TabFilter, Dropdown Status Antrian, AntrianDialog (Form Tambah/Edit)
+• Process: Validasi Transisi Status (transisiDiizinkan), Update DB, Hitung KPI
+• Output: Counter KPI (Menunggu/Proses/Selesai), Refresh Tabel Antrian Realtime
+[Deklarasi Variabel]:
+• String filter = &#x27;AKTIF&#x27;; List&lt;Antrian&gt; data = new ArrayList&lt;&gt;()
+• StatusAntrian statusLama = null, statusBaru = null
+• int countMenunggu = 0, countProses = 0, countSelesai = 0" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontSize=11;align=left;spacingLeft=14;" vertex="1" parent="1">
+          <mxGeometry x="790" y="200" width="420" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_sub_load" value="Subroutine: reload()
+Query Antrian dari DB &amp; Hitung Counter KPI" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#E0E7FF;strokeColor=#6366F1;fontColor=#312E81;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="870" y="360" width="260" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_db_read" value="Tabel antrian
+SELECT a.*, l.nama
+FROM antrian a ..." style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="345" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_proc_kpi" value="Update Telemetry KPI Counter:
+• Menunggu: Count(status == MENUNGGU)
+• Proses: Count(status == PROSES)
+• Siap Diambil: Count(status == SELESAI)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#0F172A;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="850" y="440" width="300" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_inp_action" value="User Memilih Aksi di Panel Antrian:
+(Filter Tab / Tambah Manual / Edit Data / Ubah Status / Hapus)" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="810" y="540" width="380" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_dec_act" value="Pilihan Aksi?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="925" y="620" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_act_filter" value="Ganti Filter TabBar:
+[Semua Aktif] [Menunggu]
+[Diproses] [Siap Diambil]
+[Riwayat] [Semua]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#3B82F6;fontColor=#1E3A8A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="600" y="725" width="190" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_act_dialog" value="AntrianDialog:
+Input Pelanggan, Layanan, Qty, Keterangan
+INSERT / UPDATE antrian" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#FAF5FF;strokeColor=#A855F7;fontColor=#581C87;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="820" y="725" width="230" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_act_del" value="Hapus Antrian:
+Dialog Konfirmasi -&gt; DELETE antrian" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="725" width="210" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_fsm_swim" value="ATURAN VALIDASI TRANSISI STATUS (AntrianPanel.transisiDiizinkan):
+1. MENUNGGU -&gt; PROSES (Mulai pengerjaan cetak)
+2. PROSES -&gt; SELESAI (Selesai cetak, Set waktu_selesai = NOW())
+3. SELESAI -&gt; DIAMBIL (Pesanan diserahkan ke pelanggan &amp; diarsipkan)
+* VALIDASI: Status yang sudah DIAMBIL atau dimundurkan akan DITOLAK!" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#0F172A;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="760" y="830" width="480" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_dec_fsm" value="Transisi Status
+Diizinkan?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="925" y="955" width="150" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_err_fsm" value="Dialog Peringatan:
+&#x27;Status tidak bisa dimundurkan /
+antrian yang sudah diambil terkunci!&#x27;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="967" width="210" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_sub_dbsave" value="Subroutine: AntrianDao.updateStatus() / insert() / delete()
+Eksekusi Perubahan Data ke Database MySQL" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#DCFCE7;strokeColor=#16A34A;fontColor=#14532D;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="810" y="1070" width="380" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_db_write" value="Tabel antrian
+UPDATE / INSERT /
+DELETE" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1230" y="1055" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_proc_refresh" value="Reload Data Tabel &amp; Refresh Counter KPI Telemetry" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="840" y="1150" width="320" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_off_return" value="[RETURN TO MODUL 1: NAVIGASI]" style="shape=offPageConnector;whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#1D4ED8;fontColor=#FFFFFF;fontStyle=1;fontSize=11;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="890" y="1225" width="220" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_e1_a" edge="1" source="m3_from_nav" target="m3_prep" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="870" y="185" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3_e1_b" edge="1" source="m3_from_pos" target="m3_prep" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1130" y="185" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3_e2" edge="1" source="m3_prep" target="m3_sub_load" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_e2_db" edge="1" source="m3_sub_load" target="m3_db_read" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_e3" edge="1" source="m3_sub_load" target="m3_proc_kpi" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_e4" edge="1" source="m3_proc_kpi" target="m3_inp_action" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_e5" edge="1" source="m3_inp_action" target="m3_dec_act" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_e6_f" value="Filter" edge="1" source="m3_dec_act" target="m3_act_filter" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="695" y="660" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3_e6_d" value="Tambah/Edit" edge="1" source="m3_dec_act" target="m3_act_dialog" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="935" y="660" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3_e6_s" value="Ubah Status" edge="1" source="m3_dec_act" target="m3_fsm_swim" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_e6_x" value="Hapus" edge="1" source="m3_dec_act" target="m3_act_del" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1185" y="660" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3_e7_f" edge="1" source="m3_act_filter" target="m3_proc_refresh" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="695" y="1172" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3_e7_d" edge="1" source="m3_act_dialog" target="m3_sub_dbsave" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="935" y="1040" />
+              <mxPoint x="950" y="1040" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3_e7_x" edge="1" source="m3_act_del" target="m3_sub_dbsave" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1185" y="1040" />
+              <mxPoint x="1050" y="1040" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3_e8_fsm" edge="1" source="m3_fsm_swim" target="m3_dec_fsm" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_e9_no" value="Ditolak" edge="1" source="m3_dec_fsm" target="m3_err_fsm" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_e9_ok" value="Diizinkan" edge="1" source="m3_dec_fsm" target="m3_sub_dbsave" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_e10_db" edge="1" source="m3_sub_dbsave" target="m3_db_write" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_e11" edge="1" source="m3_sub_dbsave" target="m3_proc_refresh" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_e12" edge="1" source="m3_proc_refresh" target="m3_off_return" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="diag_mod_inv" name="Modul 4: Inventaris, Master Produk &amp; Restock ACID">
+    <mxGraphModel dx="1600" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="2600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="m4_hdr" value="&lt;b&gt;MODUL 4: MANAJEMEN INVENTARIS, MASTER BARANG, KATEGORI &amp; ENGINE RESTOCK ACID&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px;font-weight:normal;color:#94A3B8;&quot;&gt;StokPanel.java, RestockService.java, BarangDao.java, KategoriDao.java, RestockDao.java, LayananPanel.java&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#F8FAFC;fontSize=15;align=center;arcSize=8;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="25" width="900" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_from_nav" value="[FROM MODUL 1: NAVIGASI INVENTARIS]" style="shape=offPageConnector;whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#1D4ED8;fontColor=#FFFFFF;fontStyle=1;fontSize=11;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="890" y="115" width="220" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_prep" value="PREPARATION (Inventaris, Master Produk &amp; Restock Engine):
+[IPO Context]:
+• Input: Form Barang, Form Kategori, Form Layanan, Form Restock Masuk
+• Process: Validasi Kode Unik, Restock ACID Transaction (Stok += Qty, Harga Beli Baru)
+• Output: Master Table Update, Peringatan Stok Minimum (Badge Menipis/Habis)
+[Deklarasi Variabel]:
+• List&lt;Barang&gt; listBarang = []; List&lt;Kategori&gt; listKategori = []
+• List&lt;Restock&gt; listRestock = []; Restock restock = null; int qty = 0" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontSize=11;align=left;spacingLeft=14;" vertex="1" parent="1">
+          <mxGeometry x="790" y="200" width="420" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_dec_tab" value="Pilih Sub-Modul /
+Tab Inventaris?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="925" y="355" width="150" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_tab_b" value="1. TAB BARANG &amp; STOK:
+• Tambah/Edit Master Barang (Kode, Nama, Satuan, Harga Beli, Harga Jual, Stok Min)
+• Deteksi Stok: HABIS (stok&lt;=0) / MENIPIS (stok&lt;=min)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#3B82F6;fontColor=#1E3A8A;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="640" y="465" width="290" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_tab_k" value="2. TAB KATEGORI:
+• Kelola Kategori Produk (ATK, Kertas, Tinta, Jilid)
+• INSERT / UPDATE / DELETE kategori (FK SET NULL)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#0F172A;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1070" y="465" width="280" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_tab_l" value="3. TAB LAYANAN (Owner):
+• Kelola Tarif Jasa Print &amp; Cetak (LayananPanel)
+• INSERT / UPDATE / DELETE master tarif" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAF5FF;strokeColor=#A855F7;fontColor=#581C87;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="640" y="565" width="290" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_inp_restock" value="4. TAB RESTOCK (Owner Only):
+Input: Barang, Qty Masuk (&gt;0), Harga Beli Baru, Supplier, Catatan
+Klik &#x27;SIMPAN RESTOCK&#x27;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="565" width="340" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_dec_r_val" value="Jumlah &gt; 0 &amp;
+Barang Valid?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1135" y="660" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_err_restock" value="Dialog Peringatan:
+&#x27;Jumlah restock harus &gt; 0&#x27;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1340" y="670" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_sub_restock_acid" value="RestockService.simpan() (ACID TRANSACTION):
+1. conn.setAutoCommit(false)
+2. INSERT INTO restock (barang_id, jumlah, harga_beli, supplier, catatan, user_id)
+3. UPDATE barang SET stok = stok + jumlah WHERE id = ?
+4. Jika harga_beli &gt; 0: UPDATE barang SET harga_beli = ? WHERE id = ?
+5. conn.commit()" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#DCFCE7;strokeColor=#16A34A;fontColor=#14532D;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="930" y="770" width="440" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_db_restock" value="Tabel restock &amp;
+Tabel barang" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1410" y="780" width="150" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_sub_master_db" value="Eksekusi CRUD Master ke Database MySQL
+BarangDao / KategoriDao / LayananDao" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#E0E7FF;strokeColor=#6366F1;fontColor=#312E81;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="640" y="790" width="270" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_db_master" value="Tabel barang,
+kategori, layanan" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="430" y="775" width="170" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_proc_alert" value="Pemeriksaan Otomatis Batas Minimum Stok:
+Cek stok &lt;= stok_minimum -&gt; Munculkan Notifikasi Peringatan di Dashboard" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontColor=#991B1B;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="800" y="915" width="400" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_proc_refresh" value="Refresh Tampilan Tabel, Data Kategori &amp; Badge Stok" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="850" y="995" width="300" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_off_return" value="[RETURN TO MODUL 1: NAVIGASI]" style="shape=offPageConnector;whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#1D4ED8;fontColor=#FFFFFF;fontStyle=1;fontSize=11;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="890" y="1070" width="220" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_e1" edge="1" source="m4_from_nav" target="m4_prep" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_e2" edge="1" source="m4_prep" target="m4_dec_tab" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_e3_b" value="Barang" edge="1" source="m4_dec_tab" target="m4_tab_b" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="785" y="397" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4_e3_k" value="Kategori" edge="1" source="m4_dec_tab" target="m4_tab_k" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1210" y="397" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4_e3_l" value="Layanan" edge="1" source="m4_dec_tab" target="m4_tab_l" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="785" y="420" />
+              <mxPoint x="785" y="540" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4_e3_r" value="Restock" edge="1" source="m4_dec_tab" target="m4_inp_restock" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1210" y="420" />
+              <mxPoint x="1210" y="540" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4_e4_r" edge="1" source="m4_inp_restock" target="m4_dec_r_val" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_e5_no" value="Tidak Valid" edge="1" source="m4_dec_r_val" target="m4_err_restock" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_e5_ok" value="Valid" edge="1" source="m4_dec_r_val" target="m4_sub_restock_acid" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_e6_db" edge="1" source="m4_sub_restock_acid" target="m4_db_restock" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_e7_b" edge="1" source="m4_tab_b" target="m4_sub_master_db" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="775" y="540" />
+              <mxPoint x="775" y="760" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4_e7_k" edge="1" source="m4_tab_k" target="m4_sub_master_db" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1210" y="540" />
+              <mxPoint x="850" y="760" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4_e7_l" edge="1" source="m4_tab_l" target="m4_sub_master_db" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_e8_db" edge="1" source="m4_sub_master_db" target="m4_db_master" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_e9_a" edge="1" source="m4_sub_master_db" target="m4_proc_alert" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="775" y="875" />
+              <mxPoint x="900" y="875" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4_e9_b" edge="1" source="m4_sub_restock_acid" target="m4_proc_alert" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1150" y="875" />
+              <mxPoint x="1050" y="875" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4_e10" edge="1" source="m4_proc_alert" target="m4_proc_refresh" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m4_e11" edge="1" source="m4_proc_refresh" target="m4_off_return" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="diag_mod_mgmt" name="Modul 5: Laporan, User &amp; Backup Database">
+    <mxGraphModel dx="1600" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="2600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="m5_hdr" value="&lt;b&gt;MODUL 5: MANAJEMEN OWNER — LAPORAN KEUANGAN, KELOLA PENGGUNA &amp; BACKUP DATABASE&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px;font-weight:normal;color:#94A3B8;&quot;&gt;LaporanPanel.java, UserPanel.java, UserService.java, PengaturanPanel.java, BackupService.java, ExcelExporter.java&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#1E293B;fontColor=#F8FAFC;fontSize=15;align=center;arcSize=8;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="25" width="900" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_from_nav" value="[FROM MODUL 1: NAVIGASI MANAJEMEN]" style="shape=offPageConnector;whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#1D4ED8;fontColor=#FFFFFF;fontStyle=1;fontSize=11;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="890" y="115" width="220" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_prep" value="PREPARATION (Manajemen Owner, Laporan Keuangan &amp; Backup Database):
+[IPO Context]:
+• Input: Filter Periode (Harian/Mingguan/Bulanan/Kustom), User Form, Store Profile, Trigger Backup
+• Process: Laba Calculation (Omzet - Modal Beli), BCrypt Hash, Dump SQL Metadata Engine
+• Output: Visual TrendChart, Spreadsheet Excel (.xlsx), Database Backup (.sql)
+[Deklarasi Variabel]:
+• Periode p = Periode.HARIAN; LocalDate fromDate, toDate
+• BigDecimal omzet = ZERO, laba = ZERO; Path targetBackup = null" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontSize=11;align=left;spacingLeft=14;" vertex="1" parent="1">
+          <mxGeometry x="780" y="200" width="440" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_dec_mod" value="Pilih Menu
+Manajemen?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="925" y="360" width="150" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_mod_lap" value="1. LAPORAN KEUANGAN:
+LaporanPanel &amp; LaporanDao
+Analisis Omzet, Laba &amp; Ekspor Excel" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#3B82F6;fontColor=#1E3A8A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="550" y="475" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_mod_usr" value="2. KELOLA PENGGUNA:
+UserPanel &amp; UserService
+Kredensial &amp; Otorisasi Staf" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAF5FF;strokeColor=#A855F7;fontColor=#581C87;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="870" y="475" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_mod_set" value="3. PENGATURAN &amp; BACKUP:
+PengaturanPanel &amp; BackupService
+Profil Struk &amp; Dump SQL" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="475" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_inp_lap" value="Pilih Periode: [Harian] [Mingguan] [Bulanan] [Kustom]
+Klik &#x27;Ekspor ke Excel&#x27;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="540" y="565" width="280" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_sub_lap_calc" value="LaporanDao.hitungMetrik():
+• Omzet Bruto = Σ Total Transaksi
+• Estimasi Laba Bersih = Σ (Subtotal - (Harga Beli × Qty))
+• Total Transaksi &amp; Nilai Rata-rata per Nota
+• Render TrendChart &amp; 4 Tab Laporan" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#EFF6FF;strokeColor=#3B82F6;fontColor=#1E3A8A;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="520" y="645" width="320" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_db_tx_read" value="Tabel transaksi &amp;
+Tabel transaksi_item" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="290" y="652" width="180" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_doc_excel" value="File Spreadsheet Excel:
+ExcelExporter.export() (.xlsx/CSV)" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#DCFCE7;strokeColor=#16A34A;fontColor=#14532D;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="550" y="770" width="260" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_inp_usr" value="UserPanel: Tambah / Edit / Reset Password / Hapus User" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="860" y="565" width="280" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_sub_usr_rules" value="UserService.simpan() &amp; hapus() Rules:
+1. Username unik &amp; Password minimal 4 karakter
+2. Enkripsi Password dengan BCrypt Hash
+3. PROTEKSI: Dilarang menghapus/nonaktifkan Owner terakhir!" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#FAF5FF;strokeColor=#A855F7;fontColor=#581C87;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="840" y="645" width="320" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_db_usr_write" value="Tabel users
+INSERT / UPDATE /
+DELETE" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="890" y="770" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_inp_set" value="PengaturanPanel:
+• Simpan Profil Toko (Nama, Telp, Alamat, Footer Struk)
+• Klik &#x27;Backup Database Sekarang&#x27; -&gt; Pilih Path File" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="565" width="300" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_sub_backup" value="BackupService.backup(targetPath):
+1. conn.getMetaData().getTables() -&gt; Baca 9 tabel MySQL
+2. Loop tabel -&gt; SELECT * FROM [table]
+3. Generate DML INSERT INTO [table] (...) VALUES (...)
+4. Tulis file SQL UTF-8 ke disk: &#x27;giriatk_backup_yyyyMMdd.sql&#x27;" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#FEF3C7;strokeColor=#D97706;fontColor=#78350F;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="655" width="340" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_db_all" value="Seluruh Basis Data
+(9 Tabel MySQL)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#E2E8F0;strokeColor=#64748B;fontColor=#0F172A;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1530" y="667" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_doc_sql" value="File Backup Database:
+giriatk_backup.sql" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#DCFCE7;strokeColor=#16A34A;fontColor=#14532D;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1230" y="790" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_off_return" value="[RETURN TO MODUL 1: NAVIGASI]" style="shape=offPageConnector;whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#1D4ED8;fontColor=#FFFFFF;fontStyle=1;fontSize=11;align=center;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="890" y="900" width="220" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_e1" edge="1" source="m5_from_nav" target="m5_prep" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_e2" edge="1" source="m5_prep" target="m5_dec_mod" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_e3_l" value="Laporan" edge="1" source="m5_dec_mod" target="m5_mod_lap" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="680" y="402" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5_e3_u" value="Pengguna" edge="1" source="m5_dec_mod" target="m5_mod_usr" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_e3_s" value="Pengaturan / Backup" edge="1" source="m5_dec_mod" target="m5_mod_set" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1320" y="402" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5_e4_l" edge="1" source="m5_mod_lap" target="m5_inp_lap" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_e5_l" edge="1" source="m5_inp_lap" target="m5_sub_lap_calc" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_e5_db" edge="1" source="m5_sub_lap_calc" target="m5_db_tx_read" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_e6_l" edge="1" source="m5_sub_lap_calc" target="m5_doc_excel" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_e4_u" edge="1" source="m5_mod_usr" target="m5_inp_usr" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_e5_u" edge="1" source="m5_inp_usr" target="m5_sub_usr_rules" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_e6_u" edge="1" source="m5_sub_usr_rules" target="m5_db_usr_write" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_e4_s" edge="1" source="m5_mod_set" target="m5_inp_set" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_e5_s" edge="1" source="m5_inp_set" target="m5_sub_backup" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_e5_s_db" edge="1" source="m5_sub_backup" target="m5_db_all" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_e6_s" edge="1" source="m5_sub_backup" target="m5_doc_sql" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m5_ret_l" edge="1" source="m5_doc_excel" target="m5_off_return" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="680" y="860" />
+              <mxPoint x="950" y="860" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5_ret_u" edge="1" source="m5_db_usr_write" target="m5_off_return" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="970" y="860" />
+              <mxPoint x="1000" y="860" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5_ret_s" edge="1" source="m5_doc_sql" target="m5_off_return" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1320" y="860" />
+              <mxPoint x="1050" y="860" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
