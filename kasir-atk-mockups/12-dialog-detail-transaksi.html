@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>GiriATK &amp; Print — Detail Transaksi</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#E7DCC3; font-family:'Segoe UI', system-ui, sans-serif; color:#1C1917; padding:28px 0 40px; }
+  .mono { font-family:'Cascadia Mono', 'JetBrains Mono', Consolas, monospace; }
+  .win { width:1440px; height:900px; margin:0 auto; background:#FAF6EF; border:2px solid #1C1917; box-shadow:10px 10px 0 rgba(28,25,23,.22); display:flex; flex-direction:column; overflow:hidden; position:relative; }
+  .titlebar { height:46px; background:#FFFDF8; border-bottom:2px solid #1C1917; display:flex; align-items:center; justify-content:space-between; padding:0 16px; flex:none; }
+  .tb-left { display:flex; align-items:center; gap:10px; }
+  .glyph { width:13px; height:13px; background:#C93A1E; border:1.5px solid #1C1917; }
+  .tb-title { font-family:Georgia, 'Times New Roman', serif; font-size:15px; }
+  .tb-btns { display:flex; gap:18px; }
+  .app { flex:1; display:flex; min-height:0; }
+  aside { width:232px; flex:none; background:#1C1917; color:#F3ECDC; display:flex; flex-direction:column; padding:22px 14px 16px; }
+  .wordmark { font-family:Georgia, 'Times New Roman', serif; font-size:26px; line-height:1.05; padding:0 10px 4px; }
+  .wordmark em { font-style:italic; color:#C93A1E; }
+  .wm-sub { font-size:9.5px; letter-spacing:.3em; text-transform:uppercase; color:#A8A29E; padding:0 10px 20px; border-bottom:1px dashed rgba(243,236,220,.25); margin-bottom:16px; }
+  nav { display:flex; flex-direction:column; gap:3px; }
+  .nav-item { display:flex; align-items:center; gap:11px; padding:9px 10px; font-size:13.5px; color:#E9E2D0; text-decoration:none; border-left:4px solid transparent; }
+  .nav-item svg { flex:none; opacity:.85; }
+  .nav-item.active { background:#FAF6EF; color:#1C1917; font-weight:700; border-left:4px solid #C93A1E; }
+  .nav-badge { margin-left:auto; font-family:'Cascadia Mono', Consolas, monospace; font-size:10.5px; background:#C93A1E; color:#FFFDF8; padding:1px 6px; border-radius:8px; }
+  .side-spacer { flex:1; }
+  .user-chip { border-top:1px dashed rgba(243,236,220,.25); padding-top:14px; display:flex; align-items:center; gap:10px; }
+  .avatar { width:36px; height:36px; border-radius:50%; background:#C93A1E; color:#FFFDF8; display:flex; align-items:center; justify-content:center; font-family:Georgia, serif; font-weight:700; font-size:14px; border:1.5px solid #F3ECDC; flex:none; }
+  .user-chip .nm { font-size:13px; font-weight:600; line-height:1.25; }
+  .user-chip .rl { font-size:9.5px; letter-spacing:.2em; text-transform:uppercase; color:#A8A29E; }
+  main { flex:1; padding:26px 30px; }
+  .topbar { border-bottom:2px solid #1C1917; padding-bottom:14px; margin-bottom:18px; }
+  .topbar h1 { font-family:Georgia, 'Times New Roman', serif; font-size:30px; font-weight:700; }
+  .topbar .sub { font-size:11px; text-transform:uppercase; letter-spacing:.14em; color:#78716C; margin-top:3px; }
+  .panel { background:#FFFDF8; border:1px solid #E0D7BF; }
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.12em; color:#78716C; background:#F3ECDC; padding:10px 18px; }
+  td { padding:12px 18px; font-size:13.5px; border-bottom:1px solid #F0E8D2; }
+  td.num, th.num { text-align:right; font-family:'Cascadia Mono', Consolas, monospace; }
+  .badge { font-size:10px; text-transform:uppercase; letter-spacing:.09em; font-weight:700; padding:3px 8px; border-radius:5px; border:1px solid; }
+  .b-neutral { color:#6B655C; background:#ECE7DB; border-color:#D4CBB6; }
+  .b-green { color:#2F7D4F; background:#E2EFE4; border-color:#B9D6BF; }
+  .b-blue { color:#2456A6; background:#E0E9F5; border-color:#B3C8E4; }
+  /* dim layer + modal */
+  .dim { position:absolute; inset:46px 0 0 0; background:rgba(28,25,23,.62); display:flex; align-items:flex-start; justify-content:center; padding-top:44px; }
+  .receipt-modal { width:480px; position:relative; }
+  .receipt { background:#FFFDF8; border:2px solid #1C1917; box-shadow:8px 8px 0 rgba(0,0,0,.35); padding:26px 30px 8px; position:relative;
+    background-image:radial-gradient(rgba(28,25,23,.045) 1px, transparent 1.6px); background-size:12px 12px; }
+  .rc-close { position:absolute; top:-15px; right:-15px; width:34px; height:34px; border-radius:50%; background:#1C1917; color:#FAF6EF; border:2px solid #FAF6EF; font-size:15px; cursor:pointer; z-index:5; display:flex; align-items:center; justify-content:center; }
+  .rc-shop { text-align:center; }
+  .rc-shop .nm { font-family:Georgia, 'Times New Roman', serif; font-size:25px; font-weight:700; }
+  .rc-shop .nm em { font-style:italic; color:#C93A1E; }
+  .rc-shop .ad { font-size:11.5px; color:#78716C; margin-top:3px; line-height:1.5; }
+  .rc-div { border-top:1.5px dashed #1C1917; margin:15px 0 12px; }
+  .rc-div.thin { border-top:1px dashed #CBBFA0; margin:12px 0; }
+  .rc-meta { display:flex; justify-content:space-between; font-family:'Cascadia Mono', Consolas, monospace; font-size:12px; line-height:1.9; }
+  .rc-meta .k { color:#78716C; }
+  .rc-item { display:flex; justify-content:space-between; gap:12px; font-size:13px; padding:5px 0; }
+  .rc-item .l .n { font-weight:600; }
+  .rc-item .l .d { font-family:'Cascadia Mono', Consolas, monospace; font-size:11.5px; color:#78716C; }
+  .rc-item .r { font-family:'Cascadia Mono', Consolas, monospace; font-weight:700; white-space:nowrap; }
+  .rc-total { display:flex; justify-content:space-between; align-items:baseline; padding:4px 0; font-size:13.5px; }
+  .rc-total .v { font-family:'Cascadia Mono', Consolas, monospace; font-weight:700; }
+  .rc-total.grand { font-size:16px; }
+  .rc-total.grand .v { font-size:19px; }
+  .rc-total .green { color:#2F7D4F; }
+  .stamp { position:absolute; top:196px; right:22px; transform:rotate(-6deg); color:#C93A1E; font-weight:800; font-size:27px; letter-spacing:.22em; padding:7px 16px 7px 19px; border:3px solid #C93A1E; box-shadow:inset 0 0 0 2px #FFFDF8, inset 0 0 0 4.5px rgba(201,57,30,.75); opacity:.92; mix-blend-mode:multiply; font-family:'Segoe UI', system-ui, sans-serif; }
+  .rc-thanks { text-align:center; font-family:Georgia, 'Times New Roman', serif; font-style:italic; font-size:14.5px; color:#44403C; padding:2px 0 4px; }
+  .barcode { margin:8px auto 2px; height:38px; width:250px;
+    background:repeating-linear-gradient(90deg,#1C1917 0 2px,transparent 2px 5px,#1C1917 5px 6px,transparent 6px 11px,#1C1917 11px 14px,transparent 14px 17px,#1C1917 17px 18px,transparent 18px 23px,#1C1917 23px 26px,transparent 26px 29px); }
+  .barcode-cap { text-align:center; font-family:'Cascadia Mono', Consolas, monospace; font-size:9.5px; letter-spacing:.4em; color:#A8A29E; padding-bottom:12px; }
+  .perf { height:10px; background:linear-gradient(-45deg, transparent 7px, #FFFDF8 0) 0 0/14px 14px repeat-x, linear-gradient(45deg, transparent 7px, #FFFDF8 0) 7px 0/14px 14px repeat-x; filter:drop-shadow(0 1.5px 0 rgba(0,0,0,.4)); margin-top:-1px; }
+  .modal-actions { display:flex; gap:12px; margin-top:16px; }
+  .btn-print { flex:1; height:46px; background:#FAF6EF; border:2px solid #1C1917; box-shadow:3px 3px 0 #1C1917; font-family:inherit; font-size:12.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; }
+  .btn-print:hover { background:#FFFDF8; }
+  .btn-tutup { flex:1; height:46px; background:#C93A1E; color:#FFFDF8; border:2px solid #1C1917; box-shadow:3px 3px 0 #1C1917; font-family:inherit; font-size:12.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; }
+  .btn-tutup:hover { background:#A82E15; }
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="titlebar">
+    <div class="tb-left"><span class="glyph"></span><span class="tb-title">GiriATK &amp; Print — Riwayat Transaksi</span></div>
+    <div class="tb-btns">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16"/></svg>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </div>
+  </div>
+  <div class="app">
+    <aside>
+      <div class="wordmark">GiriATK<br><em>&amp; Print</em></div>
+      <div class="wm-sub">Kasir · Stok · Cetak</div>
+      <nav>
+        <a class="nav-item" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="5"/><rect x="13" y="10" width="8" height="11"/><rect x="3" y="13" width="8" height="8"/></svg>Dashboard</a>
+        <a class="nav-item" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16l-1.5 9h-13L4 6Z"/><path d="M4 6L3 3H1.5"/><circle cx="9" cy="20" r="1.6"/><circle cx="17" cy="20" r="1.6"/></svg>Transaksi</a>
+        <a class="nav-item" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3l9 5-9 5-9-5 9-5Z"/><path d="M3 13l9 5 9-5"/></svg>Antrian Jasa<span class="nav-badge">6</span></a>
+        <a class="nav-item active" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3.5 2"/></svg>Riwayat Transaksi</a>
+        <a class="nav-item" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8l9-5 9 5v8l-9 5-9-5V8Z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg>Stok &amp; Barang</a>
+      </nav>
+      <div class="side-spacer"></div>
+      <div class="user-chip">
+        <div class="avatar">SW</div>
+        <div><div class="nm">Sari Wulandari</div><div class="rl">Kasir</div></div>
+      </div>
+    </aside>
+    <main>
+      <div class="topbar"><h1>Riwayat Transaksi</h1><div class="sub">Jumat, 23 Oktober 2026 · 47 Struk</div></div>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Kode Struk</th><th>Waktu</th><th>Kasir</th><th>Tipe</th><th class="num">Total</th></tr></thead>
+          <tbody>
+            <tr><td class="mono" style="font-weight:700;">TRX-20261023-0047</td><td class="mono">11.12</td><td>Sari Wulandari</td><td><span class="badge b-neutral">Campuran</span></td><td class="num">Rp 214.500</td></tr>
+            <tr><td class="mono" style="font-weight:700;">TRX-20261023-0046</td><td class="mono">10.58</td><td>Sari Wulandari</td><td><span class="badge b-green">Barang</span></td><td class="num">Rp 74.000</td></tr>
+            <tr><td class="mono" style="font-weight:700;">TRX-20261023-0045</td><td class="mono">10.41</td><td>Sari Wulandari</td><td><span class="badge b-blue">Jasa</span></td><td class="num">Rp 75.000</td></tr>
+            <tr><td class="mono" style="font-weight:700;">TRX-20261023-0044</td><td class="mono">10.22</td><td>Giri Saputra</td><td><span class="badge b-green">Barang</span></td><td class="num">Rp 486.000</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+  <div class="dim">
+    <div class="receipt-modal">
+      <div class="receipt">
+        <button class="rc-close">✕</button>
+        <div class="rc-shop">
+          <div class="nm">GiriATK <em>&amp; Print</em></div>
+          <div class="ad">Jl. Raya Giri No. 88, Banyuwangi · Telp 0812-3456-7890<br>Buka setiap hari 07.00–21.00</div>
+        </div>
+        <div class="rc-div"></div>
+        <div class="rc-meta"><span><span class="k">NO. STRUK :</span> TRX-20261023-0047</span><span><span class="k">KASIR :</span> SARI W.</span></div>
+        <div class="rc-meta"><span><span class="k">TANGGAL :</span> 23 OKT 2026</span><span><span class="k">PUKUL :</span> 11.12 WIB</span></div>
+        <div class="rc-div"></div>
+        <div class="rc-item"><div class="l"><div class="n">Kertas HVS A4 80gsm</div><div class="d">1 rim × 52.000</div></div><div class="r">52.000</div></div>
+        <div class="rc-item"><div class="l"><div class="n">Pulpen Gel Pilot G2</div><div class="d">2 pcs × 18.500</div></div><div class="r">37.000</div></div>
+        <div class="rc-item"><div class="l"><div class="n">Print A4 Warna <span style="color:#2456A6;font-size:11px;">[JASA · A-030]</span></div><div class="d">50 lbr × 1.500</div></div><div class="r">75.000</div></div>
+        <div class="rc-item"><div class="l"><div class="n">Buku Tulis 58 Lbr</div><div class="d">3 pcs × 5.500</div></div><div class="r">16.500</div></div>
+        <div class="rc-item"><div class="l"><div class="n">Amplop Putih 104</div><div class="d">10 pcs × 1.000</div></div><div class="r">10.000</div></div>
+        <div class="rc-item"><div class="l"><div class="n">Lakban Bening 48mm</div><div class="d">2 roll × 12.000</div></div><div class="r">24.000</div></div>
+        <div class="rc-div thin"></div>
+        <div class="rc-total grand"><span>TOTAL</span><span class="v">Rp 214.500</span></div>
+        <div class="rc-total"><span>BAYAR (TUNAI)</span><span class="v">Rp 250.000</span></div>
+        <div class="rc-total"><span>KEMBALI</span><span class="v green">Rp 35.500</span></div>
+        <div class="stamp">LUNAS</div>
+        <div class="rc-div"></div>
+        <div class="rc-thanks">— Terima kasih sudah berbelanja —</div>
+        <div class="barcode"></div>
+        <div class="barcode-cap">TRX-20261023-0047</div>
+      </div>
+      <div class="perf"></div>
+      <div class="modal-actions">
+        <button class="btn-print">Cetak Ulang Struk</button>
+        <button class="btn-tutup">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

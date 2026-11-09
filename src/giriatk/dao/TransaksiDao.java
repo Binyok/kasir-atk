@@ -1,6 +1,7 @@
 package giriatk.dao;
 
 import giriatk.config.Db;
+import giriatk.model.StatusTransaksi;
 import giriatk.model.TipeItem;
 import giriatk.model.TipeTransaksi;
 import giriatk.model.Transaksi;
@@ -21,23 +22,34 @@ import java.util.List;
 
 public class TransaksiDao {
 
-    private static final DateTimeFormatter KODE_DATE = DateTimeFormatter.ofPattern("yyyyMMdd");
-
     public String kodeOtomatis(Connection conn) throws SQLException {
-        String prefix = "TRX-" + LocalDate.now().format(KODE_DATE) + "-";
-        String sql = "SELECT COUNT(*) FROM transaksi WHERE kode LIKE ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, prefix + "%");
-            try (ResultSet rs = ps.executeQuery()) {
-                int next = rs.next() ? rs.getInt(1) + 1 : 1;
-                return prefix + String.format("%04d", next);
+        int next = 1;
+        String sqlLast = "SELECT id FROM transaksi ORDER BY id DESC LIMIT 1";
+        try (PreparedStatement ps = conn.prepareStatement(sqlLast);
+                ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                next = rs.getInt("id") + 1;
             }
+        }
+        String candidate = String.format("TRX-%04d", next);
+        String sqlCheck = "SELECT 1 FROM transaksi WHERE kode = ?";
+        while (true) {
+            try (PreparedStatement ps = conn.prepareStatement(sqlCheck)) {
+                ps.setString(1, candidate);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) {
+                        return candidate;
+                    }
+                }
+            }
+            next++;
+            candidate = String.format("TRX-%04d", next);
         }
     }
 
     public int insert(Connection conn, Transaksi t) throws SQLException {
-        String sql = "INSERT INTO transaksi (kode, tipe, subtotal, diskon, total, bayar, kembali, catatan, user_id, tanggal) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO transaksi (kode, tipe, subtotal, diskon, total, bayar, kembali, metode_bayar, payment_ref, catatan, user_id, tanggal) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, t.getKode());
             ps.setString(2, t.getTipe().name());
@@ -46,13 +58,15 @@ public class TransaksiDao {
             ps.setBigDecimal(5, t.getTotal());
             ps.setBigDecimal(6, t.getBayar());
             ps.setBigDecimal(7, t.getKembali());
-            ps.setString(8, t.getCatatan());
+            ps.setString(8, t.getMetodeBayar() == null ? "TUNAI" : t.getMetodeBayar());
+            ps.setString(9, t.getPaymentRef());
+            ps.setString(10, t.getCatatan());
             if (t.getUserId() == null) {
-                ps.setNull(9, java.sql.Types.INTEGER);
+                ps.setNull(11, java.sql.Types.INTEGER);
             } else {
-                ps.setInt(9, t.getUserId());
+                ps.setInt(11, t.getUserId());
             }
-            ps.setTimestamp(10, Timestamp.valueOf(t.getTanggal() == null ? LocalDateTime.now() : t.getTanggal()));
+            ps.setTimestamp(12, Timestamp.valueOf(t.getTanggal() == null ? LocalDateTime.now() : t.getTanggal()));
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -94,9 +108,13 @@ public class TransaksiDao {
     }
 
     public Transaksi findById(int id) throws SQLException {
-        String sql = "SELECT t.id, t.kode, t.tipe, t.subtotal, t.diskon, t.total, t.bayar, t.kembali, t.catatan, "
-                + "t.user_id, u.nama_lengkap AS user_nama, t.tanggal "
-                + "FROM transaksi t LEFT JOIN users u ON u.id = t.user_id WHERE t.id = ?";
+        String sql = "SELECT t.id, t.kode, t.tipe, t.subtotal, t.diskon, t.total, t.bayar, t.kembali, t.metode_bayar, t.payment_ref, t.catatan, "
+                + "t.user_id, u.nama_lengkap AS user_nama, t.tanggal, t.status, t.void_alasan, t.void_at, t.void_by, "
+                + "uv.nama_lengkap AS void_user_nama "
+                + "FROM transaksi t "
+                + "LEFT JOIN users u ON u.id = t.user_id "
+                + "LEFT JOIN users uv ON uv.id = t.void_by "
+                + "WHERE t.id = ?";
         try (Connection conn = Db.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
@@ -139,9 +157,12 @@ public class TransaksiDao {
     }
 
     public List<Transaksi> findRange(LocalDate from, LocalDate to, int limit) throws SQLException {
-        String sql = "SELECT t.id, t.kode, t.tipe, t.subtotal, t.diskon, t.total, t.bayar, t.kembali, t.catatan, "
-                + "t.user_id, u.nama_lengkap AS user_nama, t.tanggal "
-                + "FROM transaksi t LEFT JOIN users u ON u.id = t.user_id "
+        String sql = "SELECT t.id, t.kode, t.tipe, t.subtotal, t.diskon, t.total, t.bayar, t.kembali, t.metode_bayar, t.payment_ref, t.catatan, "
+                + "t.user_id, u.nama_lengkap AS user_nama, t.tanggal, t.status, t.void_alasan, t.void_at, t.void_by, "
+                + "uv.nama_lengkap AS void_user_nama "
+                + "FROM transaksi t "
+                + "LEFT JOIN users u ON u.id = t.user_id "
+                + "LEFT JOIN users uv ON uv.id = t.void_by "
                 + "WHERE t.tanggal >= ? AND t.tanggal < ? ORDER BY t.tanggal DESC, t.id DESC LIMIT " + Math.max(1, limit);
         List<Transaksi> list = new ArrayList<>();
         try (Connection conn = Db.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -156,6 +177,54 @@ public class TransaksiDao {
         return list;
     }
 
+    public void voidTransaksi(int id, String alasan, Integer userId) throws SQLException {
+        try (Connection conn = Db.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                String sqlCheck = "SELECT status FROM transaksi WHERE id = ? FOR UPDATE";
+                try (PreparedStatement ps = conn.prepareStatement(sqlCheck)) {
+                    ps.setInt(1, id);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next()) {
+                            throw new SQLException("Transaksi tidak ditemukan.");
+                        }
+                        if ("VOID".equalsIgnoreCase(rs.getString("status"))) {
+                            throw new SQLException("Transaksi sudah pernah di-void sebelumnya.");
+                        }
+                    }
+                }
+
+                String sqlUpdate = "UPDATE transaksi SET status = 'VOID', void_alasan = ?, void_at = ?, void_by = ? WHERE id = ?";
+                try (PreparedStatement ps = conn.prepareStatement(sqlUpdate)) {
+                    ps.setString(1, alasan);
+                    ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+                    if (userId == null) {
+                        ps.setNull(3, java.sql.Types.INTEGER);
+                    } else {
+                        ps.setInt(3, userId);
+                    }
+                    ps.setInt(4, id);
+                    ps.executeUpdate();
+                }
+
+                List<TransaksiItem> items = findItems(conn, id);
+                BarangDao barangDao = new BarangDao();
+                for (TransaksiItem item : items) {
+                    if (item.getTipe() == TipeItem.BARANG && item.getBarangId() != null) {
+                        barangDao.tambahStok(conn, item.getBarangId(), item.getQty());
+                    }
+                }
+
+                conn.commit();
+            } catch (Exception ex) {
+                conn.rollback();
+                throw ex;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        }
+    }
+
     private Transaksi map(ResultSet rs) throws SQLException {
         Transaksi t = new Transaksi();
         t.setId(rs.getInt("id"));
@@ -166,12 +235,21 @@ public class TransaksiDao {
         t.setTotal(nvl(rs.getBigDecimal("total")));
         t.setBayar(nvl(rs.getBigDecimal("bayar")));
         t.setKembali(nvl(rs.getBigDecimal("kembali")));
+        t.setMetodeBayar(rs.getString("metode_bayar"));
+        t.setPaymentRef(rs.getString("payment_ref"));
         t.setCatatan(rs.getString("catatan"));
         int userId = rs.getInt("user_id");
         t.setUserId(rs.wasNull() ? null : userId);
         t.setUserName(rs.getString("user_nama"));
         Timestamp ts = rs.getTimestamp("tanggal");
         t.setTanggal(ts == null ? null : ts.toLocalDateTime());
+        t.setStatus(StatusTransaksi.fromDb(rs.getString("status")));
+        t.setVoidAlasan(rs.getString("void_alasan"));
+        Timestamp vts = rs.getTimestamp("void_at");
+        t.setVoidAt(vts == null ? null : vts.toLocalDateTime());
+        int vby = rs.getInt("void_by");
+        t.setVoidBy(rs.wasNull() ? null : vby);
+        t.setVoidByName(rs.getString("void_user_nama"));
         return t;
     }
 

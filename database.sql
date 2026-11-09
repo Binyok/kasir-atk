@@ -71,11 +71,19 @@ CREATE TABLE IF NOT EXISTS transaksi (
     total DECIMAL(14,2) NOT NULL DEFAULT 0,
     bayar DECIMAL(14,2) NOT NULL DEFAULT 0,
     kembali DECIMAL(14,2) NOT NULL DEFAULT 0,
+    metode_bayar VARCHAR(30) NOT NULL DEFAULT 'TUNAI',
+    payment_ref VARCHAR(150),
     catatan VARCHAR(255),
+    status ENUM('SUKSES','VOID') NOT NULL DEFAULT 'SUKSES',
+    void_alasan VARCHAR(255),
+    void_at DATETIME,
+    void_by INT,
     user_id INT,
     tanggal DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     KEY idx_transaksi_tanggal (tanggal),
-    CONSTRAINT fk_transaksi_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    KEY idx_transaksi_status (status),
+    CONSTRAINT fk_transaksi_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_transaksi_void_user FOREIGN KEY (void_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS transaksi_item (
@@ -121,8 +129,11 @@ CREATE TABLE IF NOT EXISTS pengaturan (
 
 INSERT INTO pengaturan (nama_kunci, nilai) VALUES
     ('nama_toko', 'GiriATK & Print'),
-    ('alamat', 'Jl. Contoh No. 1'),
-    ('telepon', '0812-0000-0000'),
+    ('alamat', 'Jl. Raya Giri No. 88, Banyuwangi'),
+    ('telepon', '0812-3456-7890'),
     ('footer_struk', 'Terima kasih telah berbelanja'),
-    ('stok_minimum_default', '5')
+    ('stok_minimum_default', '5'),
+    ('printer_nama', ''),
+    ('printer_lebar', '58mm'),
+    ('printer_auto', '1')
 ON DUPLICATE KEY UPDATE nilai = nilai;

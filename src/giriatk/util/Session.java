@@ -28,4 +28,8 @@ public final class Session {
     public static boolean isOwner() {
         return current != null && current.isOwner();
     }
+
+    public static Integer getUserId() {
+        return current == null ? null : current.getId();
+    }
 }

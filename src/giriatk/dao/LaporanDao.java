@@ -41,10 +41,10 @@ public class LaporanDao {
 
     public BarisLaporan rekap(LocalDate from, LocalDate to) throws SQLException {
         String sql = "SELECT "
-                + "(SELECT COUNT(*) FROM transaksi WHERE tanggal >= ? AND tanggal < ?) AS jml, "
-                + "(SELECT COALESCE(SUM(total),0) FROM transaksi WHERE tanggal >= ? AND tanggal < ?) AS omzet, "
+                + "(SELECT COUNT(*) FROM transaksi WHERE tanggal >= ? AND tanggal < ? AND status = 'SUKSES') AS jml, "
+                + "(SELECT COALESCE(SUM(total),0) FROM transaksi WHERE tanggal >= ? AND tanggal < ? AND status = 'SUKSES') AS omzet, "
                 + "(SELECT COALESCE(SUM(i.subtotal - i.harga_beli * i.qty),0) FROM transaksi_item i "
-                + " JOIN transaksi t ON t.id = i.transaksi_id WHERE t.tanggal >= ? AND t.tanggal < ?) AS laba";
+                + " JOIN transaksi t ON t.id = i.transaksi_id WHERE t.tanggal >= ? AND t.tanggal < ? AND t.status = 'SUKSES') AS laba";
         try (Connection conn = Db.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             Timestamp start = start(from);
             Timestamp end = start(to.plusDays(1));
@@ -65,11 +65,11 @@ public class LaporanDao {
     public List<BarisLaporan> omzetPerHari(LocalDate from, LocalDate to) throws SQLException {
         String sql = "SELECT d.hari, d.jml, d.omzet, COALESCE(l.laba,0) AS laba FROM "
                 + "(SELECT DATE(tanggal) AS hari, COUNT(*) AS jml, COALESCE(SUM(total),0) AS omzet FROM transaksi "
-                + " WHERE tanggal >= ? AND tanggal < ? GROUP BY DATE(tanggal)) d "
+                + " WHERE tanggal >= ? AND tanggal < ? AND status = 'SUKSES' GROUP BY DATE(tanggal)) d "
                 + "LEFT JOIN "
                 + "(SELECT DATE(t.tanggal) AS hari, COALESCE(SUM(i.subtotal - i.harga_beli * i.qty),0) AS laba "
                 + " FROM transaksi_item i JOIN transaksi t ON t.id = i.transaksi_id "
-                + " WHERE t.tanggal >= ? AND t.tanggal < ? GROUP BY DATE(t.tanggal)) l ON l.hari = d.hari "
+                + " WHERE t.tanggal >= ? AND t.tanggal < ? AND t.status = 'SUKSES' GROUP BY DATE(t.tanggal)) l ON l.hari = d.hari "
                 + "ORDER BY d.hari";
         List<BarisLaporan> list = new ArrayList<>();
         try (Connection conn = Db.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -109,7 +109,7 @@ public class LaporanDao {
         String sql = "SELECT i.nama_item, i.tipe, SUM(i.qty) AS qty, COALESCE(SUM(i.subtotal),0) AS omzet, "
                 + "COALESCE(SUM(i.subtotal - i.harga_beli * i.qty),0) AS laba "
                 + "FROM transaksi_item i JOIN transaksi t ON t.id = i.transaksi_id "
-                + "WHERE t.tanggal >= ? AND t.tanggal < ? "
+                + "WHERE t.tanggal >= ? AND t.tanggal < ? AND t.status = 'SUKSES' "
                 + "GROUP BY i.nama_item, i.tipe ORDER BY qty DESC LIMIT " + Math.max(1, limit);
         List<ItemTerlaris> list = new ArrayList<>();
         try (Connection conn = Db.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -127,14 +127,14 @@ public class LaporanDao {
 
     public List<BarisLaporan> rekapPerTipe(LocalDate from, LocalDate to) throws SQLException {
         return rekapKelompok(from, to,
-                "i.tipe", "WHERE t.tanggal >= ? AND t.tanggal < ? AND i.tipe IN ('BARANG','JASA')");
+                "i.tipe", "WHERE t.tanggal >= ? AND t.tanggal < ? AND t.status = 'SUKSES' AND i.tipe IN ('BARANG','JASA')");
     }
 
     public List<BarisLaporan> rekapPerKategori(LocalDate from, LocalDate to) throws SQLException {
         return rekapKelompok(from, to,
                 "COALESCE(k.nama, 'Tanpa Kategori')",
                 "LEFT JOIN barang b ON b.id = i.barang_id LEFT JOIN kategori k ON k.id = b.kategori_id "
-                + "WHERE t.tanggal >= ? AND t.tanggal < ? AND i.tipe = 'BARANG'");
+                + "WHERE t.tanggal >= ? AND t.tanggal < ? AND t.status = 'SUKSES' AND i.tipe = 'BARANG'");
     }
 
     private List<BarisLaporan> rekapKelompok(LocalDate from, LocalDate to, String groupExpr, String whereAndJoin)

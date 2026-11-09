@@ -15,12 +15,19 @@ public class Transaksi {
     private BigDecimal total = BigDecimal.ZERO;
     private BigDecimal bayar = BigDecimal.ZERO;
     private BigDecimal kembali = BigDecimal.ZERO;
+    private String metodeBayar = "TUNAI";
+    private String paymentRef;
     private String catatan;
     private Integer userId;
     private String userName;
     private LocalDateTime tanggal;
     private boolean buatAntrian = true;
     private String namaPelanggan;
+    private StatusTransaksi status = StatusTransaksi.SUKSES;
+    private String voidAlasan;
+    private LocalDateTime voidAt;
+    private Integer voidBy;
+    private String voidByName;
     private final List<TransaksiItem> items = new ArrayList<>();
 
     public int getId() {
@@ -95,6 +102,22 @@ public class Transaksi {
         this.catatan = catatan;
     }
 
+    public String getMetodeBayar() {
+        return metodeBayar;
+    }
+
+    public void setMetodeBayar(String metodeBayar) {
+        this.metodeBayar = metodeBayar == null ? "TUNAI" : metodeBayar;
+    }
+
+    public String getPaymentRef() {
+        return paymentRef;
+    }
+
+    public void setPaymentRef(String paymentRef) {
+        this.paymentRef = paymentRef;
+    }
+
     public Integer getUserId() {
         return userId;
     }
@@ -137,5 +160,45 @@ public class Transaksi {
 
     public void setNamaPelanggan(String namaPelanggan) {
         this.namaPelanggan = namaPelanggan;
+    }
+
+    public StatusTransaksi getStatus() {
+        return status;
+    }
+
+    public void setStatus(StatusTransaksi status) {
+        this.status = status;
+    }
+
+    public String getVoidAlasan() {
+        return voidAlasan;
+    }
+
+    public void setVoidAlasan(String voidAlasan) {
+        this.voidAlasan = voidAlasan;
+    }
+
+    public LocalDateTime getVoidAt() {
+        return voidAt;
+    }
+
+    public void setVoidAt(LocalDateTime voidAt) {
+        this.voidAt = voidAt;
+    }
+
+    public Integer getVoidBy() {
+        return voidBy;
+    }
+
+    public void setVoidBy(Integer voidBy) {
+        this.voidBy = voidBy;
+    }
+
+    public String getVoidByName() {
+        return voidByName;
+    }
+
+    public void setVoidByName(String voidByName) {
+        this.voidByName = voidByName;
     }
 }

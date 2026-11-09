@@ -4,8 +4,11 @@ import giriatk.dao.BarangDao;
 import giriatk.dao.KategoriDao;
 import giriatk.model.Barang;
 import giriatk.model.Kategori;
+import giriatk.service.RestockService;
+import giriatk.util.Dialogs;
 import giriatk.util.Fmt;
 import giriatk.util.ImageUtil;
+import giriatk.util.Session;
 import giriatk.util.Theme;
 import giriatk.util.UiKit;
 
@@ -13,8 +16,10 @@ import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
@@ -59,13 +64,22 @@ public class BarangDialog extends FormDialog {
     private String currentGambar;
 
     public BarangDialog(Window owner, Barang existing) {
-        super(owner, existing == null ? "Tambah Barang" : "Ubah Barang",
+        this(owner, existing, null);
+    }
+
+    public BarangDialog(Window owner, Barang existing, String kodeBarcodeBaru) {
+        super(owner, (existing == null || existing.getId() == 0) ? "Tambah Barang" : "Ubah Barang",
                 "Lengkapi data barang untuk penjualan dan pemantauan stok.");
         this.existing = existing;
 
         cmbSatuan.setEditable(true);
         styleCombo(cmbSatuan);
         styleCombo(cmbKategori);
+
+        txtKode.addActionListener(e -> {
+            cekDanIsiOtomatisByKode();
+            txtNama.requestFocusInWindow();
+        });
 
         cmbKategori.addItem(TANPA_KATEGORI);
         try {
@@ -77,11 +91,15 @@ public class BarangDialog extends FormDialog {
             error("Gagal memuat kategori: " + ex.getMessage());
         }
 
-        if (existing == null) {
-            try {
-                txtKode.setText(dao.kodeOtomatis());
-            } catch (SQLException ex) {
-                txtKode.setText("BRG0001");
+        if (existing == null || existing.getId() == 0) {
+            if (kodeBarcodeBaru != null && !kodeBarcodeBaru.isBlank()) {
+                txtKode.setText(kodeBarcodeBaru.trim());
+            } else {
+                try {
+                    txtKode.setText(dao.kodeOtomatis());
+                } catch (SQLException ex) {
+                    txtKode.setText("BRG0001");
+                }
             }
             txtStok.setText("0");
             txtStokMin.setText("0");
@@ -112,7 +130,24 @@ public class BarangDialog extends FormDialog {
         addField("Satuan", fieldWidth(cmbSatuan, 340));
         addField("Harga beli", fieldWidth(txtHargaBeli, 340));
         addField("Harga jual", fieldWidth(txtHargaJual, 340));
-        addField("Stok saat ini", fieldWidth(txtStok, 340));
+
+        JComponent stokComponent;
+        if (existing != null && existing.getId() != 0) {
+            txtStok.setEditable(false);
+            JPanel stokPanel = new JPanel(new BorderLayout(8, 0));
+            stokPanel.setOpaque(false);
+            stokPanel.setPreferredSize(new Dimension(340, 38));
+            stokPanel.add(txtStok, BorderLayout.CENTER);
+
+            UiKit.SoftButton btnKoreksi = new UiKit.SoftButton("Koreksi / Rusak", UiKit.Variant.GHOST);
+            btnKoreksi.setFont(Theme.text(Font.PLAIN, 11));
+            btnKoreksi.addActionListener(e -> bukaDialogKoreksiStok());
+            stokPanel.add(btnKoreksi, BorderLayout.EAST);
+            stokComponent = stokPanel;
+        } else {
+            stokComponent = fieldWidth(txtStok, 340);
+        }
+        addField("Stok saat ini", stokComponent);
         addField("Stok minimum", fieldWidth(txtStokMin, 340));
         addField("Gambar produk", buildGambarPanel());
         addFullWidth(chkAktif);
@@ -196,6 +231,39 @@ public class BarangDialog extends FormDialog {
         }
     }
 
+    private void bukaDialogKoreksiStok() {
+        if (existing == null || existing.getId() == 0) {
+            return;
+        }
+        JTextField jumlah = UiKit.textField("Contoh: -2 atau +5");
+        JTextField alasan = UiKit.textField("Contoh: barang rusak / selisih stok opname");
+        JPanel panel = new JPanel(new java.awt.GridLayout(0, 1, 0, 8));
+        panel.add(new JLabel("Stok saat ini: " + existing.getStok()));
+        panel.add(jumlah);
+        panel.add(alasan);
+        int result = JOptionPane.showConfirmDialog(this, panel, "Koreksi Stok", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result != JOptionPane.OK_OPTION) {
+            return;
+        }
+        Integer delta = Fmt.parseBulat(jumlah.getText());
+        String alasanText = alasan.getText().trim();
+        if (delta == null || delta == 0 || alasanText.isEmpty()) {
+            Dialogs.peringatan(this, "Jumlah koreksi harus berupa angka selain 0 dan alasan wajib diisi.");
+            return;
+        }
+        if (!Dialogs.konfirmasi(this, "Simpan koreksi stok " + (delta > 0 ? "+" : "") + delta + " untuk " + existing.getNama() + "?")) {
+            return;
+        }
+        try {
+            new RestockService().catatKoreksi(existing.getId(), delta, alasanText, Session.getUserId());
+            existing.setStok(existing.getStok() + delta);
+            txtStok.setText(String.valueOf(existing.getStok()));
+            Dialogs.info(this, "Koreksi stok berhasil disimpan.");
+        } catch (Exception ex) {
+            Dialogs.error(this, "Gagal menyimpan koreksi stok: " + ex.getMessage());
+        }
+    }
+
     @Override
     protected void simpan() {
         String kode = txtKode.getText().trim();
@@ -227,6 +295,9 @@ public class BarangDialog extends FormDialog {
         if (stokMin == null) {
             error("Stok minimum wajib diisi dengan angka.");
             return;
+        }
+        if (existing != null && existing.getId() != 0) {
+            stok = existing.getStok();
         }
         Object satuanItem = cmbSatuan.getEditor().getItem();
         String satuan = satuanItem == null ? "" : satuanItem.toString().trim();
@@ -264,7 +335,7 @@ public class BarangDialog extends FormDialog {
                 barang.setGambar(currentGambar);
             }
 
-            if (existing == null) {
+            if (existing == null || existing.getId() == 0) {
                 dao.insert(barang);
             } else {
                 dao.update(barang);
@@ -272,6 +343,32 @@ public class BarangDialog extends FormDialog {
             sukses();
         } catch (SQLException ex) {
             error("Gagal menyimpan barang: " + ex.getMessage());
+        }
+    }
+
+    private void cekDanIsiOtomatisByKode() {
+        if (existing != null) return;
+        String kode = txtKode.getText().trim();
+        if (kode.isEmpty()) return;
+        try {
+            Barang b = dao.findByKode(kode);
+            if (b != null) {
+                txtNama.setText(b.getNama());
+                txtMerk.setText(b.getMerk() != null ? b.getMerk() : "");
+                txtJenis.setText(b.getJenis() != null ? b.getJenis() : "");
+                txtWarna.setText(b.getWarna() != null ? b.getWarna() : "");
+                txtUkuran.setText(b.getUkuran() != null ? b.getUkuran() : "");
+                cmbSatuan.setSelectedItem(b.getSatuan());
+                txtHargaBeli.setText(Fmt.angka(b.getHargaBeli()));
+                txtHargaJual.setText(Fmt.angka(b.getHargaJual()));
+                txtStok.setText(String.valueOf(b.getStok()));
+                txtStokMin.setText(String.valueOf(b.getStokMinimum()));
+                chkAktif.setSelected(b.isAktif());
+                pilihKategori(b.getKategoriId());
+                currentGambar = b.getGambar();
+                updatePreview();
+            }
+        } catch (Exception ignored) {
         }
     }
 

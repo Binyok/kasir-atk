@@ -9,14 +9,11 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
-import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Path2D;
 import java.awt.geom.RoundRectangle2D;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -27,6 +24,8 @@ public class TrendChart extends JPanel {
 
     private List<BarisLaporan> data = List.of();
     private int hoverIndex = -1;
+    private int[] xs;
+    private int[] bars;
 
     public TrendChart() {
         setOpaque(false);
@@ -58,39 +57,16 @@ public class TrendChart extends JPanel {
         repaint();
     }
 
-    private int padLeft() {
-        return 64;
-    }
-
-    private int padRight() {
-        return 24;
-    }
-
-    private int padTop() {
-        return 28;
-    }
-
-    private int padBottom() {
-        return 32;
-    }
-
-    private int[] xs;
-    private double[] ys;
-
     private int cariIndex(int mouseX) {
-        if (xs == null || xs.length == 0) {
+        if (xs == null || bars == null) {
             return -1;
         }
-        int best = 0;
-        int bestDist = Integer.MAX_VALUE;
         for (int i = 0; i < xs.length; i++) {
-            int d = Math.abs(mouseX - xs[i]);
-            if (d < bestDist) {
-                bestDist = d;
-                best = i;
+            if (mouseX >= xs[i] - bars[i] / 2 && mouseX <= xs[i] + bars[i] / 2) {
+                return i;
             }
         }
-        return bestDist <= 60 ? best : -1;
+        return -1;
     }
 
     @Override
@@ -102,10 +78,10 @@ public class TrendChart extends JPanel {
 
         int w = getWidth();
         int h = getHeight();
-        int left = padLeft();
-        int right = w - padRight();
-        int top = padTop();
-        int bottom = h - padBottom();
+        int left = 14;
+        int right = w - 14;
+        int top = 26;
+        int bottom = h - 34;
 
         if (data.isEmpty()) {
             g2.setColor(Theme.MUTED);
@@ -124,149 +100,114 @@ public class TrendChart extends JPanel {
         if (max <= 0) {
             max = 1;
         }
-        max = niceCeil(max);
 
-        // Grid + Y-Axis Labels
-        g2.setFont(Theme.mono(Font.PLAIN, 10));
-        int garis = 4;
-        for (int i = 0; i <= garis; i++) {
-            int y = bottom - (int) Math.round((bottom - top) * (i / (double) garis));
+        boolean kosong = true;
+        for (BarisLaporan b : data) {
+            if (b.getOmzet().doubleValue() > 0) {
+                kosong = false;
+                break;
+            }
+        }
+
+        g2.setStroke(new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{3, 4}, 0));
+        for (int i = 1; i <= 3; i++) {
+            int y = bottom - (int) Math.round((bottom - top) * (i / 4.0));
             g2.setColor(Theme.BORDER);
             g2.drawLine(left, y, right, y);
-            
-            g2.setColor(Theme.FAINT);
-            String label = ringkas(max * i / garis);
-            FontMetrics fm = g2.getFontMetrics();
-            g2.drawString(label, left - 10 - fm.stringWidth(label), y + 4);
         }
+
+        g2.setColor(Theme.INK);
+        g2.setStroke(new BasicStroke(2f));
+        g2.drawLine(left, bottom, right, bottom);
 
         int n = data.size();
+        double slot = (right - left) / (double) n;
+        int bw = (int) Math.max(6, Math.min(44, slot * 0.56));
         xs = new int[n];
-        ys = new double[n];
+        bars = new int[n];
+        boolean rapat = n > 14;
+
+        g2.setFont(Theme.mono(Font.BOLD, 10));
         for (int i = 0; i < n; i++) {
-            xs[i] = n == 1 ? (left + right) / 2
-                    : left + (int) Math.round((right - left) * (i / (double) (n - 1)));
-            double ratio = data.get(i).getOmzet().doubleValue() / max;
-            ys[i] = bottom - ratio * (bottom - top);
-        }
+            BarisLaporan b = data.get(i);
+            xs[i] = (int) Math.round(left + slot * i + slot / 2);
+            bars[i] = bw;
+            double ratio = b.getOmzet().doubleValue() / max;
+            int bh = (int) Math.max(kosong ? 0 : 3, Math.round((bottom - top) * ratio));
+            int x = xs[i] - bw / 2;
+            int y = bottom - bh;
+            boolean today = i == n - 1;
+            boolean hover = i == hoverIndex;
 
-        // Area Fill + Smooth Curve
-        Path2D line = new Path2D.Double();
-        line.moveTo(xs[0], ys[0]);
-        for (int i = 1; i < n; i++) {
-            double x0 = xs[i - 1];
-            double y0 = ys[i - 1];
-            double x1 = xs[i];
-            double y1 = ys[i];
-            double cx = (x1 - x0) / 3.0;
-            line.curveTo(x0 + cx, y0, x1 - cx, y1, x1, y1);
-        }
+            if (!kosong) {
+                Color fill = hover || today ? Theme.ACCENT : Theme.INK;
+                g2.setColor(fill);
+                g2.fillRect(x, y, bw, bh);
 
-        Path2D area = (Path2D) line.clone();
-        area.lineTo(xs[n - 1], bottom);
-        area.lineTo(xs[0], bottom);
-        area.closePath();
-
-        // Dark Amber Gradient Glow
-        g2.setPaint(new GradientPaint(0, top, Theme.alpha(Theme.ACCENT, 90), 0, bottom, Theme.alpha(Theme.ACCENT, 0)));
-        g2.fill(area);
-
-        // Main Curve Line
-        g2.setColor(Theme.ACCENT);
-        g2.setStroke(new BasicStroke(2.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        g2.draw(line);
-
-        // X-Axis Date Labels
-        g2.setFont(Theme.mono(Font.PLAIN, 10));
-        boolean banyak = n > 12;
-        for (int i = 0; i < n; i++) {
-            if (banyak && i % 2 != 0) {
-                continue;
+                if (!rapat || hover || today) {
+                    String val = ringkas(b.getOmzet().doubleValue());
+                    g2.setColor(today ? Theme.ACCENT : Theme.INK);
+                    FontMetrics fm = g2.getFontMetrics();
+                    g2.drawString(val, xs[i] - fm.stringWidth(val) / 2, y - 8);
+                }
             }
-            String label = labelTanggal(data.get(i).getLabel());
+
+            if (!rapat || i % 2 == 0 || today) {
+                String label = labelTanggal(b.getLabel());
+                g2.setFont(Theme.mono(today ? Font.BOLD : Font.PLAIN, 9));
+                g2.setColor(today ? Theme.ACCENT : Theme.MUTED);
+                FontMetrics fm = g2.getFontMetrics();
+                g2.drawString(label, xs[i] - fm.stringWidth(label) / 2, bottom + 18);
+                g2.setFont(Theme.mono(Font.BOLD, 10));
+            }
+        }
+
+        if (kosong) {
+            String msg = "Belum ada omzet tercatat pada periode ini.";
+            g2.setFont(Theme.text(Font.PLAIN, 12));
             g2.setColor(Theme.MUTED);
             FontMetrics fm = g2.getFontMetrics();
-            g2.drawString(label, xs[i] - fm.stringWidth(label) / 2, bottom + 18);
+            g2.drawString(msg, (w - fm.stringWidth(msg)) / 2, top + (bottom - top) / 2);
         }
 
-        // Data Dots
-        for (int i = 0; i < n; i++) {
-            boolean aktif = i == hoverIndex;
-            int r = aktif ? 6 : 3;
-            g2.setColor(Theme.SURFACE);
-            g2.fill(new Ellipse2D.Double(xs[i] - r - 2, ys[i] - r - 2, (r + 2) * 2, (r + 2) * 2));
-            g2.setColor(aktif ? Theme.INK : Theme.ACCENT);
-            g2.fill(new Ellipse2D.Double(xs[i] - r, ys[i] - r, r * 2, r * 2));
-            if (aktif) {
-                g2.setColor(Theme.ACCENT);
-                g2.setStroke(new BasicStroke(1.5f));
-                g2.draw(new Ellipse2D.Double(xs[i] - r - 2, ys[i] - r - 2, (r + 2) * 2, (r + 2) * 2));
-            }
-        }
-
-        // Hover Vertical Guide Line + Tooltip
-        if (hoverIndex >= 0 && hoverIndex < n) {
-            g2.setColor(Theme.alpha(Theme.INK, 60));
-            g2.setStroke(new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{4, 4}, 0));
-            g2.drawLine(xs[hoverIndex], top, xs[hoverIndex], bottom);
-            gambarTooltip(g2, hoverIndex, left, right, top);
+        if (!kosong && hoverIndex >= 0 && hoverIndex < n) {
+            gambarTooltip(g2, hoverIndex, left, right, top, bottom);
         }
 
         g2.dispose();
     }
 
-    private void gambarTooltip(Graphics2D g2, int index, int left, int right, int top) {
+    private void gambarTooltip(Graphics2D g2, int index, int left, int right, int top, int bottom) {
         BarisLaporan b = data.get(index);
         String nilai = Fmt.rupiah(b.getOmzet());
-        String tanggal = labelTanggal(b.getLabel()) + " • " + b.getJumlahTransaksi() + " Transaksi";
+        String tanggal = labelTanggal(b.getLabel()) + " · " + b.getJumlahTransaksi() + " transaksi";
 
-        g2.setFont(Theme.display(Font.BOLD, 13));
+        g2.setFont(Theme.mono(Font.BOLD, 12));
         FontMetrics fmNilai = g2.getFontMetrics();
-        g2.setFont(Theme.mono(Font.PLAIN, 10));
+        g2.setFont(Theme.mono(Font.PLAIN, 9));
         FontMetrics fmTanggal = g2.getFontMetrics();
 
-        int wBox = Math.max(fmNilai.stringWidth(nilai), fmTanggal.stringWidth(tanggal)) + 26;
-        int hBox = 50;
+        int wBox = Math.max(fmNilai.stringWidth(nilai), fmTanggal.stringWidth(tanggal)) + 24;
+        int hBox = 46;
         int x = xs[index] - wBox / 2;
         x = Math.max(left, Math.min(x, right - wBox));
-        int y = Math.max(top, (int) ys[index] - hBox - 16);
+        int y = Math.max(top, bottom - hBox - 30);
 
-        // Tooltip container
-        g2.setColor(new Color(0, 0, 0, 160));
-        g2.fill(new RoundRectangle2D.Double(x + 1, y + 2, wBox, hBox, 8, 8));
-        g2.setColor(Theme.SURFACE_ELEVATED);
-        g2.fill(new RoundRectangle2D.Double(x, y, wBox, hBox, 8, 8));
-        g2.setColor(Theme.BORDER_STRONG);
-        g2.draw(new RoundRectangle2D.Double(x, y, wBox, hBox, 8, 8));
+        g2.setColor(Theme.INK);
+        g2.fill(new RoundRectangle2D.Double(x + 3, y + 3, wBox, hBox, 0, 0));
+        g2.setColor(Theme.SURFACE);
+        g2.fill(new RoundRectangle2D.Double(x, y, wBox, hBox, 0, 0));
+        g2.setColor(Theme.INK);
+        g2.setStroke(new BasicStroke(1f));
+        g2.draw(new RoundRectangle2D.Double(x, y, wBox, hBox, 0, 0));
 
         g2.setColor(Theme.ACCENT);
-        g2.setFont(Theme.display(Font.BOLD, 13));
-        g2.drawString(nilai, x + 12, y + 20);
+        g2.setFont(Theme.mono(Font.BOLD, 12));
+        g2.drawString(nilai, x + 12, y + 18);
 
         g2.setColor(Theme.MUTED);
-        g2.setFont(Theme.mono(Font.PLAIN, 10));
-        g2.drawString(tanggal, x + 12, y + 38);
-    }
-
-    private double niceCeil(double value) {
-        if (value <= 0) {
-            return 1;
-        }
-        double mag = Math.pow(10, Math.floor(Math.log10(value)));
-        double norm = value / mag;
-        double step;
-        if (norm <= 1) {
-            step = 1;
-        } else if (norm <= 2) {
-            step = 2;
-        } else if (norm <= 2.5) {
-            step = 2.5;
-        } else if (norm <= 5) {
-            step = 5;
-        } else {
-            step = 10;
-        }
-        return step * mag;
+        g2.setFont(Theme.mono(Font.PLAIN, 9));
+        g2.drawString(tanggal, x + 12, y + 34);
     }
 
     private String ringkas(double value) {

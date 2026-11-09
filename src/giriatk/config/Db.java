@@ -66,18 +66,24 @@ public final class Db {
 
     private static void migrate(Connection conn) throws SQLException {
         var meta = conn.getMetaData();
-        checkAndAddColumn(conn, meta, "merk", "VARCHAR(100)");
-        checkAndAddColumn(conn, meta, "jenis", "VARCHAR(100)");
-        checkAndAddColumn(conn, meta, "warna", "VARCHAR(50)");
-        checkAndAddColumn(conn, meta, "ukuran", "VARCHAR(50)");
-        checkAndAddColumn(conn, meta, "gambar", "VARCHAR(255)");
+        checkAndAddColumn(conn, meta, "barang", "merk", "VARCHAR(100)");
+        checkAndAddColumn(conn, meta, "barang", "jenis", "VARCHAR(100)");
+        checkAndAddColumn(conn, meta, "barang", "warna", "VARCHAR(50)");
+        checkAndAddColumn(conn, meta, "barang", "ukuran", "VARCHAR(50)");
+        checkAndAddColumn(conn, meta, "barang", "gambar", "VARCHAR(255)");
+        checkAndAddColumn(conn, meta, "transaksi", "status", "ENUM('SUKSES','VOID') NOT NULL DEFAULT 'SUKSES'");
+        checkAndAddColumn(conn, meta, "transaksi", "void_alasan", "VARCHAR(255)");
+        checkAndAddColumn(conn, meta, "transaksi", "void_at", "DATETIME");
+        checkAndAddColumn(conn, meta, "transaksi", "void_by", "INT");
+        checkAndAddColumn(conn, meta, "transaksi", "metode_bayar", "VARCHAR(30) NOT NULL DEFAULT 'TUNAI'");
+        checkAndAddColumn(conn, meta, "transaksi", "payment_ref", "VARCHAR(150)");
     }
 
-    private static void checkAndAddColumn(Connection conn, java.sql.DatabaseMetaData meta, String colName, String colType) throws SQLException {
-        try (var rs = meta.getColumns(null, null, "barang", colName)) {
+    private static void checkAndAddColumn(Connection conn, java.sql.DatabaseMetaData meta, String tableName, String colName, String colType) throws SQLException {
+        try (var rs = meta.getColumns(null, null, tableName, colName)) {
             if (!rs.next()) {
                 try (var st = conn.createStatement()) {
-                    st.executeUpdate("ALTER TABLE barang ADD COLUMN `" + colName + "` " + colType);
+                    st.executeUpdate("ALTER TABLE `" + tableName + "` ADD COLUMN `" + colName + "` " + colType);
                 }
             }
         }

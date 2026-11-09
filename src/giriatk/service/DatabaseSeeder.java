@@ -30,21 +30,19 @@ public class DatabaseSeeder {
 
     private void seedUsers() throws SQLException {
         if (!userDao.findAll().isEmpty()) {
+            try (java.sql.Connection conn = giriatk.config.Db.getConnection();
+                 java.sql.PreparedStatement ps = conn.prepareStatement("UPDATE users SET aktif = 0 WHERE username = 'kasir'")) {
+                ps.executeUpdate();
+            } catch (Exception ignored) {
+            }
             return;
         }
         User owner = new User();
         owner.setUsername("owner");
-        owner.setNamaLengkap("Pemilik Toko");
+        owner.setNamaLengkap("Pengelola Toko");
         owner.setRole(Role.OWNER);
         owner.setAktif(true);
         userDao.insert(owner, "owner123");
-
-        User kasir = new User();
-        kasir.setUsername("kasir");
-        kasir.setNamaLengkap("Kasir");
-        kasir.setRole(Role.KASIR);
-        kasir.setAktif(true);
-        userDao.insert(kasir, "kasir123");
     }
 
     private void seedKategori() throws SQLException {

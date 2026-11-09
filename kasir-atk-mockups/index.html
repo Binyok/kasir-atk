@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>GiriATK &amp; Print — Galeri Mockup Desktop</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#FAF6EF; font-family:'Segoe UI', system-ui, sans-serif; color:#1C1917;
+    background-image:radial-gradient(rgba(28,25,23,.05) 1px, transparent 1.6px); background-size:13px 13px; }
+  .wrap { width:1240px; margin:0 auto; padding:52px 20px 64px; }
+  .kicker { font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:#C93A1E; font-weight:800; }
+  h1 { font-family:Georgia, 'Playfair Display', 'Times New Roman', serif; font-size:52px; font-weight:700; margin:12px 0 4px; }
+  h1 em { font-style:italic; color:#C93A1E; }
+  .rule { height:5px; background:#C93A1E; width:150px; margin:20px 0 14px; box-shadow:3px 3px 0 #1C1917; }
+  .sub { font-size:12px; text-transform:uppercase; letter-spacing:.16em; color:#78716C; font-weight:700; }
+  .sub .mono { font-family:'Cascadia Mono', Consolas, monospace; letter-spacing:.05em; }
+  .meta-row { display:flex; gap:26px; margin-top:22px; padding:14px 0; border-top:1.5px dashed #CBBFA0; border-bottom:1.5px dashed #CBBFA0; font-family:'Cascadia Mono', Consolas, monospace; font-size:12px; color:#44403C; }
+  .meta-row b { color:#1C1917; }
+  .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-top:30px; }
+  .card { background:#FFFDF8; border:1.5px solid #1C1917; box-shadow:5px 5px 0 rgba(28,25,23,.16); text-decoration:none; color:inherit; display:block; }
+  .card:hover { box-shadow:7px 7px 0 rgba(201,57,30,.35); transform:translate(-1px,-1px); }
+  .thumb { height:196px; position:relative; overflow:hidden; border-bottom:1.5px solid #1C1917; background:#FAF6EF; }
+  .thumb .tb { height:17px; background:#FFFDF8; border-bottom:1.5px solid #1C1917; display:flex; align-items:center; gap:4px; padding:0 7px; }
+  .thumb .tb i { width:7px; height:7px; background:#C93A1E; border:1px solid #1C1917; display:block; }
+  .thumb .tb s { width:26px; height:4px; background:#E0D7BF; display:block; margin-left:4px; }
+  .thumb .side { position:absolute; left:0; top:17px; bottom:0; width:44px; background:#1C1917; padding:9px 7px; }
+  .thumb .side i { display:block; height:7px; background:rgba(243,236,220,.35); margin-bottom:7px; }
+  .thumb .side i.on { background:#FAF6EF; box-shadow:-3px 0 0 #C93A1E; }
+  .thumb .body { position:absolute; left:44px; right:0; top:17px; bottom:0; padding:10px; }
+  .blk { background:#F3ECDC; border:1px solid #E0D7BF; }
+  .blk.ink { background:#1C1917; border-color:#1C1917; }
+  .blk.red { background:#C93A1E; border-color:#A82E15; }
+  .blk.line { background:transparent; border:none; border-top:2px solid #1C1917; height:0; }
+  .blk.dash { background:transparent; border:1px dashed #CBBFA0; }
+  .thumb .center-modal { position:absolute; left:50%; top:55%; transform:translate(-50%,-50%); width:46%; height:62%; background:#FFFDF8; border:2px solid #1C1917; box-shadow:4px 4px 0 rgba(0,0,0,.3); padding:7px; }
+  .thumb .dimmed { position:absolute; inset:17px 0 0 0; background:rgba(28,25,23,.45); }
+  .stamp-mini { position:absolute; right:8px; top:38%; transform:rotate(-8deg); color:#C93A1E; font-weight:800; font-size:11px; letter-spacing:.18em; border:2px solid #C93A1E; padding:2px 6px; background:rgba(255,253,248,.75); }
+  .card-b { padding:15px 17px 16px; }
+  .card-b .no { font-family:'Cascadia Mono', Consolas, monospace; font-size:11px; color:#C93A1E; font-weight:700; letter-spacing:.14em; }
+  .card-b h3 { font-family:Georgia, 'Times New Roman', serif; font-size:19.5px; margin:4px 0 4px; }
+  .card-b p { font-size:12.5px; color:#78716C; line-height:1.55; min-height:38px; }
+  .card-b .open { font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#1C1917; margin-top:8px; display:block; }
+  .card:hover .open { color:#C93A1E; }
+  .foot { margin-top:36px; border-top:2px solid #1C1917; padding-top:16px; display:flex; justify-content:space-between; font-family:'Cascadia Mono', Consolas, monospace; font-size:11.5px; color:#78716C; }
+  .swatches { display:flex; gap:8px; align-items:center; }
+  .swatches i { width:16px; height:16px; border:1.5px solid #1C1917; display:block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Mockup Antarmuka · Aplikasi Desktop Java Swing</div>
+  <h1>GiriATK <em>&amp; Print</em> — Mockup Desktop</h1>
+  <div class="rule"></div>
+  <div class="sub">Arah Desain: Kertas Cetak · 13 Layar · Jendela 1440 × 900</div>
+  <div class="meta-row">
+    <span>PALET: <b>#FAF6EF</b> KERTAS · <b>#1C1917</b> TINTA · <b>#C93A1E</b> MERAH STEMPEL</span>
+    <span>TIPOGRAFI: <b>GEORGIA</b> SERIF · SEGOE UI · <b>CASCADIA MONO</b></span>
+    <span class="swatches">CONTOH WARNA: <i style="background:#FAF6EF"></i><i style="background:#1C1917"></i><i style="background:#C93A1E"></i><i style="background:#2F7D4F"></i><i style="background:#2456A6"></i></span>
+  </div>
+
+  <div class="grid">
+    <a class="card" href="01-login.html">
+      <div class="thumb"><div class="tb"><i></i><s></s></div>
+        <div style="position:absolute;left:0;top:17px;bottom:0;width:52%;background:#1C1917;padding:14px;"><div style="font-family:Georgia,serif;color:#F3ECDC;font-size:21px;line-height:1.1;">GiriATK<br><span style="color:#C93A1E;font-style:italic;">&amp; Print</span></div><div style="width:34px;height:4px;background:#C93A1E;margin:10px 0;"></div><div style="height:5px;background:rgba(243,236,220,.3);width:80%;margin-bottom:5px;"></div><div style="height:5px;background:rgba(243,236,220,.3);width:60%;"></div></div>
+        <div style="position:absolute;right:9%;top:26%;width:27%;background:#FFFDF8;border:2px solid #1C1917;box-shadow:3px 3px 0 #1C1917;padding:9px;"><div style="height:6px;background:#1C1917;width:55%;margin-bottom:8px;"></div><div style="height:11px;border:1.5px solid #CBBFA0;margin-bottom:6px;"></div><div style="height:11px;border:1.5px solid #CBBFA0;margin-bottom:8px;"></div><div style="height:13px;background:#C93A1E;border:1.5px solid #1C1917;"></div></div>
+      </div>
+      <div class="card-b"><span class="no">LAYAR 01</span><h3>Masuk / Login</h3><p>Panel merek tinta dengan crop mark &amp; barcode, kartu formulir cetak, petunjuk akun demo.</p><span class="open">Buka Mockup →</span></div>
+    </a>
+
+    <a class="card" href="02-dashboard-owner.html">
+      <div class="thumb"><div class="tb"><i></i><s></s></div><div class="side"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="body"><div class="blk line" style="margin-bottom:8px;"></div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:7px;"><div class="blk" style="height:30px;border:1.5px solid #1C1917;"></div><div class="blk" style="height:30px;"></div><div class="blk" style="height:30px;"></div><div class="blk" style="height:30px;"></div></div>
+          <div style="display:grid;grid-template-columns:1.8fr 1fr;gap:5px;"><div class="blk" style="height:86px;padding:7px;"><div style="display:flex;align-items:flex-end;gap:4px;height:100%;"><i style="flex:1;background:#1C1917;height:55%;"></i><i style="flex:1;background:#1C1917;height:70%;"></i><i style="flex:1;background:#1C1917;height:45%;"></i><i style="flex:1;background:#1C1917;height:62%;"></i><i style="flex:1;background:#C93A1E;height:88%;"></i></div></div><div style="display:flex;flex-direction:column;gap:5px;"><div class="blk" style="flex:1;"></div><div class="blk" style="flex:1;"></div></div></div>
+        </div>
+      </div>
+      <div class="card-b"><span class="no">LAYAR 02</span><h3>Dashboard Owner</h3><p>Omzet &amp; laba hari ini, grafik tren 7 hari, stok menipis, dan antrian terbaru.</p><span class="open">Buka Mockup →</span></div>
+    </a>
+
+    <a class="card" href="03-dashboard-kasir.html">
+      <div class="thumb"><div class="tb"><i></i><s></s></div><div class="side"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+        <div class="body"><div class="blk line" style="margin-bottom:8px;"></div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:7px;"><div class="blk" style="height:26px;"></div><div class="blk" style="height:26px;"></div><div class="blk" style="height:26px;"></div><div class="blk" style="height:26px;"></div></div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:7px;"><div class="blk red" style="height:34px;"></div><div class="blk" style="height:34px;"></div><div class="blk" style="height:34px;"></div></div>
+          <div class="blk" style="height:64px;padding:6px;"><div style="height:5px;background:#E0D7BF;margin-bottom:5px;"></div><div style="height:5px;background:#E0D7BF;margin-bottom:5px;"></div><div style="height:5px;background:#E0D7BF;width:70%;"></div></div>
+        </div>
+      </div>
+      <div class="card-b"><span class="no">LAYAR 03</span><h3>Dashboard Kasir</h3><p>Tanpa angka laba — statistik shift, tiket aksi cepat, dan daftar antrian aktif.</p><span class="open">Buka Mockup →</span></div>
+    </a>
+
+    <a class="card" href="04-transaksi.html">
+      <div class="thumb"><div class="tb"><i></i><s></s></div><div class="side"><i></i><i class="on"></i><i></i><i></i><i></i></div>
+        <div class="body"><div class="blk line" style="margin-bottom:8px;"></div>
+          <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:7px;">
+            <div><div style="display:flex;gap:4px;margin-bottom:5px;"><div class="blk ink" style="width:44px;height:13px;"></div><div class="blk" style="flex:1;height:13px;"></div></div>
+            <div class="blk" style="height:96px;padding:6px;"><div style="height:6px;background:#E0D7BF;margin-bottom:6px;"></div><div style="height:6px;background:#E0D7BF;margin-bottom:6px;"></div><div style="height:6px;background:#E0D7BF;margin-bottom:6px;"></div><div style="height:6px;background:#E0D7BF;width:65%;"></div></div></div>
+            <div style="background:#FFFDF8;border:2px solid #1C1917;padding:7px;"><div style="height:6px;background:#1C1917;width:50%;margin:0 auto 7px;"></div><div style="border-top:1px dashed #CBBFA0;padding-top:5px;"><div style="height:5px;background:#E0D7BF;margin-bottom:5px;"></div><div style="height:5px;background:#E0D7BF;margin-bottom:7px;"></div></div><div class="blk red" style="height:15px;"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-b"><span class="no">LAYAR 04</span><h3>Transaksi / Kasir</h3><p>Katalog barang &amp; jasa di kiri, panel struk kertas dengan bayar &amp; kembalian di kanan.</p><span class="open">Buka Mockup →</span></div>
+    </a>
+
+    <a class="card" href="05-antrian.html">
+      <div class="thumb"><div class="tb"><i></i><s></s></div><div class="side"><i></i><i></i><i class="on"></i><i></i><i></i></div>
+        <div class="body"><div class="blk line" style="margin-bottom:8px;"></div>
+          <div style="display:flex;gap:4px;margin-bottom:6px;"><div class="blk ink" style="width:40px;height:12px;"></div><div class="blk" style="width:48px;height:12px;"></div><div class="blk" style="width:40px;height:12px;"></div><div class="blk" style="width:44px;height:12px;"></div></div>
+          <div class="blk" style="height:104px;padding:6px;"><div style="height:9px;background:#F3ECDC;border-bottom:1px solid #E0D7BF;margin:-6px -6px 6px;"></div><div style="height:6px;background:#E0D7BF;margin-bottom:7px;"></div><div style="height:6px;background:#E0D7BF;margin-bottom:7px;"></div><div style="height:6px;background:#E0D7BF;margin-bottom:7px;"></div><div style="height:6px;background:#E0D7BF;width:60%;"></div></div>
+        </div>
+      </div>
+      <div class="card-b"><span class="no">LAYAR 05</span><h3>Antrian Jasa</h3><p>Antrian print &amp; fotokopi dengan chip filter dan kontrol status per baris.</p><span class="open">Buka Mockup →</span></div>
+    </a>
+
+    <a class="card" href="06-stok.html">
+      <div class="thumb"><div class="tb"><i></i><s></s></div><div class="side"><i></i><i></i><i></i><i></i><i class="on"></i></div>
+        <div class="body"><div class="blk line" style="margin-bottom:8px;"></div>
+          <div style="display:flex;gap:4px;margin-bottom:6px;"><div class="blk" style="flex:1;height:13px;"></div><div class="blk red" style="width:52px;height:13px;"></div></div>
+          <div class="blk" style="height:104px;padding:6px;"><div style="height:9px;background:#F3ECDC;border-bottom:1px solid #E0D7BF;margin:-6px -6px 6px;"></div><div style="height:6px;background:#E0D7BF;margin-bottom:7px;"></div><div style="height:6px;background:#E0D7BF;margin-bottom:7px;"></div><div style="height:6px;background:#F9E0DC;margin-bottom:7px;"></div><div style="height:6px;background:#E0D7BF;width:70%;"></div></div>
+        </div>
+      </div>
+      <div class="card-b"><span class="no">LAYAR 06</span><h3>Stok &amp; Barang</h3><p>Tabel inventaris ATK dengan badge Aman / Menipis / Habis dan aksi restock.</p><span class="open">Buka Mockup →</span></div>
+    </a>
+
+    <a class="card" href="07-layanan.html">
+      <div class="thumb"><div class="tb"><i></i><s></s></div><div class="side"><i></i><i></i><i></i><i></i><i class="on"></i></div>
+        <div class="body"><div class="blk line" style="margin-bottom:8px;"></div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;">
+            <div class="blk" style="height:52px;padding:6px;"><div style="height:6px;background:#1C1917;width:70%;margin-bottom:5px;"></div><div style="height:8px;background:#C93A1E;width:45%;"></div></div>
+            <div class="blk" style="height:52px;padding:6px;"><div style="height:6px;background:#1C1917;width:60%;margin-bottom:5px;"></div><div style="height:8px;background:#C93A1E;width:50%;"></div></div>
+            <div class="blk" style="height:52px;padding:6px;"><div style="height:6px;background:#1C1917;width:66%;margin-bottom:5px;"></div><div style="height:8px;background:#C93A1E;width:40%;"></div></div>
+            <div class="blk" style="height:52px;padding:6px;"><div style="height:6px;background:#1C1917;width:58%;margin-bottom:5px;"></div><div style="height:8px;background:#C93A1E;width:48%;"></div></div>
+            <div class="blk" style="height:52px;padding:6px;"><div style="height:6px;background:#1C1917;width:64%;margin-bottom:5px;"></div><div style="height:8px;background:#C93A1E;width:44%;"></div></div>
+            <div class="blk dash" style="height:52px;display:flex;align-items:center;justify-content:center;color:#C93A1E;font-size:16px;">+</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-b"><span class="no">LAYAR 07</span><h3>Layanan Jasa</h3><p>Kartu daftar harga ala cetakan: print, fotokopi, laminating, jilid, dan scan.</p><span class="open">Buka Mockup →</span></div>
+    </a>
+
+    <a class="card" href="08-laporan.html">
+      <div class="thumb"><div class="tb"><i></i><s></s></div><div class="side"><i></i><i></i><i></i><i></i><i class="on"></i></div>
+        <div class="body"><div class="blk line" style="margin-bottom:8px;"></div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:7px;"><div class="blk" style="height:26px;border:1.5px solid #1C1917;"></div><div class="blk" style="height:26px;"></div><div class="blk" style="height:26px;"></div><div class="blk" style="height:26px;"></div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;"><div class="blk" style="height:56px;padding:6px;"><div style="height:5px;background:#E0D7BF;margin-bottom:5px;"></div><div style="height:5px;background:#E0D7BF;margin-bottom:5px;"></div><div style="height:5px;background:#E0D7BF;width:60%;"></div></div><div class="blk" style="height:56px;padding:7px;"><div style="height:6px;background:#C93A1E;width:46%;margin-bottom:5px;"></div><div style="height:6px;background:#1C1917;width:27%;margin-bottom:5px;"></div><div style="height:6px;background:#1C1917;width:15%;"></div></div></div>
+        </div>
+      </div>
+      <div class="card-b"><span class="no">LAYAR 08</span><h3>Laporan</h3><p>Omzet &amp; laba bersih periode, item terlaris, rekap kategori, dan ekspor Excel.</p><span class="open">Buka Mockup →</span></div>
+    </a>
+
+    <a class="card" href="09-riwayat.html">
+      <div class="thumb"><div class="tb"><i></i><s></s></div><div class="side"><i></i><i></i><i></i><i class="on"></i><i></i></div>
+        <div class="body"><div class="blk line" style="margin-bottom:8px;"></div>
+          <div class="blk" style="height:13px;margin-bottom:6px;"></div>
+          <div class="blk" style="height:100px;padding:6px;"><div style="height:9px;background:#F3ECDC;border-bottom:1px solid #E0D7BF;margin:-6px -6px 6px;"></div><div style="height:6px;background:#E0D7BF;margin-bottom:7px;"></div><div style="height:6px;background:#E0D7BF;margin-bottom:7px;"></div><div style="height:6px;background:#E0D7BF;margin-bottom:7px;"></div><div style="height:6px;background:#E0D7BF;width:55%;"></div></div>
+        </div>
+      </div>
+      <div class="card-b"><span class="no">LAYAR 09</span><h3>Riwayat Transaksi</h3><p>Semua struk hari ini dengan kode TRX mono, tipe, total, dan tombol detail.</p><span class="open">Buka Mockup →</span></div>
+    </a>
+
+    <a class="card" href="10-pengguna.html">
+      <div class="thumb"><div class="tb"><i></i><s></s></div><div class="side"><i></i><i></i><i></i><i></i><i class="on"></i></div>
+        <div class="body"><div class="blk line" style="margin-bottom:8px;"></div>
+          <div style="display:flex;justify-content:flex-end;margin-bottom:6px;"><div class="blk red" style="width:56px;height:13px;"></div></div>
+          <div class="blk" style="height:100px;padding:7px;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;"><i style="width:13px;height:13px;border-radius:50%;background:#C93A1E;display:block;"></i><div style="height:6px;background:#E0D7BF;flex:1;"></div></div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;"><i style="width:13px;height:13px;border-radius:50%;background:#1C1917;display:block;"></i><div style="height:6px;background:#E0D7BF;flex:1;"></div></div>
+            <div style="display:flex;align-items:center;gap:6px;"><i style="width:13px;height:13px;border-radius:50%;background:#1C1917;display:block;"></i><div style="height:6px;background:#E0D7BF;flex:.7;"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-b"><span class="no">LAYAR 10</span><h3>Pengguna</h3><p>Kelola akun owner &amp; kasir: role, status aktif, reset password, nonaktifkan.</p><span class="open">Buka Mockup →</span></div>
+    </a>
+
+    <a class="card" href="11-pengaturan.html">
+      <div class="thumb"><div class="tb"><i></i><s></s></div><div class="side"><i></i><i></i><i></i><i></i><i class="on"></i></div>
+        <div class="body"><div class="blk line" style="margin-bottom:8px;"></div>
+          <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:6px;">
+            <div style="background:#FFFDF8;border:1.5px solid #1C1917;padding:7px;"><div style="height:6px;background:#1C1917;width:45%;margin-bottom:7px;"></div><div style="height:10px;border:1.5px solid #CBBFA0;margin-bottom:5px;"></div><div style="height:10px;border:1.5px solid #CBBFA0;margin-bottom:5px;"></div><div style="height:10px;border:1.5px solid #CBBFA0;width:60%;"></div></div>
+            <div style="display:flex;flex-direction:column;gap:6px;"><div class="blk" style="height:52px;"></div><div class="blk" style="height:52px;"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-b"><span class="no">LAYAR 11</span><h3>Pengaturan</h3><p>Formulir profil toko bergaya cetak, backup database, dan pilihan tema tampilan.</p><span class="open">Buka Mockup →</span></div>
+    </a>
+
+    <a class="card" href="12-dialog-detail-transaksi.html">
+      <div class="thumb"><div class="tb"><i></i><s></s></div><div class="dimmed"></div>
+        <div class="center-modal"><div style="font-family:Georgia,serif;font-size:11px;text-align:center;font-weight:700;">GiriATK <span style="color:#C93A1E;">&amp; Print</span></div><div style="border-top:1px dashed #1C1917;margin:5px 0;"></div><div style="height:5px;background:#E0D7BF;margin-bottom:4px;"></div><div style="height:5px;background:#E0D7BF;margin-bottom:4px;"></div><div style="height:5px;background:#E0D7BF;width:65%;"></div><div style="border-top:1px dashed #CBBFA0;margin:5px 0;"></div><div style="height:6px;background:#1C1917;width:45%;margin-left:auto;"></div></div>
+        <span class="stamp-mini">LUNAS</span>
+      </div>
+      <div class="card-b"><span class="no">LAYAR 12 · DIALOG</span><h3>Detail Transaksi</h3><p>Struk di atas layar redup — lengkap dengan cap stempel LUNAS dan barcode.</p><span class="open">Buka Mockup →</span></div>
+    </a>
+
+    <a class="card" href="13-dialog-barang.html">
+      <div class="thumb"><div class="tb"><i></i><s></s></div><div class="dimmed"></div>
+        <div class="center-modal" style="width:56%;"><div style="height:7px;background:#1C1917;width:50%;margin-bottom:7px;"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;"><div style="height:11px;border:1.5px solid #CBBFA0;"></div><div style="height:11px;border:1.5px solid #CBBFA0;"></div><div style="height:11px;border:1.5px solid #C93A1E;grid-column:1/-1;"></div><div style="height:11px;border:1.5px solid #CBBFA0;"></div><div style="height:11px;border:1.5px solid #CBBFA0;"></div></div><div style="display:flex;justify-content:flex-end;gap:4px;margin-top:7px;"><div style="width:30px;height:11px;border:1.5px solid #1C1917;"></div><div style="width:38px;height:11px;background:#C93A1E;border:1.5px solid #1C1917;"></div></div></div>
+      </div>
+      <div class="card-b"><span class="no">LAYAR 13 · DIALOG</span><h3>Tambah Barang</h3><p>Formulir barang baru ala formulir cetak — kode, kategori, harga, stok minimum.</p><span class="open">Buka Mockup →</span></div>
+    </a>
+  </div>
+
+  <div class="foot">
+    <span>GIRIATK &amp; PRINT — SISTEM KASIR ATK + JASA CETAK</span>
+    <span>MOCKUP v1.0 · KERTAS CETAK · 23 OKT 2026</span>
+  </div>
+</div>
+</body>
+</html>

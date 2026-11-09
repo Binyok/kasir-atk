@@ -19,7 +19,8 @@ public final class Icons {
     public enum Name {
         DASHBOARD, CART, QUEUE, BOX, TAG, PRINTER, CHART, USERS, SETTINGS, LOGOUT,
         PLUS, MINUS, EDIT, TRASH, SEARCH, REFRESH, DOWNLOAD, WARNING, CHECK, CLOSE,
-        RECEIPT, MONEY, CLOCK, CALENDAR, EYE, KEY
+        RECEIPT, MONEY, CLOCK, CALENDAR, EYE, KEY, MINIMIZE, MAXIMIZE,
+        CHEVRON_LEFT, CHEVRON_RIGHT
     }
 
     public static void paint(Graphics2D target, Name name, int size, Color color) {
@@ -201,6 +202,20 @@ public final class Icons {
                 g.draw(new Line2D.Double(8, 3, 8, 6.5));
                 g.draw(new Line2D.Double(16, 3, 16, 6.5));
                 g.draw(new Rectangle2D.Double(7, 13, 3, 3));
+                break;
+            case MINIMIZE:
+                g.draw(new Line2D.Double(5, 12, 19, 12));
+                break;
+            case MAXIMIZE:
+                g.draw(new Rectangle2D.Double(5, 5, 14, 14));
+                break;
+            case CHEVRON_LEFT:
+                g.draw(new Line2D.Double(14.5, 6, 8.5, 12));
+                g.draw(new Line2D.Double(8.5, 12, 14.5, 18));
+                break;
+            case CHEVRON_RIGHT:
+                g.draw(new Line2D.Double(9.5, 6, 15.5, 12));
+                g.draw(new Line2D.Double(15.5, 12, 9.5, 18));
                 break;
             default:
                 break;

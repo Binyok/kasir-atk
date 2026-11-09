@@ -7,7 +7,9 @@ import giriatk.model.Layanan;
 import giriatk.model.TipeItem;
 import giriatk.model.Transaksi;
 import giriatk.model.TransaksiItem;
+import giriatk.service.ThermalPrintService;
 import giriatk.service.TransaksiService;
+import giriatk.view.dialog.MidtransPaymentDialog;
 import giriatk.util.Dialogs;
 import giriatk.util.Fmt;
 import giriatk.util.Icons;
@@ -21,6 +23,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -28,6 +31,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
@@ -44,6 +48,7 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.RenderingHints;
+import java.awt.Window;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.math.BigDecimal;
@@ -57,6 +62,7 @@ public class TransaksiPanel extends BasePanel {
     private final BarangDao barangDao = new BarangDao();
     private final LayananDao layananDao = new LayananDao();
     private final TransaksiService service = new TransaksiService();
+    private final ThermalPrintService printService = new ThermalPrintService();
 
     private final List<Katalog> katalogData = new ArrayList<>();
     private final List<TransaksiItem> keranjang = new ArrayList<>();
@@ -135,6 +141,7 @@ public class TransaksiPanel extends BasePanel {
         modeRow.add(tabJasa);
 
         txtCariKatalog.setPreferredSize(new Dimension(240, 38));
+        txtCariKatalog.addActionListener(e -> scanBarcodeAtauPilihFirstItem());
         txtCariKatalog.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) { reloadKatalog(); }
@@ -150,7 +157,7 @@ public class TransaksiPanel extends BasePanel {
         toolbar.add(txtCariKatalog, BorderLayout.EAST);
         card.add(toolbar, BorderLayout.NORTH);
 
-        tableKatalog.setRowHeight(48);
+        tableKatalog.setRowHeight(54);
         tableKatalog.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(javax.swing.JTable table, Object value, boolean isSelected,
@@ -162,10 +169,29 @@ public class TransaksiPanel extends BasePanel {
                 return this;
             }
         });
-        tableKatalog.getColumnModel().getColumn(0).setMinWidth(52);
-        tableKatalog.getColumnModel().getColumn(0).setMaxWidth(54);
-        tableKatalog.getColumnModel().getColumn(0).setPreferredWidth(52);
-        tableKatalog.getColumnModel().getColumn(1).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.LEFT, true));
+        tableKatalog.getColumnModel().getColumn(0).setMinWidth(44);
+        tableKatalog.getColumnModel().getColumn(0).setMaxWidth(46);
+        tableKatalog.getColumnModel().getColumn(0).setPreferredWidth(44);
+        int[] lebarKatalog = {44, 232, 62, 96, 52, 92};
+        for (int i = 0; i < lebarKatalog.length; i++) {
+            tableKatalog.getColumnModel().getColumn(i).setPreferredWidth(lebarKatalog[i]);
+        }
+        tableKatalog.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(javax.swing.JTable table, Object value, boolean isSelected,
+                    boolean hasFocus, int row, int column) {
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                String teks = String.valueOf(value);
+                int pisah = teks.indexOf(" · ");
+                String utama = pisah > 0 ? teks.substring(0, pisah) : teks;
+                String detail = pisah > 0 ? teks.substring(pisah + 3) : "";
+                utama = utama.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+                detail = detail.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+                setText("<html><b>" + utama + "</b>" + (detail.isBlank() ? "" : "<br><font color='#78716C' size='2'>" + detail + "</font>") + "</html>");
+                setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 6));
+                return this;
+            }
+        });
         tableKatalog.getColumnModel().getColumn(2).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.CENTER));
         tableKatalog.getColumnModel().getColumn(3).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.RIGHT));
         tableKatalog.getColumnModel().getColumn(4).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.CENTER));
@@ -178,9 +204,9 @@ public class TransaksiPanel extends BasePanel {
                 return cell;
             }
         });
-        tableKatalog.getColumnModel().getColumn(KOLOM_AKSI).setMinWidth(96);
-        tableKatalog.getColumnModel().getColumn(KOLOM_AKSI).setMaxWidth(100);
-        tableKatalog.getColumnModel().getColumn(KOLOM_AKSI).setPreferredWidth(96);
+        tableKatalog.getColumnModel().getColumn(KOLOM_AKSI).setMinWidth(88);
+        tableKatalog.getColumnModel().getColumn(KOLOM_AKSI).setMaxWidth(94);
+        tableKatalog.getColumnModel().getColumn(KOLOM_AKSI).setPreferredWidth(92);
 
         tableKatalog.setEmptyState("Katalog tidak ditemukan", "Coba kata kunci lain atau tambahkan item.");
         tableKatalog.addMouseListener(new MouseAdapter() {
@@ -363,8 +389,17 @@ public class TransaksiPanel extends BasePanel {
         panel.add(antrianRow);
         panel.add(Box.createVerticalStrut(14));
 
-        UiKit.SoftButton simpan = new UiKit.SoftButton("PROSES TRANSAKSI & CETAK", UiKit.Variant.PRIMARY);
-        simpan.setAlignmentX(Component.LEFT_ALIGNMENT);
+        UiKit.SoftButton bayarMidtrans = new UiKit.SoftButton("BAYAR VIA MIDTRANS (QRIS/GoPay)", UiKit.Variant.GHOST);
+        bayarMidtrans.setAlignmentX(Component.CENTER_ALIGNMENT);
+        bayarMidtrans.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        bayarMidtrans.setPreferredSize(new Dimension(0, 40));
+        bayarMidtrans.setFont(Theme.text(Font.BOLD, 12));
+        bayarMidtrans.addActionListener(e -> simpanTransaksiMidtrans());
+        panel.add(bayarMidtrans);
+        panel.add(Box.createVerticalStrut(6));
+
+        UiKit.SoftButton simpan = new UiKit.SoftButton("PROSES TRANSAKSI (TUNAI) & CETAK", UiKit.Variant.PRIMARY);
+        simpan.setAlignmentX(Component.CENTER_ALIGNMENT);
         simpan.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
         simpan.setPreferredSize(new Dimension(0, 46));
         simpan.setFont(Theme.text(Font.BOLD, 13));
@@ -384,9 +419,10 @@ public class TransaksiPanel extends BasePanel {
     private JPanel barisInfo(String label, JLabel value, int valSize, Color labelColor, Color valColor) {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setOpaque(false);
-        panel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.setPreferredSize(new Dimension(0, 22));
         panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
-        
+
         JLabel lbl = new JLabel(label);
         lbl.setFont(Theme.text(Font.BOLD, 12));
         lbl.setForeground(labelColor);
@@ -420,7 +456,7 @@ public class TransaksiPanel extends BasePanel {
 
         JPanel baris1 = new JPanel(new BorderLayout(8, 0));
         baris1.setOpaque(false);
-        baris1.setAlignmentX(Component.LEFT_ALIGNMENT);
+        baris1.setAlignmentX(Component.CENTER_ALIGNMENT);
         baris1.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
         baris1.add(nama, BorderLayout.CENTER);
         baris1.add(subtotal, BorderLayout.EAST);
@@ -453,7 +489,7 @@ public class TransaksiPanel extends BasePanel {
 
         JPanel baris2 = new JPanel(new BorderLayout(8, 0));
         baris2.setOpaque(false);
-        baris2.setAlignmentX(Component.LEFT_ALIGNMENT);
+        baris2.setAlignmentX(Component.CENTER_ALIGNMENT);
         baris2.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
         baris2.add(harga, BorderLayout.WEST);
         baris2.add(stepper, BorderLayout.EAST);
@@ -504,6 +540,39 @@ public class TransaksiPanel extends BasePanel {
             }
         } catch (Exception ex) {
             Dialogs.error(this, "Gagal memuat katalog: " + ex.getMessage());
+        }
+    }
+
+    private void scanBarcodeAtauPilihFirstItem() {
+        String input = txtCariKatalog.getText().trim();
+        if (input.isEmpty()) {
+            return;
+        }
+
+        if (modeBarang) {
+            try {
+                Barang b = barangDao.findByKode(input);
+                if (b != null && b.isAktif()) {
+                    Katalog k = new Katalog(TipeItem.BARANG, b.getId(), b.getNama(), b.getLabelLengkap(),
+                            b.getSatuan(), b.getHargaJual(), b.getStok(), b.getHargaBeli(), b.getGambar());
+                    tambahKeKeranjang(k);
+                    txtCariKatalog.setText("");
+                    return;
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        if (!katalogData.isEmpty()) {
+            for (Katalog k : katalogData) {
+                if (k.label().equalsIgnoreCase(input)) {
+                    tambahKeKeranjang(k);
+                    txtCariKatalog.setText("");
+                    return;
+                }
+            }
+            tambahKeKeranjang(katalogData.get(0));
+            txtCariKatalog.setText("");
         }
     }
 
@@ -689,6 +758,22 @@ public class TransaksiPanel extends BasePanel {
 
         try {
             Transaksi tersimpan = service.simpan(transaksi);
+
+            boolean autoPrint = false;
+            try {
+                String val = new giriatk.dao.PengaturanDao().get("printer_auto", "1");
+                autoPrint = "1".equals(val);
+            } catch (Exception ignored) {
+            }
+
+            if (autoPrint) {
+                try {
+                    printService.cetakStruk(tersimpan);
+                } catch (Exception printEx) {
+                    Dialogs.peringatan(this, "Transaksi tersimpan, tetapi gagal mencetak struk: " + printEx.getMessage());
+                }
+            }
+
             Dialogs.info(this, "Transaksi Berhasil Disimpan!\n\n"
                     + "Kode Nota: " + tersimpan.getKode() + "\n"
                     + "Total: " + Fmt.rupiah(tersimpan.getTotal()) + "\n"
@@ -701,6 +786,66 @@ public class TransaksiPanel extends BasePanel {
             reloadKatalog();
         } catch (Exception ex) {
             Dialogs.error(this, "Gagal menyimpan transaksi:\n" + ex.getMessage());
+        }
+    }
+
+    private void simpanTransaksiMidtrans() {
+        if (keranjang.isEmpty()) {
+            Dialogs.peringatan(this, "Keranjang masih kosong.");
+            return;
+        }
+
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        String tempKode = "TRX-M" + System.currentTimeMillis() % 100000;
+        String namaPlg = txtPelanggan.getText().trim().isEmpty() ? "Pelanggan Toko" : txtPelanggan.getText().trim();
+
+        MidtransPaymentDialog dlg = new MidtransPaymentDialog(owner, tempKode, total, namaPlg);
+        dlg.setVisible(true);
+
+        if (!dlg.isPaid()) {
+            Dialogs.peringatan(this, "Pembayaran Midtrans belum berhasil / dibatalkan.");
+            return;
+        }
+
+        Transaksi transaksi = new Transaksi();
+        transaksi.setUserId(Session.user() == null ? null : Session.user().getId());
+        transaksi.setDiskon(BigDecimal.ZERO);
+        transaksi.setBayar(total);
+        transaksi.setMetodeBayar("MIDTRANS (" + dlg.getPaymentType().toUpperCase() + ")");
+        transaksi.setPaymentRef(tempKode);
+        transaksi.setBuatAntrian(chkBuatAntrian.isVisible() && chkBuatAntrian.isSelected());
+        transaksi.setNamaPelanggan(txtPelanggan.getText().trim().isEmpty() ? null : txtPelanggan.getText().trim());
+        transaksi.getItems().addAll(keranjang);
+
+        try {
+            Transaksi tersimpan = service.simpan(transaksi);
+
+            boolean autoPrint = false;
+            try {
+                String val = new giriatk.dao.PengaturanDao().get("printer_auto", "1");
+                autoPrint = "1".equals(val);
+            } catch (Exception ignored) {
+            }
+
+            if (autoPrint) {
+                try {
+                    printService.cetakStruk(tersimpan);
+                } catch (Exception printEx) {
+                    Dialogs.peringatan(this, "Transaksi tersimpan, tetapi gagal mencetak struk: " + printEx.getMessage());
+                }
+            }
+
+            Dialogs.info(this, "Transaksi Midtrans Berhasil Disimpan!\n\n"
+                    + "Kode Nota: " + tersimpan.getKode() + "\n"
+                    + "Metode: " + tersimpan.getMetodeBayar() + "\n"
+                    + "Total: " + Fmt.rupiah(tersimpan.getTotal()));
+            keranjang.clear();
+            txtBayar.setText("");
+            txtPelanggan.setText("");
+            refreshKeranjang();
+            reloadKatalog();
+        } catch (Exception ex) {
+            Dialogs.error(this, "Gagal menyimpan transaksi Midtrans:\n" + ex.getMessage());
         }
     }
 

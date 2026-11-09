@@ -5,9 +5,10 @@ import giriatk.dao.TransaksiDao;
 import giriatk.model.BarisLaporan;
 import giriatk.model.ItemTerlaris;
 import giriatk.model.Transaksi;
-import giriatk.service.ExcelExporter;
+import giriatk.service.PdfExporter;
 import giriatk.util.Dialogs;
 import giriatk.util.Fmt;
+import giriatk.util.Icons;
 import giriatk.util.Theme;
 import giriatk.util.UiKit;
 import giriatk.view.component.ScrollablePanel;
@@ -77,28 +78,32 @@ public class LaporanPanel extends BasePanel {
         super(new BorderLayout());
 
         JPanel body = new ScrollablePanel();
-        body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
+        body.setLayout(new java.awt.GridBagLayout());
 
-        JPanel header = pageHeader("Laporan Keuangan & Penjualan", "Analisis performa omzet, estimasi laba, produk terlaris, dan ekspor ke Excel.");
-        header.setAlignmentX(Component.LEFT_ALIGNMENT);
-        header.setMaximumSize(new Dimension(Integer.MAX_VALUE, 65));
-        body.add(header);
+        java.awt.GridBagConstraints gc = new java.awt.GridBagConstraints();
+        gc.gridx = 0;
+        gc.weightx = 1;
+        gc.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gc.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        int[] row = {0};
+        java.util.function.BiConsumer<java.awt.Component, Integer> addRow = (comp, gap) -> {
+            gc.gridy = row[0]++;
+            gc.insets = new java.awt.Insets(0, 0, gap, 0);
+            body.add(comp, gc);
+        };
 
-        JPanel control = buildControl();
-        body.add(control);
-
-        body.add(buildStatRow());
-        body.add(Box.createVerticalStrut(14));
-
-        body.add(buildChartCard());
-        body.add(Box.createVerticalStrut(14));
+        addRow.accept(buildControl(), 18);
+        addRow.accept(buildStatRow(), 14);
+        addRow.accept(buildChartCard(), 14);
 
         JPanel tabs = buildTabs();
-        tabs.setAlignmentX(Component.LEFT_ALIGNMENT);
         tabs.setPreferredSize(new Dimension(0, 380));
         tabs.setMaximumSize(new Dimension(Integer.MAX_VALUE, 380));
-        body.add(tabs);
-        body.add(Box.createVerticalStrut(10));
+        addRow.accept(tabs, 10);
+
+        add(pageHeader("Laporan Keuangan & Penjualan",
+                "Analisis performa omzet, estimasi laba, produk terlaris, dan ekspor ke PDF."),
+                BorderLayout.NORTH);
 
         JScrollPane scroll = new JScrollPane(body);
         scroll.setBorder(null);
@@ -139,12 +144,10 @@ public class LaporanPanel extends BasePanel {
         addToggle(periodeRow, Periode.KUSTOM, "Kustom");
         togglePeriode.get(Periode.HARIAN).setActive(true);
 
-        UiKit.SoftButton prev = new UiKit.SoftButton("‹", UiKit.Variant.GHOST);
-        prev.setPreferredSize(new Dimension(36, 32));
+        UiKit.IconButton prev = new UiKit.IconButton(Icons.Name.CHEVRON_LEFT, Theme.INK, 14, true);
         prev.addActionListener(e -> geser(-1));
-        
-        UiKit.SoftButton next = new UiKit.SoftButton("›", UiKit.Variant.GHOST);
-        next.setPreferredSize(new Dimension(36, 32));
+
+        UiKit.IconButton next = new UiKit.IconButton(Icons.Name.CHEVRON_RIGHT, Theme.INK, 14, true);
         next.addActionListener(e -> geser(1));
 
         lblPeriode.setFont(Theme.mono(Font.BOLD, 13));
@@ -158,8 +161,8 @@ public class LaporanPanel extends BasePanel {
         nav.add(lblPeriode);
         nav.add(next);
 
-        UiKit.SoftButton ekspor = new UiKit.SoftButton("Ekspor Excel (.xlsx)", UiKit.Variant.PRIMARY);
-        ekspor.addActionListener(e -> eksporExcel());
+        UiKit.SoftButton ekspor = new UiKit.SoftButton("Ekspor Laporan PDF", UiKit.Variant.PRIMARY);
+        ekspor.addActionListener(e -> eksporPdf());
 
         JPanel kiri = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         kiri.setOpaque(false);
@@ -442,34 +445,41 @@ public class LaporanPanel extends BasePanel {
         }
     }
 
-    private void eksporExcel() {
+    private void eksporPdf() {
         JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Simpan Laporan Excel");
-        chooser.setSelectedFile(new java.io.File("laporan-" + from + "-" + to + ".xlsx"));
+        chooser.setDialogTitle("Simpan Laporan PDF");
+        chooser.setSelectedFile(new java.io.File("laporan-" + from + "-" + to + ".pdf"));
         if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
             return;
         }
         Path target = chooser.getSelectedFile().toPath();
         try {
-            ExcelExporter x = new ExcelExporter();
-            
-            // Sheet 1: Ringkasan
-            x.sheet("Ringkasan");
-            x.title("LAPORAN KEUANGAN & PENJUALAN", 4);
-            x.subtitle("Periode", Fmt.tanggal(from) + " s/d " + Fmt.tanggal(to));
-            x.subtitle("Dicetak", Fmt.tanggalWaktu(java.time.LocalDateTime.now()));
-            x.blank();
-            x.section("RINGKASAN TOTAL", 4);
-            x.header("Metrik", "Nilai");
-            x.row(ExcelExporter.txt("Total Omzet"), ExcelExporter.rp(Fmt.parseAngka(lblOmzet.getText())));
-            x.row(ExcelExporter.txt("Total Laba"), ExcelExporter.rp(Fmt.parseAngka(lblLaba.getText())));
-            x.row(ExcelExporter.txt("Jumlah Transaksi"), ExcelExporter.num(Fmt.parseAngka(lblTransaksi.getText())));
-            x.row(ExcelExporter.txt("Rata-rata Transaksi"), ExcelExporter.rp(Fmt.parseAngka(lblRata.getText())));
+            PdfExporter pdf = new PdfExporter();
+            pdf.setTitle("LAPORAN KEUANGAN & PENJUALAN - GIRI ATK");
+            pdf.setSubtitle("Tanggal Cetak: " + Fmt.tanggalWaktu(java.time.LocalDateTime.now()));
+            pdf.setPeriode(Fmt.tanggal(from) + " s/d " + Fmt.tanggal(to));
 
-            x.save(target);
-            Dialogs.info(this, "Laporan berhasil diekspor ke Excel:\n" + target.toAbsolutePath());
+            pdf.setColumns(new String[]{"Metrik / Kategori", "Keterangan", "Nilai"}, new float[]{0.45f, 0.25f, 0.30f});
+
+            pdf.section("--- RINGKASAN PERFORMA KEUANGAN ---");
+            pdf.row("Total Omzet Penjualan", "Bruto Nota Sukses", lblOmzet.getText());
+            pdf.row("Estimasi Laba Bersih", "Margin Bruto", lblLaba.getText());
+            pdf.row("Jumlah Transaksi", "Nota Diterbitkan", lblTransaksi.getText() + " transaksi");
+            pdf.row("Rata-rata Transaksi", "Per Belanja Pelanggan", lblRata.getText());
+
+            pdf.section("--- REKAP HARIAN PERIODE ---");
+            for (int i = 0; i < modelHarian.getRowCount(); i++) {
+                pdf.row(
+                    String.valueOf(modelHarian.getValueAt(i, 0)),
+                    modelHarian.getValueAt(i, 1) + " trx",
+                    "Omzet: " + modelHarian.getValueAt(i, 2)
+                );
+            }
+
+            pdf.save(target);
+            Dialogs.info(this, "Laporan PDF berhasil disimpan:\n" + target.toAbsolutePath());
         } catch (IOException ex) {
-            Dialogs.error(this, "Gagal mengekspor file Excel: " + ex.getMessage());
+            Dialogs.error(this, "Gagal mengekspor file PDF: " + ex.getMessage());
         }
     }
 }

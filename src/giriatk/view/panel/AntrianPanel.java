@@ -107,7 +107,6 @@ public class AntrianPanel extends BasePanel {
         filterBar.addTab("PROSES", "Sedang Diproses");
         filterBar.addTab("SELESAI", "Siap Diambil");
         filterBar.addTab("DIAMBIL", "Riwayat Diambil");
-        filterBar.addTab("SEMUA", "Semua Status");
         filterBar.setActive("AKTIF");
         filterBar.setOnChange(key -> {
             filter = key;
@@ -123,7 +122,7 @@ public class AntrianPanel extends BasePanel {
 
         JPanel toolbar = new JPanel(new BorderLayout());
         toolbar.setOpaque(false);
-        toolbar.add(filterBar, BorderLayout.WEST);
+        toolbar.add(filterBar, BorderLayout.CENTER);
         toolbar.add(kanan, BorderLayout.EAST);
 
         table.getColumnModel().getColumn(0).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.LEFT, true));

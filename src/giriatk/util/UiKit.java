@@ -3,6 +3,7 @@ package giriatk.util;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
@@ -36,16 +37,14 @@ public final class UiKit {
     }
 
     public static class SurfacePanel extends JPanel {
-        private final int arc;
         private final boolean shadow;
 
         public SurfacePanel(LayoutManager layout) {
-            this(layout, Theme.RADIUS_CARD, true);
+            this(layout, Theme.RADIUS_CARD, false);
         }
 
         public SurfacePanel(LayoutManager layout, int arc, boolean shadow) {
             super(layout);
-            this.arc = arc;
             this.shadow = shadow;
             setOpaque(false);
         }
@@ -54,24 +53,15 @@ public final class UiKit {
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            
-            // Outer double-bezel shadow/hairline
+            int off = shadow ? 4 : 0;
             if (shadow) {
-                g2.setColor(Theme.isDark() ? new Color(0, 0, 0, 80) : new Color(0, 0, 0, 15));
-                g2.fillRoundRect(1, 2, getWidth() - 2, getHeight() - 2, arc, arc);
+                g2.setColor(Theme.INK);
+                g2.fillRect(off, off, getWidth() - off, getHeight() - off);
             }
-            
-            // Surface fill
             g2.setColor(Theme.SURFACE);
-            g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, arc, arc);
-            
-            // Top inner highlight line (1px)
-            g2.setColor(Theme.isDark() ? new Color(255, 255, 255, 12) : new Color(255, 255, 255, 140));
-            g2.drawLine(arc / 2, 1, getWidth() - 1 - arc / 2, 1);
-            
-            // Outer border
-            g2.setColor(Theme.BORDER);
-            g2.drawRoundRect(0, 0, getWidth() - 2, getHeight() - 2, arc, arc);
+            g2.fillRect(0, 0, getWidth() - off, getHeight() - off);
+            g2.setColor(shadow ? Theme.INK : Theme.BORDER);
+            g2.drawRect(0, 0, getWidth() - off - 1, getHeight() - off - 1);
             g2.dispose();
             super.paintComponent(g);
         }
@@ -83,7 +73,7 @@ public final class UiKit {
         private final Variant variant;
 
         public SoftButton(String text, Variant variant) {
-            super(text);
+            super(text == null ? "" : text.toUpperCase());
             this.variant = variant;
             setContentAreaFilled(false);
             setBorderPainted(false);
@@ -91,8 +81,8 @@ public final class UiKit {
             setOpaque(false);
             setRolloverEnabled(true);
             setCursor(new Cursor(Cursor.HAND_CURSOR));
-            setFont(Theme.text(Font.BOLD, 12));
-            setBorder(new EmptyBorder(10, 18, 10, 18));
+            setFont(Theme.text(Font.BOLD, 11));
+            setBorder(new EmptyBorder(12, 20, 13, 20));
             setForeground(Theme.INK);
         }
 
@@ -100,72 +90,77 @@ public final class UiKit {
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            boolean roll = getModel().isRollover();
+            boolean roll = getModel().isRollover() && isEnabled();
             boolean press = getModel().isPressed() && isEnabled();
             int shift = press ? 1 : 0;
             int w = getWidth();
-            int h = getHeight() - shift;
+            int h = getHeight();
+            boolean hard = variant == Variant.PRIMARY;
+            int off = hard ? 3 : 0;
 
             Color bg;
             Color fg;
-            Color border = null;
+            Color border;
 
             switch (variant) {
                 case PRIMARY:
                     bg = press ? Theme.ACCENT_PRESSED : (roll ? Theme.ACCENT_HOVER : Theme.ACCENT);
-                    fg = Theme.isDark() ? new Color(0x0A0C10) : Color.WHITE;
+                    fg = Theme.SURFACE;
+                    border = Theme.INK;
                     break;
                 case INK:
-                    bg = press ? new Color(0x10141B) : (roll ? new Color(0x273142) : Theme.SURFACE_ELEVATED);
-                    fg = Theme.INK;
-                    border = Theme.BORDER_STRONG;
+                    bg = press ? Theme.INK : (roll ? Theme.INK_SOFT : Theme.INK);
+                    fg = Theme.CANVAS;
+                    border = Theme.INK;
                     break;
                 case GHOST:
-                    bg = roll ? Theme.SURFACE_HOVER : Theme.SURFACE_ELEVATED;
+                    bg = roll ? Theme.SURFACE_ELEVATED : Theme.SURFACE;
                     fg = Theme.INK;
-                    border = Theme.BORDER;
+                    border = Theme.INK;
                     break;
                 case DANGER:
-                    bg = roll ? Theme.DANGER_SOFT : Theme.SURFACE;
+                    bg = press ? Theme.DANGER_HOVER : (roll ? Theme.DANGER_SOFT : Theme.SURFACE);
                     fg = Theme.DANGER;
-                    border = Theme.alpha(Theme.DANGER, 120);
+                    border = Theme.DANGER;
                     break;
                 case SUBTLE:
                 default:
                     bg = roll ? Theme.SURFACE_HOVER : Theme.SURFACE_ELEVATED;
-                    fg = Theme.MUTED;
-                    border = Theme.BORDER;
+                    fg = Theme.INK_SOFT;
+                    border = Theme.BORDER_STRONG;
                     break;
             }
 
             if (!isEnabled()) {
-                bg = Theme.SURFACE;
+                bg = Theme.SURFACE_ELEVATED;
                 fg = Theme.FAINT;
                 border = Theme.BORDER;
             }
 
-            g2.setColor(bg);
-            g2.fillRoundRect(0, shift, w, h, Theme.RADIUS_CONTROL, Theme.RADIUS_CONTROL);
-            if (border != null) {
-                g2.setColor(border);
-                g2.drawRoundRect(0, shift, w - 1, h - 1, Theme.RADIUS_CONTROL, Theme.RADIUS_CONTROL);
+            if (hard && isEnabled()) {
+                g2.setColor(Theme.INK);
+                g2.fillRect(off, off, w - off, h - off);
             }
+            g2.setColor(bg);
+            g2.fillRect(shift, shift, w - off - shift, h - off - shift);
+            g2.setColor(border);
+            g2.drawRect(shift, shift, w - off - shift - 1, h - off - shift - 1);
             if (isFocusOwner()) {
                 g2.setColor(Theme.ACCENT);
-                g2.drawRoundRect(1, shift + 1, w - 3, h - 3, Theme.RADIUS_CONTROL, Theme.RADIUS_CONTROL);
+                g2.drawRect(shift + 2, shift + 2, w - off - shift - 5, h - off - shift - 5);
             }
             g2.dispose();
 
             setForeground(fg);
             Graphics gShift = g.create();
-            gShift.translate(0, shift);
+            gShift.translate(shift, shift);
             super.paintComponent(gShift);
             gShift.dispose();
         }
     }
 
     public static class IconButton extends JButton {
-        private final Icons.Name icon;
+        private Icons.Name icon;
         private final Color color;
         private final int iconSize;
         private final boolean boxed;
@@ -198,8 +193,16 @@ public final class UiKit {
                 case MINUS: return "Kurangi";
                 case TRASH: return "Hapus";
                 case EDIT: return "Ubah";
+                case CHEVRON_LEFT: return "Ciutkan panel";
+                case CHEVRON_RIGHT: return "Bentangkan panel";
                 default: return null;
             }
+        }
+
+        public void setIconName(Icons.Name icon) {
+            this.icon = icon;
+            setToolTipText(tooltip(icon));
+            repaint();
         }
 
         @Override
@@ -208,16 +211,16 @@ public final class UiKit {
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             boolean hover = (getModel().isRollover() || getModel().isPressed()) && isEnabled();
             if (boxed) {
-                g2.setColor(hover ? Theme.SURFACE_HOVER : Theme.SURFACE_ELEVATED);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), Theme.RADIUS_CONTROL, Theme.RADIUS_CONTROL);
-                g2.setColor(Theme.BORDER);
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, Theme.RADIUS_CONTROL, Theme.RADIUS_CONTROL);
+                g2.setColor(hover ? Theme.SURFACE_ELEVATED : Theme.SURFACE);
+                g2.fillRect(0, 0, getWidth(), getHeight());
+                g2.setColor(Theme.INK);
+                g2.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
             } else if (hover) {
                 g2.setColor(Theme.SURFACE_HOVER);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), Theme.RADIUS_CONTROL, Theme.RADIUS_CONTROL);
+                g2.fillRect(0, 0, getWidth(), getHeight());
             }
             g2.dispose();
-            
+
             Graphics2D gi = (Graphics2D) g.create();
             gi.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             gi.translate((getWidth() - iconSize) / 2, (getHeight() - iconSize) / 2);
@@ -238,8 +241,8 @@ public final class UiKit {
             setFocusPainted(false);
             setOpaque(false);
             setCursor(new Cursor(Cursor.HAND_CURSOR));
-            setFont(Theme.text(Font.BOLD, 12));
-            setBorder(new EmptyBorder(8, 16, 8, 16));
+            setFont(Theme.text(Font.BOLD, 11));
+            setBorder(new EmptyBorder(9, 16, 9, 16));
         }
 
         public void setActive(boolean active) {
@@ -259,125 +262,18 @@ public final class UiKit {
             int h = getHeight();
             if (active) {
                 g2.setColor(activeFill);
-                g2.fillRoundRect(0, 0, w, h, Theme.RADIUS_CONTROL, Theme.RADIUS_CONTROL);
+                g2.fillRect(0, 0, w, h);
+                g2.setColor(Theme.INK);
+                g2.drawRect(0, 0, w - 1, h - 1);
             } else {
-                g2.setColor(getModel().isRollover() ? Theme.SURFACE_HOVER : Theme.SURFACE_ELEVATED);
-                g2.fillRoundRect(0, 0, w, h, Theme.RADIUS_CONTROL, Theme.RADIUS_CONTROL);
-                g2.setColor(Theme.BORDER);
-                g2.drawRoundRect(0, 0, w - 1, h - 1, Theme.RADIUS_CONTROL, Theme.RADIUS_CONTROL);
-            }
-            g2.dispose();
-            setForeground(active ? new Color(0x0A0C10) : Theme.MUTED);
-            super.paintComponent(g);
-        }
-    }
-
-    public static class ThemeToggleSwitch extends javax.swing.JComponent {
-        private final java.awt.Window window;
-        private Runnable onToggle;
-
-        public ThemeToggleSwitch(java.awt.Window window) {
-            this.window = window;
-            setPreferredSize(new Dimension(58, 28));
-            setMaximumSize(new Dimension(58, 28));
-            setMinimumSize(new Dimension(58, 28));
-            setCursor(new Cursor(Cursor.HAND_CURSOR));
-            setToolTipText(Theme.isDark() ? "Beralih ke Mode Terang (Light)" : "Beralih ke Mode Gelap (Dark)");
-
-            addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    Theme.toggle(window);
-                    setToolTipText(Theme.isDark() ? "Beralih ke Mode Terang (Light)" : "Beralih ke Mode Gelap (Dark)");
-                    if (onToggle != null) {
-                        onToggle.run();
-                    }
-                    repaint();
-                }
-            });
-        }
-
-        public void setOnToggle(Runnable onToggle) {
-            this.onToggle = onToggle;
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-
-            int w = getWidth();
-            int h = getHeight();
-            boolean dark = Theme.isDark();
-
-            // Track Pill
-            g2.setColor(Theme.SURFACE_ELEVATED);
-            g2.fillRoundRect(0, 0, w, h, h, h);
-            g2.setColor(Theme.BORDER_STRONG);
-            g2.drawRoundRect(0, 0, w - 1, h - 1, h, h);
-
-            int pad = 3;
-            int knobSize = h - (pad * 2);
-
-            int sunX = pad + (knobSize / 2);
-            int sunY = h / 2;
-            int moonX = w - pad - (knobSize / 2);
-            int moonY = h / 2;
-
-            // Inactive icons
-            if (dark) {
-                g2.setColor(Theme.FAINT);
-                paintSunIcon(g2, sunX, sunY, 11);
-            } else {
-                g2.setColor(Theme.FAINT);
-                paintMoonIcon(g2, moonX, moonY, 11);
-            }
-
-            // Sliding Active Knob
-            int knobX = dark ? (w - knobSize - pad) : pad;
-            int knobY = pad;
-
-            g2.setColor(new Color(0, 0, 0, 50));
-            g2.fillOval(knobX + 1, knobY + 1, knobSize, knobSize);
-
-            if (dark) {
-                g2.setColor(Theme.ACCENT);
-                g2.fillOval(knobX, knobY, knobSize, knobSize);
-                g2.setColor(new Color(0x0A0C10));
-                paintMoonIcon(g2, knobX + (knobSize / 2), knobY + (knobSize / 2), 11);
-            } else {
-                g2.setColor(Color.WHITE);
-                g2.fillOval(knobX, knobY, knobSize, knobSize);
+                g2.setColor(getModel().isRollover() ? Theme.SURFACE_HOVER : Theme.SURFACE);
+                g2.fillRect(0, 0, w, h);
                 g2.setColor(Theme.BORDER_STRONG);
-                g2.drawOval(knobX, knobY, knobSize - 1, knobSize - 1);
-                g2.setColor(Theme.ACCENT);
-                paintSunIcon(g2, knobX + (knobSize / 2), knobY + (knobSize / 2), 11);
+                g2.drawRect(0, 0, w - 1, h - 1);
             }
-
             g2.dispose();
-        }
-
-        private void paintSunIcon(Graphics2D g2, int cx, int cy, int size) {
-            int r = size / 3;
-            g2.fillOval(cx - r, cy - r, r * 2, r * 2);
-            g2.setStroke(new BasicStroke(1.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-            int rayLen = size / 2;
-            for (int i = 0; i < 8; i++) {
-                double angle = i * Math.PI / 4.0;
-                int x1 = (int) Math.round(cx + Math.cos(angle) * (r + 1));
-                int y1 = (int) Math.round(cy + Math.sin(angle) * (r + 1));
-                int x2 = (int) Math.round(cx + Math.cos(angle) * rayLen);
-                int y2 = (int) Math.round(cy + Math.sin(angle) * rayLen);
-                g2.drawLine(x1, y1, x2, y2);
-            }
-        }
-
-        private void paintMoonIcon(Graphics2D g2, int cx, int cy, int size) {
-            int r = size / 2;
-            java.awt.geom.Area moon = new java.awt.geom.Area(new java.awt.geom.Ellipse2D.Double(cx - r, cy - r, r * 2, r * 2));
-            moon.subtract(new java.awt.geom.Area(new java.awt.geom.Ellipse2D.Double(cx - r + (r * 0.65), cy - r - (r * 0.3), r * 1.7, r * 1.7)));
-            g2.fill(moon);
+            setForeground(active ? Theme.SURFACE : Theme.MUTED);
+            super.paintComponent(g);
         }
     }
 
@@ -385,6 +281,7 @@ public final class UiKit {
         private final Icons.Name icon;
         private final boolean alignLeft;
         private boolean active;
+        private boolean rail;
 
         public NavItem(String text, Icons.Name icon) {
             this(text, icon, false);
@@ -394,14 +291,15 @@ public final class UiKit {
             super(text);
             this.icon = icon;
             this.alignLeft = alignLeft;
-            setHorizontalAlignment(alignLeft ? SwingConstants.LEFT : SwingConstants.CENTER);
+            setHorizontalAlignment(SwingConstants.LEFT);
             setContentAreaFilled(false);
             setBorderPainted(false);
             setFocusPainted(false);
             setOpaque(false);
             setCursor(new Cursor(Cursor.HAND_CURSOR));
             setFont(Theme.text(Font.PLAIN, 13));
-            setBorder(new EmptyBorder(0, 16, 0, 16));
+            setBorder(new EmptyBorder(0, 10, 0, 8));
+            setToolTipText(text);
             addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseEntered(MouseEvent e) {
@@ -424,10 +322,15 @@ public final class UiKit {
             return active;
         }
 
+        public void setRail(boolean rail) {
+            this.rail = rail;
+            repaint();
+        }
+
         @Override
         public Dimension getPreferredSize() {
             Dimension d = super.getPreferredSize();
-            return new Dimension(d.width + 26, 40);
+            return new Dimension(d.width + 20, 38);
         }
 
         @Override
@@ -436,30 +339,29 @@ public final class UiKit {
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             int w = getWidth();
             int h = getHeight();
-            
+
             if (active) {
-                // Active surface fill
-                g2.setColor(Theme.SURFACE_ELEVATED);
-                g2.fillRoundRect(0, 0, w, h, Theme.RADIUS_CONTROL, Theme.RADIUS_CONTROL);
-                g2.setColor(Theme.BORDER_STRONG);
-                g2.drawRoundRect(0, 0, w - 1, h - 1, Theme.RADIUS_CONTROL, Theme.RADIUS_CONTROL);
-                
-                // Left Amber indicator bar
+                g2.setColor(Theme.CANVAS);
+                g2.fillRect(0, 0, w, h);
                 g2.setColor(Theme.ACCENT);
-                g2.fillRoundRect(2, 6, 3, h - 12, 2, 2);
+                g2.fillRect(0, 0, 4, h);
             } else if (getModel().isRollover()) {
-                g2.setColor(Theme.SURFACE_HOVER);
-                g2.fillRoundRect(0, 0, w, h, Theme.RADIUS_CONTROL, Theme.RADIUS_CONTROL);
+                g2.setColor(new Color(250, 246, 239, 18));
+                g2.fillRect(0, 0, w, h);
             }
             g2.dispose();
 
-            Color fg = active ? Theme.ACCENT : (getModel().isRollover() ? Theme.INK : Theme.MUTED);
+            Color fg = active ? Theme.INK : Theme.SIDEBAR_TEXT;
             Font font = Theme.text(active ? Font.BOLD : Font.PLAIN, 13);
             FontMetrics fm = getFontMetrics(font);
             int iconSize = 17;
-            int gap = 10;
-            int contentW = iconSize + gap + fm.stringWidth(getText());
-            int startX = alignLeft ? 16 : Math.max(12, (w - contentW) / 2);
+            int gap = 11;
+            int textW = rail ? 0 : fm.stringWidth(getText());
+            int contentW = iconSize + (rail ? 0 : gap + textW);
+            int startX = rail || alignLeft ? (rail ? (w - iconSize) / 2 : 10) : Math.max(12, (w - contentW) / 2);
+            if (!rail && !alignLeft) {
+                startX = Math.max(12, (w - contentW) / 2);
+            }
             int iconY = (h - iconSize) / 2;
 
             Graphics2D gi = (Graphics2D) g.create();
@@ -467,20 +369,14 @@ public final class UiKit {
             Icons.paint(gi, icon, iconSize, fg);
             gi.dispose();
 
-            Graphics2D gt = (Graphics2D) g.create();
-            gt.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-            gt.setColor(fg);
-            gt.setFont(font);
-            int textY = (h - fm.getHeight()) / 2 + fm.getAscent();
-            gt.drawString(getText(), startX + iconSize + gap, textY);
-            gt.dispose();
-
-            if (isFocusOwner()) {
-                Graphics2D gf = (Graphics2D) g.create();
-                gf.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                gf.setColor(Theme.alpha(Theme.ACCENT, 120));
-                gf.drawRoundRect(1, 1, w - 3, h - 3, Theme.RADIUS_CONTROL, Theme.RADIUS_CONTROL);
-                gf.dispose();
+            if (!rail) {
+                Graphics2D gt = (Graphics2D) g.create();
+                gt.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                gt.setColor(fg);
+                gt.setFont(font);
+                int textY = (h - fm.getHeight()) / 2 + fm.getAscent();
+                gt.drawString(getText(), startX + iconSize + gap, textY);
+                gt.dispose();
             }
         }
     }
@@ -492,16 +388,16 @@ public final class UiKit {
 
         public AppTable(DefaultTableModel model) {
             super(model);
-            setRowHeight(48);
+            setRowHeight(46);
             setFillsViewportHeight(true);
             setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
             setShowVerticalLines(false);
             setShowHorizontalLines(true);
-            setGridColor(Theme.BORDER);
+            setGridColor(Theme.ROW_LINE);
             setIntercellSpacing(new Dimension(0, 1));
             setBorder(null);
             setBackground(Theme.SURFACE);
-            setSelectionBackground(Theme.SURFACE_MUTED);
+            setSelectionBackground(Theme.SURFACE_ELEVATED);
             setSelectionForeground(Theme.INK);
             setFont(Theme.text(Font.PLAIN, 13));
             getTableHeader().setReorderingAllowed(false);
@@ -516,6 +412,9 @@ public final class UiKit {
                         hoverRow = row;
                         repaint();
                     }
+                    setCursor(row >= 0
+                            ? new Cursor(Cursor.HAND_CURSOR)
+                            : Cursor.getDefaultCursor());
                 }
             });
             addMouseListener(new MouseAdapter() {
@@ -525,6 +424,7 @@ public final class UiKit {
                         hoverRow = -1;
                         repaint();
                     }
+                    setCursor(Cursor.getDefaultCursor());
                 }
             });
         }
@@ -537,10 +437,10 @@ public final class UiKit {
 
         private void styleHeader() {
             JTableHeader header = getTableHeader();
-            header.setFont(Theme.text(Font.BOLD, 11));
+            header.setFont(Theme.text(Font.BOLD, 10));
             header.setBackground(Theme.SURFACE_ELEVATED);
-            header.setForeground(Theme.FAINT);
-            header.setPreferredSize(new Dimension(100, 42));
+            header.setForeground(Theme.MUTED);
+            header.setPreferredSize(new Dimension(100, 40));
             header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Theme.BORDER));
             header.setDefaultRenderer(new DefaultTableCellRenderer() {
                 @Override
@@ -549,7 +449,7 @@ public final class UiKit {
                     JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                     label.setOpaque(true);
                     label.setBackground(Theme.SURFACE_ELEVATED);
-                    label.setForeground(Theme.FAINT);
+                    label.setForeground(Theme.MUTED);
                     label.setFont(Theme.text(Font.BOLD, 10));
                     label.setHorizontalAlignment(SwingConstants.LEFT);
                     label.setBorder(BorderFactory.createCompoundBorder(
@@ -568,8 +468,8 @@ public final class UiKit {
                 c.setBackground(row == hoverRow ? Theme.SURFACE_HOVER : Theme.SURFACE);
                 c.setForeground(Theme.INK);
             } else {
-                c.setBackground(Theme.SURFACE_MUTED);
-                c.setForeground(Theme.ACCENT);
+                c.setBackground(Theme.SURFACE_ELEVATED);
+                c.setForeground(Theme.INK);
             }
             return c;
         }
@@ -588,13 +488,13 @@ public final class UiKit {
                 g2.fillOval(cx - 24, cy - 64, 48, 48);
                 g2.setColor(Theme.BORDER_STRONG);
                 g2.drawOval(cx - 24, cy - 64, 48, 48);
-                
-                g2.setColor(Theme.FAINT);
+
+                g2.setColor(Theme.MUTED);
                 g2.setStroke(new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
                 g2.drawLine(cx - 8, cy - 42, cx + 8, cy - 42);
                 g2.drawLine(cx - 8, cy - 36, cx + 4, cy - 36);
 
-                g2.setFont(Theme.text(Font.BOLD, 14));
+                g2.setFont(Theme.display(Font.BOLD, 16));
                 g2.setColor(Theme.INK_SOFT);
                 FontMetrics fm = g2.getFontMetrics();
                 g2.drawString(emptyTitle, cx - fm.stringWidth(emptyTitle) / 2, cy - 2);
@@ -611,14 +511,20 @@ public final class UiKit {
     public static class PaddedRenderer extends DefaultTableCellRenderer {
         private final int alignment;
         private final boolean bold;
+        private final boolean mono;
 
         public PaddedRenderer(int alignment) {
             this(alignment, false);
         }
 
         public PaddedRenderer(int alignment, boolean bold) {
+            this(alignment, bold, false);
+        }
+
+        public PaddedRenderer(int alignment, boolean bold, boolean mono) {
             this.alignment = alignment;
             this.bold = bold;
+            this.mono = mono;
         }
 
         @Override
@@ -626,7 +532,8 @@ public final class UiKit {
                 boolean hasFocus, int row, int column) {
             JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             label.setHorizontalAlignment(alignment);
-            label.setFont(Theme.text(bold ? Font.BOLD : Font.PLAIN, 13));
+            label.setFont(mono ? Theme.mono(bold ? Font.BOLD : Font.PLAIN, 12)
+                    : Theme.text(bold ? Font.BOLD : Font.PLAIN, 13));
             label.setBorder(new EmptyBorder(0, 14, 0, 14));
             return label;
         }
@@ -638,7 +545,7 @@ public final class UiKit {
         public BadgeLabel() {
             setOpaque(false);
             setHorizontalAlignment(SwingConstants.CENTER);
-            setFont(Theme.text(Font.BOLD, 11));
+            setFont(Theme.text(Font.BOLD, 10));
         }
 
         public void setPill(Color pill) {
@@ -649,15 +556,15 @@ public final class UiKit {
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            int h = Math.min(getHeight() - 14, 24);
+            int h = 20;
             int textW = getFontMetrics(getFont()).stringWidth(getText());
-            int w = Math.min(getWidth() - 12, textW + 20);
+            int w = Math.min(getWidth() - 8, textW + 16);
             int x = (getWidth() - w) / 2;
             int y = (getHeight() - h) / 2;
             g2.setColor(pill);
-            g2.fillRoundRect(x, y, w, h, 6, 6);
-            g2.setColor(new Color(255, 255, 255, 15));
-            g2.drawRoundRect(x, y, w - 1, h - 1, 6, 6);
+            g2.fillRoundRect(x, y, w, h, 5, 5);
+            g2.setColor(Theme.mix(getForeground(), pill, 0.45f));
+            g2.drawRoundRect(x, y, w - 1, h - 1, 5, 5);
             g2.dispose();
             super.paintComponent(g);
         }
@@ -701,29 +608,29 @@ public final class UiKit {
     }
 
     public static JTextField textField(String placeholder) {
+        return textField(placeholder, false);
+    }
+
+    public static JTextField textField(String placeholder, boolean mono) {
         JTextField field = new JTextField();
         field.putClientProperty("JTextField.placeholderText", placeholder);
-        field.setFont(Theme.text(Font.PLAIN, 13));
-        field.setBackground(Theme.SURFACE_ELEVATED);
+        field.setFont(mono ? Theme.mono(Font.PLAIN, 13) : Theme.text(Font.PLAIN, 13));
+        field.setBackground(Theme.SURFACE);
         field.setForeground(Theme.INK);
         field.setCaretColor(Theme.ACCENT);
-        field.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Theme.BORDER),
-                new EmptyBorder(8, 12, 8, 12)));
-        field.setPreferredSize(new Dimension(0, 42));
+        field.setSelectionColor(Theme.ACCENT_SOFT);
+        field.setSelectedTextColor(Theme.INK);
+        field.setBorder(idleBorder());
+        field.setPreferredSize(new Dimension(0, 44));
         field.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
-                field.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(Theme.ACCENT),
-                        new EmptyBorder(8, 12, 8, 12)));
+                field.setBorder(focusBorder());
             }
 
             @Override
             public void focusLost(FocusEvent e) {
-                field.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(Theme.BORDER),
-                        new EmptyBorder(8, 12, 8, 12)));
+                field.setBorder(idleBorder());
             }
         });
         return field;
@@ -732,36 +639,45 @@ public final class UiKit {
     public static JPasswordField passwordField(String placeholder) {
         JPasswordField field = new JPasswordField();
         field.putClientProperty("JTextField.placeholderText", placeholder);
-        field.setFont(Theme.text(Font.PLAIN, 13));
-        field.setBackground(Theme.SURFACE_ELEVATED);
+        field.setFont(Theme.mono(Font.PLAIN, 13));
+        field.setBackground(Theme.SURFACE);
         field.setForeground(Theme.INK);
         field.setCaretColor(Theme.ACCENT);
-        field.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Theme.BORDER),
-                new EmptyBorder(8, 12, 8, 12)));
-        field.setPreferredSize(new Dimension(0, 42));
+        field.setSelectionColor(Theme.ACCENT_SOFT);
+        field.setSelectedTextColor(Theme.INK);
+        field.setEchoChar('\u2022');
+        field.setBorder(idleBorder());
+        field.setPreferredSize(new Dimension(0, 44));
         field.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
-                field.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(Theme.ACCENT),
-                        new EmptyBorder(8, 12, 8, 12)));
+                field.setBorder(focusBorder());
             }
 
             @Override
             public void focusLost(FocusEvent e) {
-                field.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(Theme.BORDER),
-                        new EmptyBorder(8, 12, 8, 12)));
+                field.setBorder(idleBorder());
             }
         });
         return field;
     }
 
+    private static javax.swing.border.Border idleBorder() {
+        return BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Theme.BORDER_STRONG),
+                new EmptyBorder(8, 11, 8, 11));
+    }
+
+    private static javax.swing.border.Border focusBorder() {
+        return BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Theme.ACCENT, 2),
+                new EmptyBorder(7, 10, 7, 10));
+    }
+
     public static JLabel sectionLabel(String text) {
         JLabel label = new JLabel(text);
-        label.setFont(Theme.text(Font.BOLD, 12));
-        label.setForeground(Theme.INK_SOFT);
+        label.setFont(Theme.text(Font.BOLD, 11));
+        label.setForeground(Theme.MUTED);
         return label;
     }
 
@@ -779,5 +695,11 @@ public final class UiKit {
         box.setForeground(Theme.INK_SOFT);
         box.setFocusPainted(false);
         return box;
+    }
+
+    public static void dashedBottom(JComponent component) {
+        component.setBorder(BorderFactory.createCompoundBorder(
+                component.getBorder(),
+                BorderFactory.createMatteBorder(0, 0, 1, 0, Theme.BORDER_STRONG)));
     }
 }

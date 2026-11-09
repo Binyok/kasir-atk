@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>GiriATK &amp; Print — Riwayat Transaksi</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#E7DCC3; font-family:'Segoe UI', system-ui, sans-serif; color:#1C1917; padding:28px 0 40px; }
+  .mono { font-family:'Cascadia Mono', 'JetBrains Mono', Consolas, monospace; }
+  .win { width:1440px; height:900px; margin:0 auto; background:#FAF6EF; border:2px solid #1C1917; box-shadow:10px 10px 0 rgba(28,25,23,.22); display:flex; flex-direction:column; overflow:hidden; }
+  .titlebar { height:46px; background:#FFFDF8; border-bottom:2px solid #1C1917; display:flex; align-items:center; justify-content:space-between; padding:0 16px; flex:none; }
+  .tb-left { display:flex; align-items:center; gap:10px; }
+  .glyph { width:13px; height:13px; background:#C93A1E; border:1.5px solid #1C1917; }
+  .tb-title { font-family:Georgia, 'Times New Roman', serif; font-size:15px; }
+  .tb-btns { display:flex; gap:18px; }
+  .app { flex:1; display:flex; min-height:0; }
+  aside { width:232px; flex:none; background:#1C1917; color:#F3ECDC; display:flex; flex-direction:column; padding:22px 14px 16px; }
+  .wordmark { font-family:Georgia, 'Times New Roman', serif; font-size:26px; line-height:1.05; padding:0 10px 4px; }
+  .wordmark em { font-style:italic; color:#C93A1E; }
+  .wm-sub { font-size:9.5px; letter-spacing:.3em; text-transform:uppercase; color:#A8A29E; padding:0 10px 20px; border-bottom:1px dashed rgba(243,236,220,.25); margin-bottom:16px; }
+  nav { display:flex; flex-direction:column; gap:3px; }
+  .nav-item { display:flex; align-items:center; gap:11px; padding:9px 10px; font-size:13.5px; color:#E9E2D0; text-decoration:none; border-left:4px solid transparent; }
+  .nav-item svg { flex:none; opacity:.85; }
+  .nav-item:hover { background:rgba(250,246,239,.07); }
+  .nav-item.active { background:#FAF6EF; color:#1C1917; font-weight:700; border-left:4px solid #C93A1E; }
+  .nav-badge { margin-left:auto; font-family:'Cascadia Mono', Consolas, monospace; font-size:10.5px; background:#C93A1E; color:#FFFDF8; padding:1px 6px; border-radius:8px; }
+  .side-spacer { flex:1; }
+  .user-chip { border-top:1px dashed rgba(243,236,220,.25); padding-top:14px; display:flex; align-items:center; gap:10px; }
+  .avatar { width:36px; height:36px; border-radius:50%; background:#C93A1E; color:#FFFDF8; display:flex; align-items:center; justify-content:center; font-family:Georgia, serif; font-weight:700; font-size:14px; border:1.5px solid #F3ECDC; flex:none; }
+  .user-chip .nm { font-size:13px; font-weight:600; line-height:1.25; }
+  .user-chip .rl { font-size:9.5px; letter-spacing:.2em; text-transform:uppercase; color:#A8A29E; }
+  .theme-note { margin-top:10px; font-size:10.5px; color:#78716C; display:flex; align-items:center; gap:7px; padding:0 2px; }
+  main { flex:1; padding:26px 30px; overflow:hidden; }
+  .topbar { display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid #1C1917; padding-bottom:14px; margin-bottom:18px; }
+  .topbar h1 { font-family:Georgia, 'Times New Roman', serif; font-size:30px; font-weight:700; }
+  .topbar .sub { font-size:11px; text-transform:uppercase; letter-spacing:.14em; color:#78716C; margin-top:3px; }
+  .datebox { font-family:'Cascadia Mono', Consolas, monospace; font-size:12.5px; background:#FFFDF8; border:1.5px solid #1C1917; padding:8px 12px; box-shadow:3px 3px 0 #1C1917; }
+  .toolbar { display:flex; gap:12px; margin-bottom:16px; }
+  .search { flex:1; display:flex; align-items:center; gap:9px; background:#FFFDF8; border:1.5px solid #CBBFA0; padding:0 13px; height:44px; }
+  .search input { border:none; outline:none; background:transparent; font-family:inherit; font-size:13.5px; width:100%; }
+  .sel { height:44px; display:flex; align-items:center; gap:10px; background:#FFFDF8; border:1.5px solid #CBBFA0; padding:0 13px; font-size:13px; font-weight:600; min-width:150px; justify-content:space-between; cursor:pointer; }
+  .panel { background:#FFFDF8; border:1px solid #E0D7BF; box-shadow:0 1px 2px rgba(28,25,23,.06); }
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.12em; color:#78716C; background:#F3ECDC; padding:10px 18px; border-bottom:1px solid #E0D7BF; }
+  td { padding:11px 18px; font-size:13.5px; border-bottom:1px solid #F0E8D2; vertical-align:middle; }
+  tr:last-child td { border-bottom:none; }
+  tbody tr:hover td { background:#FBF7EC; }
+  td.num, th.num { text-align:right; font-family:'Cascadia Mono', Consolas, monospace; }
+  .badge { font-size:10px; text-transform:uppercase; letter-spacing:.09em; font-weight:700; padding:3px 8px; border-radius:5px; border:1px solid; white-space:nowrap; }
+  .b-green { color:#2F7D4F; background:#E2EFE4; border-color:#B9D6BF; }
+  .b-blue { color:#2456A6; background:#E0E9F5; border-color:#B3C8E4; }
+  .b-neutral { color:#6B655C; background:#ECE7DB; border-color:#D4CBB6; }
+  .btn-detail { background:#FFFDF8; border:1.5px solid #1C1917; font-family:inherit; font-size:11.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:7px 14px; cursor:pointer; box-shadow:2px 2px 0 #1C1917; }
+  .btn-detail:hover { background:#1C1917; color:#FAF6EF; }
+  .btn-detail:active { transform:translate(1px,1px); box-shadow:1px 1px 0 #1C1917; }
+  .foot-note { margin-top:14px; font-size:12px; color:#78716C; display:flex; justify-content:space-between; }
+  .pager { display:flex; gap:6px; }
+  .pager span { font-family:'Cascadia Mono', Consolas, monospace; font-size:12px; border:1.5px solid #CBBFA0; background:#FFFDF8; padding:4px 10px; cursor:pointer; }
+  .pager span.on { background:#1C1917; color:#FAF6EF; border-color:#1C1917; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="titlebar">
+    <div class="tb-left"><span class="glyph"></span><span class="tb-title">GiriATK &amp; Print — Riwayat Transaksi</span></div>
+    <div class="tb-btns">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16"/></svg>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </div>
+  </div>
+  <div class="app">
+    <aside>
+      <div class="wordmark">GiriATK<br><em>&amp; Print</em></div>
+      <div class="wm-sub">Kasir · Stok · Cetak</div>
+      <nav>
+        <a class="nav-item" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="5"/><rect x="13" y="10" width="8" height="11"/><rect x="3" y="13" width="8" height="8"/></svg>Dashboard</a>
+        <a class="nav-item" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16l-1.5 9h-13L4 6Z"/><path d="M4 6L3 3H1.5"/><circle cx="9" cy="20" r="1.6"/><circle cx="17" cy="20" r="1.6"/></svg>Transaksi</a>
+        <a class="nav-item" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3l9 5-9 5-9-5 9-5Z"/><path d="M3 13l9 5 9-5"/></svg>Antrian Jasa<span class="nav-badge">6</span></a>
+        <a class="nav-item active" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3.5 2"/></svg>Riwayat Transaksi</a>
+        <a class="nav-item" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8l9-5 9 5v8l-9 5-9-5V8Z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg>Stok &amp; Barang</a>
+      </nav>
+      <div class="side-spacer"></div>
+      <div class="user-chip">
+        <div class="avatar">SW</div>
+        <div><div class="nm">Sari Wulandari</div><div class="rl">Kasir</div></div>
+      </div>
+      <div class="theme-note"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Tema: Kertas (Terang)</div>
+    </aside>
+    <main>
+      <div class="topbar">
+        <div><h1>Riwayat Transaksi</h1><div class="sub">Jumat, 23 Oktober 2026 · 47 Struk</div></div>
+        <div class="datebox">JUMAT, 23 OKT 2026 · 11.15</div>
+      </div>
+      <div class="toolbar">
+        <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#78716C" stroke-width="1.7"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg><input placeholder="Cari kode struk… (mis. TRX-20261023-0047)"></div>
+        <div class="sel">Semua Tipe <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></div>
+        <div class="sel">Semua Kasir <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></div>
+      </div>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Kode Struk</th><th style="width:90px;">Waktu</th><th>Kasir</th><th style="width:126px;">Tipe</th><th class="num">Item</th><th class="num">Total</th><th style="width:110px;">Aksi</th></tr></thead>
+          <tbody>
+            <tr><td class="mono" style="font-weight:700;">TRX-20261023-0047</td><td class="mono">11.12</td><td>Sari Wulandari</td><td><span class="badge b-neutral">Campuran</span></td><td class="num">6</td><td class="num" style="font-weight:700;">Rp 214.500</td><td><button class="btn-detail">Detail</button></td></tr>
+            <tr><td class="mono" style="font-weight:700;">TRX-20261023-0046</td><td class="mono">10.58</td><td>Sari Wulandari</td><td><span class="badge b-green">Barang</span></td><td class="num">3</td><td class="num" style="font-weight:700;">Rp 74.000</td><td><button class="btn-detail">Detail</button></td></tr>
+            <tr><td class="mono" style="font-weight:700;">TRX-20261023-0045</td><td class="mono">10.41</td><td>Sari Wulandari</td><td><span class="badge b-blue">Jasa</span></td><td class="num">1</td><td class="num" style="font-weight:700;">Rp 75.000</td><td><button class="btn-detail">Detail</button></td></tr>
+            <tr><td class="mono" style="font-weight:700;">TRX-20261023-0044</td><td class="mono">10.22</td><td>Giri Saputra</td><td><span class="badge b-green">Barang</span></td><td class="num">12</td><td class="num" style="font-weight:700;">Rp 486.000</td><td><button class="btn-detail">Detail</button></td></tr>
+            <tr><td class="mono" style="font-weight:700;">TRX-20261023-0043</td><td class="mono">09.57</td><td>Sari Wulandari</td><td><span class="badge b-neutral">Campuran</span></td><td class="num">4</td><td class="num" style="font-weight:700;">Rp 96.500</td><td><button class="btn-detail">Detail</button></td></tr>
+            <tr><td class="mono" style="font-weight:700;">TRX-20261023-0042</td><td class="mono">09.31</td><td>Sari Wulandari</td><td><span class="badge b-blue">Jasa</span></td><td class="num">2</td><td class="num" style="font-weight:700;">Rp 160.000</td><td><button class="btn-detail">Detail</button></td></tr>
+            <tr><td class="mono" style="font-weight:700;">TRX-20261023-0041</td><td class="mono">08.49</td><td>Sari Wulandari</td><td><span class="badge b-green">Barang</span></td><td class="num">5</td><td class="num" style="font-weight:700;">Rp 132.500</td><td><button class="btn-detail">Detail</button></td></tr>
+            <tr><td class="mono" style="font-weight:700;">TRX-20261023-0040</td><td class="mono">08.17</td><td>Giri Saputra</td><td><span class="badge b-green">Barang</span></td><td class="num">2</td><td class="num" style="font-weight:700;">Rp 104.000</td><td><button class="btn-detail">Detail</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="foot-note"><span>Menampilkan <b>8 dari 47</b> struk · Total halaman ini <b class="mono" style="color:#1C1917;">Rp 1.342.500</b></span><span class="pager"><span>←</span><span class="on">1</span><span>2</span><span>3</span><span>…</span><span>6</span><span>→</span></span></div>
+    </main>
+  </div>
+</div>
+</body>
+</html>

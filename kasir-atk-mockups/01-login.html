@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>GiriATK &amp; Print — Masuk</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#E7DCC3; font-family:'Segoe UI', system-ui, sans-serif; color:#1C1917; padding:28px 0 40px; }
+  .serif { font-family:Georgia, 'Playfair Display', 'Times New Roman', serif; }
+  .mono { font-family:'Cascadia Mono', 'JetBrains Mono', Consolas, monospace; }
+  .win { width:1440px; height:900px; margin:0 auto; background:#FAF6EF; border:2px solid #1C1917; box-shadow:10px 10px 0 rgba(28,25,23,.22); display:flex; flex-direction:column; overflow:hidden; }
+  /* title bar */
+  .titlebar { height:46px; background:#FFFDF8; border-bottom:2px solid #1C1917; display:flex; align-items:center; justify-content:space-between; padding:0 16px; flex:none; }
+  .tb-left { display:flex; align-items:center; gap:10px; }
+  .glyph { width:13px; height:13px; background:#C93A1E; border:1.5px solid #1C1917; }
+  .tb-title { font-family:Georgia, 'Times New Roman', serif; font-size:15px; letter-spacing:.01em; }
+  .tb-btns { display:flex; gap:18px; color:#1C1917; }
+  .tb-btns svg { display:block; }
+  /* body split */
+  .split { flex:1; display:flex; }
+  /* brand panel */
+  .brand { width:55%; background:#1C1917; color:#F3ECDC; position:relative; padding:56px 64px; display:flex; flex-direction:column;
+    background-image:radial-gradient(rgba(250,246,239,.13) 1.1px, transparent 1.7px); background-size:11px 11px; }
+  .crop { position:absolute; font-family:'Cascadia Mono', Consolas, monospace; font-size:20px; color:#C93A1E; line-height:1; }
+  .crop.tl { top:16px; left:18px; } .crop.tr { top:16px; right:18px; } .crop.bl { bottom:16px; left:18px; } .crop.br { bottom:16px; right:18px; }
+  .brand .kicker { font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:#C93A1E; font-weight:700; margin-bottom:22px; }
+  .brand h1 { font-family:Georgia, 'Playfair Display', serif; font-size:88px; line-height:.98; font-weight:700; letter-spacing:-.01em; }
+  .brand h1 em { font-style:italic; color:#C93A1E; }
+  .brand .rule { width:118px; height:5px; background:#C93A1E; margin:34px 0 26px; }
+  .brand .tag { font-size:19px; line-height:1.55; color:#E9E2D0; max-width:520px; }
+  .brand .tag b { color:#FAF6EF; }
+  .brand .spacer { flex:1; }
+  .telemetry { font-family:'Cascadia Mono', Consolas, monospace; font-size:12px; color:#A8A29E; line-height:2; border-top:1px dashed rgba(243,236,220,.3); padding-top:18px; }
+  .telemetry .ok { color:#7FB98E; }
+  .barcode { margin-top:16px; height:44px; width:300px;
+    background:repeating-linear-gradient(90deg,#F3ECDC 0 2px,transparent 2px 5px,#F3ECDC 5px 6px,transparent 6px 11px,#F3ECDC 11px 14px,transparent 14px 17px,#F3ECDC 17px 18px,transparent 18px 23px,#F3ECDC 23px 26px,transparent 26px 29px); opacity:.85; }
+  .barcode-cap { font-family:'Cascadia Mono', Consolas, monospace; font-size:10px; letter-spacing:.42em; color:#78716C; margin-top:6px; }
+  /* login side */
+  .login-side { flex:1; display:flex; align-items:center; justify-content:center; padding:40px;
+    background-image:radial-gradient(rgba(28,25,23,.05) 1px, transparent 1.6px); background-size:12px 12px; }
+  .form-card { width:430px; background:#FFFDF8; border:2px solid #1C1917; box-shadow:6px 6px 0 #1C1917; padding:40px 42px 34px; }
+  .form-card .no { font-family:'Cascadia Mono', Consolas, monospace; font-size:11px; color:#A8A29E; letter-spacing:.2em; display:flex; justify-content:space-between; border-bottom:1px dashed #CBBFA0; padding-bottom:12px; margin-bottom:24px; }
+  .form-card h2 { font-family:Georgia, 'Times New Roman', serif; font-size:31px; font-weight:700; margin-bottom:6px; }
+  .form-card .sub { font-size:13px; color:#78716C; margin-bottom:28px; }
+  label.lbl { display:block; font-size:11px; text-transform:uppercase; letter-spacing:.12em; font-weight:700; color:#44403C; margin:0 0 7px; }
+  .inp { width:100%; height:46px; background:#FFFDF8; border:1.5px solid #CBBFA0; padding:0 13px; font-size:14px; font-family:inherit; color:#1C1917; margin-bottom:19px; }
+  .inp:focus { outline:2px solid #C93A1E; outline-offset:1px; border-color:#C93A1E; }
+  .inp.mono-inp { font-family:'Cascadia Mono', Consolas, monospace; }
+  .pw-wrap { position:relative; }
+  .pw-wrap .eye { position:absolute; right:12px; top:13px; color:#78716C; }
+  .btn-red { display:block; width:100%; height:50px; background:#C93A1E; color:#FFFDF8; border:2px solid #1C1917; box-shadow:4px 4px 0 #1C1917; font-size:14px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; cursor:pointer; margin-top:6px; }
+  .btn-red:hover { background:#A82E15; }
+  .btn-red:active { transform:translate(2px,2px); box-shadow:2px 2px 0 #1C1917; }
+  .row-between { display:flex; justify-content:space-between; align-items:center; font-size:12.5px; color:#44403C; margin:2px 0 20px; }
+  .row-between a { color:#C93A1E; text-decoration:none; font-weight:600; }
+  .demo { margin-top:26px; border:1.5px dashed #C93A1E; background:#F9E3DC; padding:13px 15px; font-size:12.5px; line-height:1.7; color:#7A2413; }
+  .demo .t { font-size:10.5px; text-transform:uppercase; letter-spacing:.14em; font-weight:800; display:block; margin-bottom:2px; }
+  .demo .mono { font-size:12px; }
+  .foot { margin-top:20px; text-align:center; font-size:11.5px; color:#A8A29E; }
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="titlebar">
+    <div class="tb-left"><span class="glyph"></span><span class="tb-title">GiriATK &amp; Print — Masuk</span></div>
+    <div class="tb-btns">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16"/></svg>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </div>
+  </div>
+  <div class="split">
+    <div class="brand">
+      <span class="crop tl">+</span><span class="crop tr">+</span><span class="crop bl">+</span><span class="crop br">+</span>
+      <div class="kicker">Toko Alat Tulis · Jasa Cetak · Sejak 2016</div>
+      <h1>GiriATK<br><em>&amp; Print</em></h1>
+      <div class="rule"></div>
+      <p class="tag">Kasir &amp; manajemen toko ATK + jasa cetak — <b>print, fotokopi, laminating, dan jilid</b> — dalam satu terminal kerja.</p>
+      <div class="spacer"></div>
+      <div class="telemetry">
+        SISTEM&nbsp;&nbsp;: KASIR v2.4 — TERMINAL 01<br>
+        DATABASE : <span class="ok">TERHUBUNG</span> · MySQL / giriatk<br>
+        HARI INI : 23 OKT 2026 · SHIFT PAGI 07.00–15.00
+      </div>
+      <div class="barcode"></div>
+      <div class="barcode-cap">GIRI-ATK-2026</div>
+    </div>
+    <div class="login-side">
+      <div class="form-card">
+        <div class="no"><span>FORMULIR MASUK</span><span>NO. 01/A</span></div>
+        <h2>Masuk ke Terminal</h2>
+        <p class="sub">Gunakan akun yang diberikan pemilik toko.</p>
+        <label class="lbl" for="u">Username</label>
+        <input class="inp mono-inp" id="u" value="giri" autocomplete="off">
+        <label class="lbl" for="p">Password</label>
+        <div class="pw-wrap">
+          <input class="inp mono-inp" id="p" type="password" value="owner123" style="margin-bottom:0;">
+          <svg class="eye" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <div class="row-between"><span><input type="checkbox" checked style="accent-color:#C93A1E;"> Ingat terminal ini</span><a href="#">Lupa password?</a></div>
+        <button class="btn-red">Masuk</button>
+        <div class="demo">
+          <span class="t">Akun Demo</span>
+          Owner — <span class="mono">owner / owner123</span><br>
+          Kasir — <span class="mono">kasir / kasir123</span>
+        </div>
+        <div class="foot">© 2026 Giri ATK &amp; Print · Banyuwangi</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

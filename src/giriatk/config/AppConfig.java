@@ -10,6 +10,7 @@ import java.util.Properties;
 public final class AppConfig {
 
     private static final Properties PROPS = new Properties();
+    private static final Properties UI = new Properties();
 
     private static final String[] KEYS = {
         "db.host", "db.port", "db.name", "db.user", "db.password"
@@ -23,6 +24,7 @@ public final class AppConfig {
         PROPS.setProperty("db.password", "");
         loadFile();
         loadSystemOverrides();
+        loadUiFile();
     }
 
     private AppConfig() {
@@ -62,6 +64,47 @@ public final class AppConfig {
             return Integer.parseInt(get(key).trim());
         } catch (NumberFormatException e) {
             return fallback;
+        }
+    }
+
+    private static Path uiPath() {
+        Path dir = Paths.get("config");
+        if (Files.isDirectory(dir)) {
+            return dir.resolve("ui.properties");
+        }
+        return Paths.get("ui.properties");
+    }
+
+    private static void loadUiFile() {
+        Path path = uiPath();
+        if (!Files.isReadable(path)) {
+            return;
+        }
+        try (InputStream in = Files.newInputStream(path)) {
+            UI.load(in);
+        } catch (IOException ignored) {
+        }
+    }
+
+    public static boolean getUiBool(String key, boolean fallback) {
+        String value = UI.getProperty(key);
+        if (value == null) {
+            return fallback;
+        }
+        return Boolean.parseBoolean(value.trim());
+    }
+
+    public static void setUi(String key, String value) {
+        UI.setProperty(key, value);
+        Path path = uiPath();
+        try {
+            if (path.getParent() != null) {
+                Files.createDirectories(path.getParent());
+            }
+            try (java.io.OutputStream out = Files.newOutputStream(path)) {
+                UI.store(out, "GiriATK UI preferences");
+            }
+        } catch (IOException ignored) {
         }
     }
 }

@@ -1,6 +1,7 @@
 package giriatk.view.dialog;
 
 import giriatk.util.Dialogs;
+import giriatk.util.Icons;
 import giriatk.util.Theme;
 import giriatk.util.UiKit;
 
@@ -24,43 +25,30 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.util.Locale;
 
 public abstract class FormDialog extends JDialog {
 
     private final JPanel form = new JPanel(new GridBagLayout());
-    private final UiKit.SurfacePanel formCard = new UiKit.SurfacePanel(new BorderLayout());
+    private final JPanel formCard = new JPanel(new BorderLayout());
     private final JScrollPane scroll;
-    private int row;
+    private int cell;
     private boolean tersimpan;
 
     protected FormDialog(Window owner, String title, String subtitle) {
         super(owner, title, ModalityType.APPLICATION_MODAL);
+        setUndecorated(true);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         JPanel root = new JPanel(new BorderLayout());
-        root.setBackground(Theme.CANVAS);
-        root.setBorder(new EmptyBorder(20, 22, 20, 22));
+        root.setBackground(Theme.SURFACE);
+        root.setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, Theme.INK));
 
-        JPanel header = new JPanel();
-        header.setOpaque(false);
-        header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
-        JLabel heading = new JLabel(title);
-        heading.setFont(Theme.display(Font.BOLD, 18));
-        heading.setForeground(Theme.INK);
-        heading.setAlignmentX(Component.LEFT_ALIGNMENT);
-        header.add(heading);
-        if (subtitle != null && !subtitle.isBlank()) {
-            JLabel sub = new JLabel(subtitle);
-            sub.setFont(Theme.text(Font.PLAIN, 12));
-            sub.setForeground(Theme.MUTED);
-            sub.setAlignmentX(Component.LEFT_ALIGNMENT);
-            header.add(Box.createVerticalStrut(3));
-            header.add(sub);
-        }
-        root.add(header, BorderLayout.NORTH);
+        root.add(buildHeader(title), BorderLayout.NORTH);
 
-        formCard.setBorder(new EmptyBorder(18, 18, 18, 18));
         form.setOpaque(false);
+        form.setBorder(new EmptyBorder(20, 26, 4, 26));
+        formCard.setOpaque(false);
         formCard.add(form, BorderLayout.NORTH);
 
         scroll = new JScrollPane(formCard);
@@ -69,23 +57,50 @@ public abstract class FormDialog extends JDialog {
         scroll.getViewport().setOpaque(false);
         scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scroll.getVerticalScrollBar().setUnitIncrement(16);
-
-        JPanel center = new JPanel(new BorderLayout());
-        center.setOpaque(false);
-        center.setBorder(new EmptyBorder(14, 0, 4, 0));
-        center.add(scroll, BorderLayout.CENTER);
-        root.add(center, BorderLayout.CENTER);
+        root.add(scroll, BorderLayout.CENTER);
 
         root.add(buildButtons(), BorderLayout.SOUTH);
-
         setContentPane(root);
         setResizable(false);
     }
 
+    private JComponent buildHeader(String title) {
+        JPanel header = new JPanel(new BorderLayout(12, 0));
+        header.setBackground(Theme.SURFACE);
+        header.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 2, 0, Theme.INK),
+                new EmptyBorder(20, 26, 16, 20)));
+
+        JPanel texts = new JPanel();
+        texts.setOpaque(false);
+        texts.setLayout(new BoxLayout(texts, BoxLayout.Y_AXIS));
+
+        JLabel heading = new JLabel(title);
+        heading.setFont(Theme.display(Font.BOLD, 24));
+        heading.setForeground(Theme.INK);
+        heading.setAlignmentX(Component.LEFT_ALIGNMENT);
+        texts.add(heading);
+
+        JLabel code = new JLabel("FORMULIR DATA · FRM/01");
+        code.setFont(Theme.mono(Font.BOLD, 9));
+        code.setForeground(Theme.FAINT);
+        code.setBorder(new EmptyBorder(4, 0, 0, 0));
+        code.setAlignmentX(Component.LEFT_ALIGNMENT);
+        texts.add(code);
+        header.add(texts, BorderLayout.CENTER);
+
+        UiKit.IconButton close = new UiKit.IconButton(Icons.Name.CLOSE, Theme.INK, 14, true);
+        close.addActionListener(e -> dispose());
+        header.add(close, BorderLayout.EAST);
+        return header;
+    }
+
     private JComponent buildButtons() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        panel.setOpaque(false);
-        panel.setBorder(new EmptyBorder(14, 0, 0, 0));
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
+        panel.setBackground(Theme.SURFACE);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(1, 0, 0, 0, Theme.BORDER_STRONG),
+                new EmptyBorder(16, 26, 20, 26)));
 
         UiKit.SoftButton batal = new UiKit.SoftButton("Batal", UiKit.Variant.GHOST);
         batal.addActionListener(e -> dispose());
@@ -99,37 +114,44 @@ public abstract class FormDialog extends JDialog {
     }
 
     protected void addField(String label, JComponent field) {
-        JLabel lbl = new JLabel(label);
-        lbl.setFont(Theme.text(Font.BOLD, 12));
+        JPanel block = new JPanel();
+        block.setOpaque(false);
+        block.setLayout(new BoxLayout(block, BoxLayout.Y_AXIS));
+
+        JLabel lbl = new JLabel(label.toUpperCase(Locale.of("id", "ID")));
+        lbl.setFont(Theme.text(Font.BOLD, 10));
         lbl.setForeground(Theme.INK_SOFT);
+        lbl.setAlignmentX(Component.LEFT_ALIGNMENT);
+        block.add(lbl);
+        block.add(Box.createVerticalStrut(7));
+        field.setAlignmentX(Component.LEFT_ALIGNMENT);
+        block.add(field);
 
-        GridBagConstraints gcLabel = new GridBagConstraints();
-        gcLabel.gridx = 0;
-        gcLabel.gridy = row;
-        gcLabel.anchor = GridBagConstraints.WEST;
-        gcLabel.insets = new Insets(row == 0 ? 0 : 12, 0, 0, 16);
-        form.add(lbl, gcLabel);
-
-        GridBagConstraints gcField = new GridBagConstraints();
-        gcField.gridx = 1;
-        gcField.gridy = row;
-        gcField.weightx = 1;
-        gcField.fill = GridBagConstraints.HORIZONTAL;
-        gcField.insets = new Insets(row == 0 ? 0 : 12, 0, 0, 0);
-        form.add(field, gcField);
-        row++;
+        int col = cell % 2;
+        GridBagConstraints gc = new GridBagConstraints();
+        gc.gridx = col;
+        gc.gridy = cell / 2;
+        gc.weightx = 1;
+        gc.fill = GridBagConstraints.HORIZONTAL;
+        gc.anchor = GridBagConstraints.NORTHWEST;
+        gc.insets = new Insets(cell < 2 ? 0 : 15, col == 0 ? 0 : 9, 0, col == 0 ? 9 : 0);
+        form.add(block, gc);
+        cell++;
     }
 
     protected void addFullWidth(JComponent component) {
+        if (cell % 2 != 0) {
+            cell++;
+        }
         GridBagConstraints gc = new GridBagConstraints();
         gc.gridx = 0;
-        gc.gridy = row;
+        gc.gridy = cell / 2;
         gc.gridwidth = 2;
         gc.weightx = 1;
         gc.fill = GridBagConstraints.HORIZONTAL;
-        gc.insets = new Insets(12, 0, 0, 0);
+        gc.insets = new Insets(15, 0, 0, 0);
         form.add(component, gc);
-        row++;
+        cell += 2;
     }
 
     protected void batasiTinggi() {
@@ -144,6 +166,15 @@ public abstract class FormDialog extends JDialog {
     protected JComponent fieldWidth(JComponent field, int width) {
         field.setPreferredSize(new Dimension(width, field.getPreferredSize().height));
         return field;
+    }
+
+    @Override
+    public void pack() {
+        super.pack();
+        if (getWidth() < 660) {
+            setSize(660, getHeight());
+        }
+        setLocationRelativeTo(getOwner());
     }
 
     protected void error(String message) {

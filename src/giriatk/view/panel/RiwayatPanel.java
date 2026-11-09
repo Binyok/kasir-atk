@@ -43,7 +43,7 @@ public class RiwayatPanel extends BasePanel {
 
     private final TransaksiDao dao = new TransaksiDao();
     private final DefaultTableModel model = new DefaultTableModel(
-            new String[]{"No. Nota / Kode", "Waktu Transaksi", "Kategori", "Total Tagihan", "Nominal Bayar", "Kembalian", "Kasir", ""}, 0) {
+            new String[]{"No. Nota / Kode", "Waktu Transaksi", "Kategori", "Status", "Total Tagihan", "Nominal Bayar", "Kembalian", "Kasir", ""}, 0) {
         @Override
         public boolean isCellEditable(int row, int column) {
             return false;
@@ -105,18 +105,20 @@ public class RiwayatPanel extends BasePanel {
         table.getColumnModel().getColumn(0).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.LEFT, true));
         table.getColumnModel().getColumn(1).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.LEFT));
         table.getColumnModel().getColumn(2).setCellRenderer(new UiKit.BadgeRenderer());
-        table.getColumnModel().getColumn(3).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.RIGHT, true));
-        table.getColumnModel().getColumn(4).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.RIGHT));
+        table.getColumnModel().getColumn(3).setCellRenderer(new UiKit.BadgeRenderer());
+        table.getColumnModel().getColumn(4).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.RIGHT, true));
         table.getColumnModel().getColumn(5).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.RIGHT));
-        table.getColumnModel().getColumn(6).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.LEFT));
+        table.getColumnModel().getColumn(6).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.RIGHT));
+        table.getColumnModel().getColumn(7).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.LEFT));
         table.getColumnModel().getColumn(0).setPreferredWidth(165);
         table.getColumnModel().getColumn(1).setPreferredWidth(160);
         table.getColumnModel().getColumn(2).setPreferredWidth(90);
-        table.getColumnModel().getColumn(3).setPreferredWidth(110);
-        table.getColumnModel().getColumn(4).setPreferredWidth(100);
-        table.getColumnModel().getColumn(5).setPreferredWidth(95);
-        table.getColumnModel().getColumn(6).setPreferredWidth(85);
-        AksiIkon.pasang(table, 7, Icons.Name.EYE, Theme.ACCENT);
+        table.getColumnModel().getColumn(3).setPreferredWidth(75);
+        table.getColumnModel().getColumn(4).setPreferredWidth(110);
+        table.getColumnModel().getColumn(5).setPreferredWidth(100);
+        table.getColumnModel().getColumn(6).setPreferredWidth(95);
+        table.getColumnModel().getColumn(7).setPreferredWidth(85);
+        AksiIkon.pasang(table, 8, Icons.Name.EYE, Theme.ACCENT);
 
         table.addMouseListener(new MouseAdapter() {
             @Override
@@ -126,7 +128,7 @@ public class RiwayatPanel extends BasePanel {
                 if (row < 0) {
                     return;
                 }
-                if ((col == 7 && e.getClickCount() == 1) || (e.getClickCount() == 2 && col != 7)) {
+                if ((col == 8 && e.getClickCount() == 1) || (e.getClickCount() == 2 && col != 8)) {
                     lihatDetail();
                 }
             }
@@ -253,18 +255,22 @@ public class RiwayatPanel extends BasePanel {
             if (!keyword.isEmpty() && (t.getKode() == null || !t.getKode().toLowerCase().contains(keyword))) {
                 continue;
             }
+            boolean isVoid = t.getStatus() != null && t.getStatus() == giriatk.model.StatusTransaksi.VOID;
             model.addRow(new Object[]{
                 t.getKode(),
                 Fmt.tanggalWaktu(t.getTanggal()),
                 t.getTipe().name(),
-                Fmt.rupiah(t.getTotal()),
-                Fmt.rupiah(t.getBayar()),
-                Fmt.rupiah(t.getKembali()),
+                isVoid ? "VOID" : "SUKSES",
+                isVoid ? "-" : Fmt.rupiah(t.getTotal()),
+                isVoid ? "-" : Fmt.rupiah(t.getBayar()),
+                isVoid ? "-" : Fmt.rupiah(t.getKembali()),
                 t.getUserName() == null ? "-" : t.getUserName(),
                 ""
             });
-            total = total.add(t.getTotal());
-            jumlah++;
+            if (!isVoid) {
+                total = total.add(t.getTotal());
+                jumlah++;
+            }
         }
         
         lblCount.setText(String.valueOf(jumlah));
@@ -285,7 +291,11 @@ public class RiwayatPanel extends BasePanel {
                 Dialogs.peringatan(this, "Transaksi tidak ditemukan.");
                 return;
             }
-            new TransaksiDetailDialog(owner(), lengkap).setVisible(true);
+            TransaksiDetailDialog dlg = new TransaksiDetailDialog(owner(), lengkap);
+            dlg.setVisible(true);
+            if (dlg.isVoided()) {
+                reload();
+            }
         } catch (Exception ex) {
             Dialogs.error(this, "Gagal membuka detail nota: " + ex.getMessage());
         }

@@ -84,6 +84,19 @@ public class BarangDao {
         }
     }
 
+    public Barang findByKode(String kode) throws SQLException {
+        if (kode == null || kode.isBlank()) {
+            return null;
+        }
+        try (Connection conn = Db.getConnection();
+                PreparedStatement ps = conn.prepareStatement(BASE_SELECT + "WHERE b.kode = ?")) {
+            ps.setString(1, kode.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? map(rs) : null;
+            }
+        }
+    }
+
     public int insert(Barang barang) throws SQLException {
         String sql = "INSERT INTO barang (kode, nama, merk, jenis, warna, ukuran, gambar, kategori_id, satuan, harga_beli, harga_jual, stok, stok_minimum, aktif) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";

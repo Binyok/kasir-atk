@@ -16,6 +16,7 @@ import giriatk.util.Theme;
 import giriatk.util.UiKit;
 import giriatk.view.component.AksiIkon;
 import giriatk.view.component.SegmentedTabs;
+import giriatk.view.dialog.BarangDetailDialog;
 import giriatk.view.dialog.BarangDialog;
 import giriatk.view.dialog.KategoriDialog;
 
@@ -31,6 +32,9 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.KeyStroke;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -57,11 +61,9 @@ public class StokPanel extends BasePanel {
 
     public StokPanel() {
         super(new BorderLayout());
-        tabs.addTab("barang", "Daftar Barang & Stok", new BarangTab());
+        tabs.addTab("barang", "Daftar Barang & Stok", new BarangTab(() -> tabs.show("restock")));
         tabs.addTab("kategori", "Kategori Produk", new KategoriTab());
-        if (Session.isOwner()) {
-            tabs.addTab("restock", "Manajemen Restock", new RestockTab());
-        }
+        tabs.addTab("restock", "Manajemen Restock", new RestockTab());
         add(pageHeader("Inventaris & Stok Toko", "Pantau jumlah ketersediaan stok, batas minimum restock, dan kategori barang."), BorderLayout.NORTH);
         add(tabs, BorderLayout.CENTER);
     }
@@ -113,13 +115,17 @@ public class StokPanel extends BasePanel {
     private static class BarangTab extends TabBase {
 
         private final BarangDao dao = new BarangDao();
-        private final JTextField txtCari = UiKit.textField("Cari kode, nama, merk, jenis, atau kategori...");
+        private final JTextField txtCari = UiKit.textField("Scan barcode / cari nama, kode, merk...");
         private final DefaultTableModel model = model("", "Kode", "Nama Barang", "Merk", "Jenis", "Kategori", "Satuan", "Harga Beli", "Harga Jual", "Stok", "Status", "", "");
         private final UiKit.AppTable table = new UiKit.AppTable(model);
         private final List<Barang> data = new ArrayList<>();
 
-        BarangTab() {
-            txtCari.setPreferredSize(new Dimension(280, 38));
+        private final Runnable openRestock;
+
+        BarangTab(Runnable openRestock) {
+            this.openRestock = openRestock;
+            txtCari.setPreferredSize(new Dimension(320, 38));
+            txtCari.addActionListener(e -> scanAtauCariBarcode());
             txtCari.getDocument().addDocumentListener(new DocumentListener() {
                 @Override public void insertUpdate(DocumentEvent e) { reload(); }
                 @Override public void removeUpdate(DocumentEvent e) { reload(); }
@@ -128,9 +134,8 @@ public class StokPanel extends BasePanel {
 
             JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
             actions.setOpaque(false);
-            if (Session.isOwner()) {
-                actions.add(button("Tambah Barang", UiKit.Variant.PRIMARY, this::tambah));
-            }
+            actions.add(button("Tambah Barang", UiKit.Variant.PRIMARY, this::tambah));
+            actions.add(button("Restock", UiKit.Variant.GHOST, openRestock));
             UiKit.IconButton refresh = new UiKit.IconButton(Icons.Name.REFRESH, Theme.MUTED, 16, true);
             refresh.setToolTipText("Muat ulang");
             refresh.addActionListener(e -> reload());
@@ -142,7 +147,12 @@ public class StokPanel extends BasePanel {
             toolbar.add(actions, BorderLayout.EAST);
             card.add(toolbar, BorderLayout.NORTH);
 
-            table.setRowHeight(38);
+            table.setRowHeight(46);
+            for (int i : new int[]{0, 3, 4}) {
+                table.getColumnModel().getColumn(i).setMinWidth(0);
+                table.getColumnModel().getColumn(i).setMaxWidth(0);
+                table.getColumnModel().getColumn(i).setPreferredWidth(0);
+            }
             table.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer() {
                 @Override
                 public Component getTableCellRendererComponent(javax.swing.JTable table, Object value,
@@ -168,17 +178,12 @@ public class StokPanel extends BasePanel {
             table.getColumnModel().getColumn(8).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.RIGHT, true));
             table.getColumnModel().getColumn(9).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.CENTER));
             table.getColumnModel().getColumn(10).setCellRenderer(new UiKit.BadgeRenderer());
-            int[] lebar = {44, 85, 170, 95, 90, 95, 55, 95, 95, 50, 75};
+            int[] lebar = {0, 90, 230, 0, 0, 110, 62, 92, 92, 50, 78, 30, 30};
             for (int i = 0; i < lebar.length; i++) {
                 table.getColumnModel().getColumn(i).setPreferredWidth(lebar[i]);
             }
             AksiIkon.pasang(table, 11, Icons.Name.EDIT, Theme.MUTED);
             AksiIkon.pasang(table, 12, Icons.Name.TRASH, Theme.DANGER);
-            if (!Session.isOwner()) {
-                table.removeColumn(table.getColumnModel().getColumn(12));
-                table.removeColumn(table.getColumnModel().getColumn(11));
-                table.removeColumn(table.getColumnModel().getColumn(7));
-            }
 
             table.addMouseListener(new MouseAdapter() {
                 @Override
@@ -193,7 +198,7 @@ public class StokPanel extends BasePanel {
                     } else if (col == 12 && e.getClickCount() == 1) {
                         hapus();
                     } else if (e.getClickCount() == 2 && col != 11 && col != 12) {
-                        ubah();
+                        detail();
                     }
                 }
             });
@@ -244,11 +249,54 @@ public class StokPanel extends BasePanel {
             return data.get(modelRow);
         }
 
-        private void tambah() {
-            if (!Session.isOwner()) {
-                Dialogs.peringatan(this, "Hanya owner yang bisa menambah barang.");
+        private void detail() {
+            Barang barang = terpilih();
+            if (barang == null) {
                 return;
             }
+            BarangDetailDialog dlg = new BarangDetailDialog(owner(), barang);
+            dlg.setVisible(true);
+            if (dlg.isDiubah()) {
+                reload();
+            }
+        }
+
+        private void scanAtauCariBarcode() {
+            String input = txtCari.getText().trim();
+            if (input.isEmpty()) {
+                return;
+            }
+            try {
+                Barang b = dao.findByKode(input);
+                if (b != null) {
+                    for (int i = 0; i < data.size(); i++) {
+                        if (data.get(i).getId() == b.getId()) {
+                            int viewRow = table.convertRowIndexToView(i);
+                            table.setRowSelectionInterval(viewRow, viewRow);
+                            table.scrollRectToVisible(table.getCellRect(viewRow, 0, true));
+                            break;
+                        }
+                    }
+                    BarangDetailDialog dlg = new BarangDetailDialog(owner(), b);
+                    dlg.setVisible(true);
+                    if (dlg.isDiubah()) {
+                        reload();
+                    }
+                    txtCari.setText("");
+                } else {
+                    BarangDialog dialog = new BarangDialog(owner(), null, input);
+                    dialog.setVisible(true);
+                    if (dialog.isTersimpan()) {
+                        txtCari.setText("");
+                        reload();
+                    }
+                }
+            } catch (Exception ex) {
+                Dialogs.error(this, "Gagal memproses barcode: " + ex.getMessage());
+            }
+        }
+
+        private void tambah() {
             BarangDialog dialog = new BarangDialog(owner(), null);
             dialog.setVisible(true);
             if (dialog.isTersimpan()) {
@@ -257,10 +305,6 @@ public class StokPanel extends BasePanel {
         }
 
         private void ubah() {
-            if (!Session.isOwner()) {
-                Dialogs.peringatan(this, "Hanya owner yang bisa mengubah barang.");
-                return;
-            }
             Barang barang = terpilih();
             if (barang == null) {
                 return;
@@ -273,10 +317,6 @@ public class StokPanel extends BasePanel {
         }
 
         private void hapus() {
-            if (!Session.isOwner()) {
-                Dialogs.peringatan(this, "Hanya owner yang bisa menghapus barang.");
-                return;
-            }
             Barang barang = terpilih();
             if (barang == null) {
                 return;
@@ -304,9 +344,7 @@ public class StokPanel extends BasePanel {
         KategoriTab() {
             JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
             actions.setOpaque(false);
-            if (Session.isOwner()) {
-                actions.add(button("Tambah Kategori", UiKit.Variant.PRIMARY, this::tambah));
-            }
+            actions.add(button("Tambah Kategori", UiKit.Variant.PRIMARY, this::tambah));
             UiKit.IconButton refresh = new UiKit.IconButton(Icons.Name.REFRESH, Theme.MUTED, 16, true);
             refresh.setToolTipText("Muat ulang");
             refresh.addActionListener(e -> reload());
@@ -318,10 +356,6 @@ public class StokPanel extends BasePanel {
             table.getColumnModel().getColumn(2).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.CENTER));
             AksiIkon.pasang(table, 3, Icons.Name.EDIT, Theme.MUTED);
             AksiIkon.pasang(table, 4, Icons.Name.TRASH, Theme.DANGER);
-            if (!Session.isOwner()) {
-                table.removeColumn(table.getColumnModel().getColumn(4));
-                table.removeColumn(table.getColumnModel().getColumn(3));
-            }
 
             table.addMouseListener(new MouseAdapter() {
                 @Override
@@ -379,9 +413,6 @@ public class StokPanel extends BasePanel {
         }
 
         private void tambah() {
-            if (!Session.isOwner()) {
-                return;
-            }
             KategoriDialog dialog = new KategoriDialog(owner(), null);
             dialog.setVisible(true);
             if (dialog.isTersimpan()) {
@@ -390,9 +421,6 @@ public class StokPanel extends BasePanel {
         }
 
         private void ubah() {
-            if (!Session.isOwner()) {
-                return;
-            }
             Kategori k = terpilih();
             if (k == null) {
                 return;
@@ -405,9 +433,6 @@ public class StokPanel extends BasePanel {
         }
 
         private void hapus() {
-            if (!Session.isOwner()) {
-                return;
-            }
             Kategori k = terpilih();
             if (k == null) {
                 return;
@@ -432,6 +457,7 @@ public class StokPanel extends BasePanel {
         private final RestockService restockService = new RestockService();
 
         private final JComboBox<BarangItem> cmbBarang = new JComboBox<>();
+        private final JTextField txtScanBarcode = UiKit.textField("Scan barcode barang di sini...");
         private final JTextField txtJumlah = UiKit.textField("Contoh: 10");
         private final JTextField txtHargaBeli = UiKit.textField("Opsional (kosongkan jika tidak berubah)");
         private final JTextField txtKeterangan = UiKit.textField("Catatan pengadaan / supplier");
@@ -441,13 +467,17 @@ public class StokPanel extends BasePanel {
         private final UiKit.AppTable tableRiwayat = new UiKit.AppTable(modelRiwayat);
 
         RestockTab() {
+            removeAll();
+            setLayout(new BorderLayout());
+            setOpaque(false);
+
             JPanel body = new JPanel(new GridBagLayout());
             body.setOpaque(false);
 
             GridBagConstraints gcForm = new GridBagConstraints();
             gcForm.gridx = 0;
             gcForm.gridy = 0;
-            gcForm.weightx = 0.42;
+            gcForm.weightx = 0.38;
             gcForm.weighty = 1.0;
             gcForm.fill = GridBagConstraints.BOTH;
             gcForm.insets = new Insets(0, 0, 0, 16);
@@ -456,12 +486,12 @@ public class StokPanel extends BasePanel {
             GridBagConstraints gcTabel = new GridBagConstraints();
             gcTabel.gridx = 1;
             gcTabel.gridy = 0;
-            gcTabel.weightx = 0.58;
+            gcTabel.weightx = 0.62;
             gcTabel.weighty = 1.0;
             gcTabel.fill = GridBagConstraints.BOTH;
             body.add(buildRiwayatCard(), gcTabel);
 
-            card.add(body, BorderLayout.CENTER);
+            add(body, BorderLayout.CENTER);
 
             cmbBarang.setFont(Theme.text(Font.PLAIN, 13));
             cmbBarang.setBackground(Theme.SURFACE_ELEVATED);
@@ -481,6 +511,29 @@ public class StokPanel extends BasePanel {
                 }
             });
             cmbBarang.addActionListener(e -> updateInfoStok());
+
+            txtScanBarcode.addActionListener(e -> cariDenganBarcode());
+        }
+
+        private void cariDenganBarcode() {
+            String code = txtScanBarcode.getText().trim();
+            if (code.isEmpty()) return;
+            try {
+                Barang b = barangDao.findByKode(code);
+                if (b != null) {
+                    for (int i = 0; i < cmbBarang.getItemCount(); i++) {
+                        BarangItem item = cmbBarang.getItemAt(i);
+                        if (item.barang.getId() == b.getId()) {
+                            cmbBarang.setSelectedIndex(i);
+                            txtJumlah.requestFocusInWindow();
+                            return;
+                        }
+                    }
+                }
+                Dialogs.peringatan(this, "Barang dengan kode/barcode \"" + code + "\" tidak ditemukan.");
+            } catch (Exception ex) {
+                Dialogs.error(this, "Gagal mencari barcode: " + ex.getMessage());
+            }
         }
 
         private JPanel buildFormCard() {
@@ -496,32 +549,65 @@ public class StokPanel extends BasePanel {
             form.setOpaque(false);
             form.setLayout(new BoxLayout(form, BoxLayout.Y_AXIS));
 
-            form.add(fieldLabel("Pilih Barang"));
-            form.add(cmbBarang);
-            form.add(Box.createVerticalStrut(4));
+            txtScanBarcode.setAlignmentX(Component.LEFT_ALIGNMENT);
+            txtScanBarcode.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+            txtScanBarcode.setPreferredSize(new Dimension(0, 40));
+
+            cmbBarang.setAlignmentX(Component.LEFT_ALIGNMENT);
+            cmbBarang.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+            cmbBarang.setPreferredSize(new Dimension(0, 40));
+
+            lblStokSekarang.setAlignmentX(Component.LEFT_ALIGNMENT);
             lblStokSekarang.setFont(Theme.mono(Font.PLAIN, 11));
             lblStokSekarang.setForeground(Theme.MUTED);
+
+            txtJumlah.setAlignmentX(Component.LEFT_ALIGNMENT);
+            txtJumlah.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+            txtJumlah.setPreferredSize(new Dimension(0, 40));
+
+            txtHargaBeli.setAlignmentX(Component.LEFT_ALIGNMENT);
+            txtHargaBeli.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+            txtHargaBeli.setPreferredSize(new Dimension(0, 40));
+
+            txtKeterangan.setAlignmentX(Component.LEFT_ALIGNMENT);
+            txtKeterangan.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+            txtKeterangan.setPreferredSize(new Dimension(0, 40));
+
+            form.add(fieldLabel("Scan Barcode (Opsional)"));
+            form.add(Box.createVerticalStrut(4));
+            form.add(txtScanBarcode);
+            form.add(Box.createVerticalStrut(14));
+
+            form.add(fieldLabel("Pilih Barang"));
+            form.add(Box.createVerticalStrut(4));
+            form.add(cmbBarang);
+            form.add(Box.createVerticalStrut(4));
             form.add(lblStokSekarang);
             form.add(Box.createVerticalStrut(14));
 
             form.add(fieldLabel("Jumlah Restock"));
+            form.add(Box.createVerticalStrut(4));
             form.add(txtJumlah);
             form.add(Box.createVerticalStrut(14));
 
             form.add(fieldLabel("Harga Beli Baru (Opsional)"));
+            form.add(Box.createVerticalStrut(4));
             form.add(txtHargaBeli);
             form.add(Box.createVerticalStrut(14));
 
             form.add(fieldLabel("Keterangan / Supplier"));
+            form.add(Box.createVerticalStrut(4));
             form.add(txtKeterangan);
             form.add(Box.createVerticalStrut(20));
 
             UiKit.SoftButton simpan = new UiKit.SoftButton("SIMPAN RESTOCK", UiKit.Variant.PRIMARY);
+            simpan.setAlignmentX(Component.LEFT_ALIGNMENT);
             simpan.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
             simpan.setPreferredSize(new Dimension(0, 44));
             simpan.setFont(Theme.text(Font.BOLD, 13));
             simpan.addActionListener(e -> simpanRestock());
             form.add(simpan);
+            form.add(Box.createVerticalGlue());
 
             panel.add(form, BorderLayout.CENTER);
             return panel;
@@ -552,11 +638,17 @@ public class StokPanel extends BasePanel {
             top.add(refresh, BorderLayout.EAST);
             panel.add(top, BorderLayout.NORTH);
 
+            tableRiwayat.setRowHeight(40);
             tableRiwayat.getColumnModel().getColumn(0).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.LEFT));
             tableRiwayat.getColumnModel().getColumn(1).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.LEFT, true));
             tableRiwayat.getColumnModel().getColumn(2).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.CENTER));
             tableRiwayat.getColumnModel().getColumn(3).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.RIGHT));
             tableRiwayat.getColumnModel().getColumn(4).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.LEFT));
+
+            int[] widths = {130, 180, 80, 110, 140};
+            for (int i = 0; i < widths.length && i < tableRiwayat.getColumnModel().getColumnCount(); i++) {
+                tableRiwayat.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
+            }
 
             tableRiwayat.setEmptyState("Belum ada riwayat restock", "Aktivitas penambahan stok akan tercatat di sini.");
             JScrollPane scroll = new JScrollPane(tableRiwayat);
@@ -607,9 +699,11 @@ public class StokPanel extends BasePanel {
                     extra += " • Jenis: " + item.barang.getJenis();
                 }
                 lblStokSekarang.setText("Stok saat ini: " + item.barang.getStok() + " " + item.barang.getSatuan()
-                        + " • Harga Beli: " + Fmt.rupiah(item.barang.getHargaBeli()) + extra);
+                        + " • Harga Beli saat ini: " + Fmt.rupiah(item.barang.getHargaBeli()) + extra);
+                txtHargaBeli.setText(Fmt.angka(item.barang.getHargaBeli()));
             } else {
                 lblStokSekarang.setText("-");
+                txtHargaBeli.setText("");
             }
         }
 
@@ -635,6 +729,7 @@ public class StokPanel extends BasePanel {
             try {
                 restockService.simpan(restock);
                 Dialogs.info(this, "Stok \"" + item.barang.getNama() + "\" berhasil ditambah sebanyak +" + jumlah + ".");
+                txtScanBarcode.setText("");
                 txtJumlah.setText("");
                 txtHargaBeli.setText("");
                 txtKeterangan.setText("");

@@ -101,8 +101,16 @@ public class DashboardPanel extends BasePanel {
         scroll.getViewport().setOpaque(false);
         scroll.getVerticalScrollBar().setUnitIncrement(18);
 
-        add(pageHeader("Dashboard Ringkasan", "Tinjauan telemetri penjualan, status operasional toko, dan antrian cetak."), BorderLayout.NORTH);
+        add(pageHeader(greeting(), "Ringkasan Toko · Shift Pagi", true), BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
+    }
+
+    private String greeting() {
+        String nama = Session.user() == null ? "Pengguna" : Session.user().getNamaLengkap();
+        String panggil = nama.split("\\s+")[0];
+        int jam = java.time.LocalTime.now().getHour();
+        String sapaan = jam < 11 ? "Selamat pagi" : (jam < 15 ? "Selamat siang" : (jam < 19 ? "Selamat sore" : "Selamat malam"));
+        return sapaan + ", " + panggil;
     }
 
     private JPanel buildStatGrid() {
@@ -111,24 +119,22 @@ public class DashboardPanel extends BasePanel {
         lblTransaksi = valueLabel();
         lblAntrian = valueLabel();
 
-        boolean owner = Session.isOwner();
-        int cols = owner ? 4 : 3;
-        JPanel row = new JPanel(new GridLayout(1, cols, 14, 0));
+        JPanel row = new JPanel(new GridLayout(1, 4, 14, 0));
         row.setOpaque(false);
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 115));
         
-        row.add(statCard("OMZET HARI INI", lblOmzet, Icons.Name.MONEY, Theme.ACCENT, "Total bruto"));
-        if (owner) {
-            row.add(statCard("LABA BERSIH", lblLaba, Icons.Name.CHART, Theme.GREEN_FG, "Margin estimasi"));
-        }
-        row.add(statCard("TRANSAKSI", lblTransaksi, Icons.Name.RECEIPT, Theme.BLUE_FG, "Selesai dibayar"));
-        row.add(statCard("ANTRIAN AKTIF", lblAntrian, Icons.Name.QUEUE, Theme.AMBER_FG, "Dalam pengerjaan"));
+        row.add(statCard("OMZET HARI INI", lblOmzet, Icons.Name.MONEY, Theme.ACCENT, "Total bruto", true));
+        row.add(statCard("LABA BERSIH", lblLaba, Icons.Name.CHART, Theme.GREEN_FG, "Margin estimasi", false));
+        row.add(statCard("TRANSAKSI", lblTransaksi, Icons.Name.RECEIPT, Theme.BLUE_FG, "Selesai dibayar", false));
+        row.add(statCard("ANTRIAN AKTIF", lblAntrian, Icons.Name.QUEUE, Theme.AMBER_FG, "Dalam pengerjaan", false));
         
         return row;
     }
 
-    private UiKit.SurfacePanel statCard(String title, JLabel valueLabel, Icons.Name icon, Color accent, String subtext) {
-        UiKit.SurfacePanel card = card(new BorderLayout(0, 8));
+    private UiKit.SurfacePanel statCard(String title, JLabel valueLabel, Icons.Name icon, Color accent, String subtext, boolean hero) {
+        UiKit.SurfacePanel card = hero
+                ? new UiKit.SurfacePanel(new BorderLayout(0, 8), 0, true)
+                : card(new BorderLayout(0, 8));
         card.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
 
         JPanel top = new JPanel(new BorderLayout());
@@ -173,7 +179,7 @@ public class DashboardPanel extends BasePanel {
 
     private JLabel valueLabel() {
         JLabel label = new JLabel("-");
-        label.setFont(Theme.mono(Font.BOLD, 22));
+        label.setFont(Theme.mono(Font.BOLD, 26));
         label.setForeground(Theme.INK);
         return label;
     }
