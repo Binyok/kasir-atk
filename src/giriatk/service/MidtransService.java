@@ -112,6 +112,11 @@ public class MidtransService {
         return "1".equals(getConfig("midtrans_enabled", "1"));
     }
 
+    public boolean isConfigured() {
+        String key = getServerKey();
+        return !key.isBlank() && !key.contains("YOUR_SERVER_KEY");
+    }
+
     private String getSnapApiUrl() {
         return isProduction()
                 ? "https://app.midtrans.com/snap/v1/transactions"

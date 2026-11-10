@@ -94,6 +94,17 @@ public class MidtransPaymentDialog extends JDialog {
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         actions.setOpaque(false);
 
+        UiKit.SoftButton btnSimulasi = new UiKit.SoftButton("Simulasi Sukses (Test)", UiKit.Variant.PRIMARY);
+        btnSimulasi.setToolTipText("Gunakan untuk menguji alur POS & struk tanpa koneksi Midtrans asli");
+        btnSimulasi.addActionListener(e -> {
+            stopPolling();
+            paid = true;
+            paymentType = "qris_sandbox_test";
+            Dialogs.info(this, "Simulasi pembayaran Midtrans (QRIS) berhasil!");
+            dispose();
+        });
+        actions.add(btnSimulasi);
+
         UiKit.SoftButton batal = new UiKit.SoftButton("Batal / Tutup", UiKit.Variant.GHOST);
         batal.addActionListener(e -> {
             stopPolling();
@@ -103,7 +114,7 @@ public class MidtransPaymentDialog extends JDialog {
         root.add(actions, BorderLayout.SOUTH);
 
         setContentPane(root);
-        setSize(420, 300);
+        setSize(480, 320);
         setLocationRelativeTo(owner);
 
         SwingUtilities.invokeLater(() -> createAndOpenSnap(customerName));
@@ -118,6 +129,14 @@ public class MidtransPaymentDialog extends JDialog {
     }
 
     private void createAndOpenSnap(String customerName) {
+        if (!midtransService.isConfigured()) {
+            lblStatus.setText("<html><font color='#DC2626'><b>Server Key Midtrans belum dikonfigurasi.</b></font><br>"
+                    + "<font size='2' color='#78716C'>Masukkan Server Key Sandbox Anda di menu <b>Pengaturan</b>,<br>"
+                    + "atau klik tombol <b>\"Simulasi Sukses (Test)\"</b> di bawah untuk menguji transaksi.</font></html>");
+            lblPaymentType.setText("Mode: Simulasi / Sandbox Belum Dikonfigurasi");
+            return;
+        }
+
         try {
             SnapResponse snap = midtransService.createSnapTransaction(orderId, amount, customerName, null);
             lblStatus.setText("Menunggu pembayaran... (halaman pembayaran sudah terbuka di browser)");
@@ -127,9 +146,21 @@ public class MidtransPaymentDialog extends JDialog {
             }
             startPolling();
         } catch (Exception ex) {
-            lblStatus.setText("GAGAL membuat transaksi Midtrans.");
-            lblPaymentType.setText(ex.getMessage());
-            Dialogs.error(this, "Gagal memulai pembayaran Midtrans:\n" + ex.getMessage());
+            String msg = ex.getMessage();
+            if (msg != null && msg.contains("401")) {
+                lblStatus.setText("<html><font color='#DC2626'><b>Server Key Midtrans tidak valid (HTTP 401).</b></font><br>"
+                        + "<font size='2' color='#78716C'>Periksa kembali Server Key akun Sandbox Anda di menu <b>Pengaturan</b>,<br>"
+                        + "atau klik tombol <b>\"Simulasi Sukses (Test)\"</b> di bawah.</font></html>");
+                lblPaymentType.setText("Kunci API salah atau kadaluarsa");
+                Dialogs.peringatan(this, "Server Key Midtrans tidak valid (HTTP 401 Unauthorized).\n\n"
+                        + "Pastikan Server Key diisi dengan key dari akun Midtrans Sandbox Anda\n"
+                        + "(diawali dengan SB-Mid-server-...).\n\n"
+                        + "Anda juga dapat menggunakan tombol 'Simulasi Sukses' untuk menguji alur kasir.");
+            } else {
+                lblStatus.setText("GAGAL membuat transaksi Midtrans.");
+                lblPaymentType.setText(msg);
+                Dialogs.error(this, "Gagal memulai pembayaran Midtrans:\n" + msg);
+            }
         }
     }
 
