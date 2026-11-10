@@ -810,7 +810,7 @@ public class TransaksiPanel extends BasePanel {
         transaksi.setUserId(Session.user() == null ? null : Session.user().getId());
         transaksi.setDiskon(BigDecimal.ZERO);
         transaksi.setBayar(total);
-        transaksi.setMetodeBayar(dlg.getPaymentType().toUpperCase());
+        transaksi.setMetodeBayar("MIDTRANS_" + dlg.getPaymentCode().toUpperCase());
         transaksi.setPaymentRef(tempKode);
         transaksi.setBuatAntrian(chkBuatAntrian.isVisible() && chkBuatAntrian.isSelected());
         transaksi.setNamaPelanggan(txtPelanggan.getText().trim().isEmpty() ? null : txtPelanggan.getText().trim());

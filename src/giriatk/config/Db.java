@@ -75,7 +75,11 @@ public final class Db {
         checkAndAddColumn(conn, meta, "transaksi", "void_alasan", "VARCHAR(255)");
         checkAndAddColumn(conn, meta, "transaksi", "void_at", "DATETIME");
         checkAndAddColumn(conn, meta, "transaksi", "void_by", "INT");
-        checkAndAddColumn(conn, meta, "transaksi", "metode_bayar", "VARCHAR(30) NOT NULL DEFAULT 'TUNAI'");
+        checkAndAddColumn(conn, meta, "transaksi", "metode_bayar", "VARCHAR(100) NOT NULL DEFAULT 'TUNAI'");
+        try (var st = conn.createStatement()) {
+            st.executeUpdate("ALTER TABLE `transaksi` MODIFY COLUMN `metode_bayar` VARCHAR(100) NOT NULL DEFAULT 'TUNAI'");
+        } catch (Exception ignored) {
+        }
         checkAndAddColumn(conn, meta, "transaksi", "payment_ref", "VARCHAR(150)");
     }
 

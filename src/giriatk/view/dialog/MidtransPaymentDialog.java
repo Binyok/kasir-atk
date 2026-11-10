@@ -26,6 +26,9 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.Window;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -62,6 +65,7 @@ public class MidtransPaymentDialog extends JDialog {
     private final JLabel lblInstruksi = new JLabel();
     private final JLabel lblStatus = new JLabel("Menunggu konfirmasi pembayaran...");
     private final JLabel lblPaymentInfo = new JLabel();
+    private final QrCodeBox qrBox = new QrCodeBox();
     private String lastRedirectUrl = null;
 
     public MidtransPaymentDialog(Window owner, String orderId, BigDecimal amount, String customerName) {
@@ -123,18 +127,26 @@ public class MidtransPaymentDialog extends JDialog {
         body.add(Box.createVerticalStrut(12));
 
         // Info Box Panel
-        UiKit.SurfacePanel infoBox = new UiKit.SurfacePanel(new BorderLayout(0, 6));
+        UiKit.SurfacePanel infoBox = new UiKit.SurfacePanel(new BorderLayout(12, 0));
         infoBox.setBorder(BorderFactory.createEmptyBorder(12, 14, 12, 14));
         infoBox.setAlignmentX(Component.LEFT_ALIGNMENT);
-        infoBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 85));
+        infoBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 110));
+
+        JPanel infoText = new JPanel();
+        infoText.setOpaque(false);
+        infoText.setLayout(new BoxLayout(infoText, BoxLayout.Y_AXIS));
 
         lblInstruksi.setFont(Theme.text(Font.PLAIN, 12));
         lblInstruksi.setForeground(Theme.INK);
-        infoBox.add(lblInstruksi, BorderLayout.NORTH);
+        infoText.add(lblInstruksi);
+        infoText.add(Box.createVerticalStrut(4));
 
         lblPaymentInfo.setFont(Theme.mono(Font.BOLD, 12));
         lblPaymentInfo.setForeground(Theme.ACCENT);
-        infoBox.add(lblPaymentInfo, BorderLayout.CENTER);
+        infoText.add(lblPaymentInfo);
+
+        infoBox.add(infoText, BorderLayout.CENTER);
+        infoBox.add(qrBox, BorderLayout.EAST);
 
         body.add(infoBox);
         body.add(Box.createVerticalStrut(12));
@@ -171,7 +183,7 @@ public class MidtransPaymentDialog extends JDialog {
         root.add(actions, BorderLayout.SOUTH);
 
         setContentPane(root);
-        setSize(560, 390);
+        setSize(580, 420);
         setLocationRelativeTo(owner);
 
         updateInstruksiMetode();
@@ -185,17 +197,27 @@ public class MidtransPaymentDialog extends JDialog {
         return paymentType;
     }
 
+    public String getPaymentCode() {
+        MetodePilihan m = (MetodePilihan) cmbMetode.getSelectedItem();
+        return m == null ? "qris" : m.code;
+    }
+
     private void updateInstruksiMetode() {
         MetodePilihan m = (MetodePilihan) cmbMetode.getSelectedItem();
         if (m == null) return;
         lblInstruksi.setText("<html>" + m.instruksi + "</html>");
         if (m.code.equals("qris") || m.code.equals("gopay") || m.code.equals("shopeepay")) {
-            lblPaymentInfo.setText("Kode QRIS siap dipindai oleh pelanggan via e-Wallet");
+            lblPaymentInfo.setText("Scan QRIS menggunakan e-Wallet / m-Banking");
+            qrBox.setVisible(true);
         } else if (m.code.endsWith("_va") || m.code.equals("echannel")) {
-            lblPaymentInfo.setText("Nomor Rekening Virtual Account telah dibuat");
+            lblPaymentInfo.setText("Transfer sesuai nominal ke rekening VA di atas");
+            qrBox.setVisible(false);
         } else {
-            lblPaymentInfo.setText("Pilihan multi-metode aktif");
+            lblPaymentInfo.setText("Multi-metode aktif");
+            qrBox.setVisible(true);
         }
+        revalidate();
+        repaint();
     }
 
     private void bukaHalamanMidtransWeb() {
@@ -255,6 +277,63 @@ public class MidtransPaymentDialog extends JDialog {
                 dispose();
             }
         } catch (Exception ignored) {
+        }
+    }
+
+    private static final class QrCodeBox extends JPanel {
+        QrCodeBox() {
+            setOpaque(false);
+            setPreferredSize(new Dimension(84, 84));
+            setMaximumSize(new Dimension(84, 84));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            g2.setColor(java.awt.Color.WHITE);
+            g2.fillRoundRect(0, 0, 84, 84, 8, 8);
+            g2.setColor(Theme.INK);
+            g2.drawRoundRect(0, 0, 83, 83, 8, 8);
+
+            // 3 Corner finder patterns
+            drawFinder(g2, 8, 8);
+            drawFinder(g2, 54, 8);
+            drawFinder(g2, 8, 54);
+
+            // Pseudo QR dots grid
+            int[][] pattern = {
+                {0, 1, 0, 1, 1, 0},
+                {1, 0, 1, 0, 0, 1},
+                {0, 1, 1, 0, 1, 0},
+                {1, 1, 0, 1, 0, 1},
+                {0, 0, 1, 0, 1, 1},
+                {1, 0, 0, 1, 1, 0}
+            };
+            for (int r = 0; r < 6; r++) {
+                for (int c = 0; c < 6; c++) {
+                    if (pattern[r][c] == 1) {
+                        g2.fillRect(32 + c * 3, 32 + r * 3, 3, 3);
+                    }
+                }
+            }
+
+            // QRIS text badge in center bottom
+            g2.setFont(Theme.mono(Font.BOLD, 8));
+            g2.setColor(Theme.ACCENT);
+            g2.drawString("QRIS", 32, 28);
+            g2.dispose();
+        }
+
+        private void drawFinder(Graphics2D g2, int x, int y) {
+            g2.setColor(Theme.INK);
+            g2.fillRect(x, y, 22, 22);
+            g2.setColor(java.awt.Color.WHITE);
+            g2.fillRect(x + 3, y + 3, 16, 16);
+            g2.setColor(Theme.INK);
+            g2.fillRect(x + 6, y + 6, 10, 10);
         }
     }
 }
