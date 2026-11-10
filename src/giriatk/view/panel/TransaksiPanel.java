@@ -10,6 +10,7 @@ import giriatk.model.TransaksiItem;
 import giriatk.service.ThermalPrintService;
 import giriatk.service.TransaksiService;
 import giriatk.view.dialog.MidtransPaymentDialog;
+import giriatk.view.dialog.TransaksiDetailDialog;
 import giriatk.util.Dialogs;
 import giriatk.util.Fmt;
 import giriatk.util.Icons;
@@ -770,20 +771,18 @@ public class TransaksiPanel extends BasePanel {
                 try {
                     printService.cetakStruk(tersimpan);
                 } catch (Exception printEx) {
-                    Dialogs.peringatan(this, "Transaksi tersimpan, tetapi gagal mencetak struk: " + printEx.getMessage());
+                    Dialogs.peringatan(this, "Transaksi tersimpan, tetapi gagal mencetak ke hardware printer: " + printEx.getMessage());
                 }
             }
 
-            Dialogs.info(this, "Transaksi Berhasil Disimpan!\n\n"
-                    + "Kode Nota: " + tersimpan.getKode() + "\n"
-                    + "Total: " + Fmt.rupiah(tersimpan.getTotal()) + "\n"
-                    + "Bayar: " + Fmt.rupiah(tersimpan.getBayar()) + "\n"
-                    + "Kembali: " + Fmt.rupiah(tersimpan.getKembali()));
+            Window owner = SwingUtilities.getWindowAncestor(this);
             keranjang.clear();
             txtBayar.setText("");
             txtPelanggan.setText("");
             refreshKeranjang();
             reloadKatalog();
+
+            new TransaksiDetailDialog(owner, tersimpan).setVisible(true);
         } catch (Exception ex) {
             Dialogs.error(this, "Gagal menyimpan transaksi:\n" + ex.getMessage());
         }
@@ -811,7 +810,7 @@ public class TransaksiPanel extends BasePanel {
         transaksi.setUserId(Session.user() == null ? null : Session.user().getId());
         transaksi.setDiskon(BigDecimal.ZERO);
         transaksi.setBayar(total);
-        transaksi.setMetodeBayar("MIDTRANS (" + dlg.getPaymentType().toUpperCase() + ")");
+        transaksi.setMetodeBayar(dlg.getPaymentType().toUpperCase());
         transaksi.setPaymentRef(tempKode);
         transaksi.setBuatAntrian(chkBuatAntrian.isVisible() && chkBuatAntrian.isSelected());
         transaksi.setNamaPelanggan(txtPelanggan.getText().trim().isEmpty() ? null : txtPelanggan.getText().trim());
@@ -831,19 +830,17 @@ public class TransaksiPanel extends BasePanel {
                 try {
                     printService.cetakStruk(tersimpan);
                 } catch (Exception printEx) {
-                    Dialogs.peringatan(this, "Transaksi tersimpan, tetapi gagal mencetak struk: " + printEx.getMessage());
+                    Dialogs.peringatan(this, "Transaksi tersimpan, tetapi gagal mencetak ke hardware printer: " + printEx.getMessage());
                 }
             }
 
-            Dialogs.info(this, "Transaksi Midtrans Berhasil Disimpan!\n\n"
-                    + "Kode Nota: " + tersimpan.getKode() + "\n"
-                    + "Metode: " + tersimpan.getMetodeBayar() + "\n"
-                    + "Total: " + Fmt.rupiah(tersimpan.getTotal()));
             keranjang.clear();
             txtBayar.setText("");
             txtPelanggan.setText("");
             refreshKeranjang();
             reloadKatalog();
+
+            new TransaksiDetailDialog(owner, tersimpan).setVisible(true);
         } catch (Exception ex) {
             Dialogs.error(this, "Gagal menyimpan transaksi Midtrans:\n" + ex.getMessage());
         }

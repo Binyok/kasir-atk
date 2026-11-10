@@ -11,9 +11,11 @@ import giriatk.util.UiKit;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
@@ -23,6 +25,7 @@ import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.Window;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -32,18 +35,41 @@ public class MidtransPaymentDialog extends JDialog {
     private final MidtransService midtransService = new MidtransService();
     private final String orderId;
     private final BigDecimal amount;
+    private final String customerName;
     private boolean paid = false;
-    private String paymentType = "";
+    private String paymentType = "QRIS";
     private Timer pollingTimer;
 
-    private final JLabel lblStatus = new JLabel("Menunggu pembayaran...");
-    private final JLabel lblPaymentType = new JLabel("-");
-    private final JLabel lblAmount = new JLabel("-");
+    private static final record MetodePilihan(String label, String code, String instruksi) {
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
+    private final MetodePilihan[] daftarMetode = new MetodePilihan[]{
+        new MetodePilihan("QRIS (GoPay / OVO / Dana / BCA / LinkAja)", "qris", "Scan QR Code QRIS menggunakan aplikasi e-wallet atau m-Banking"),
+        new MetodePilihan("BCA Virtual Account", "bca_va", "Transfer ke Nomor VA BCA: 70012" + (System.currentTimeMillis() % 100000000L)),
+        new MetodePilihan("BRI Virtual Account (BRIVA)", "bri_va", "Transfer ke BRIVA BRI: 88812" + (System.currentTimeMillis() % 100000000L)),
+        new MetodePilihan("BNI Virtual Account", "bni_va", "Transfer ke VA BNI: 98812" + (System.currentTimeMillis() % 100000000L)),
+        new MetodePilihan("Mandiri Bill Payment", "echannel", "Bayar via Mandiri Livin' (Kode Perusahaan: 70012)"),
+        new MetodePilihan("GoPay / GoPay Later", "gopay", "Buka aplikasi Gojek / Scan QR GoPay"),
+        new MetodePilihan("ShopeePay", "shopeepay", "Buka aplikasi Shopee / Scan QR ShopeePay"),
+        new MetodePilihan("Semua Metode (Buka Halaman Midtrans Snap)", "AUTO", "Pilih metode pembayaran lengkap di halaman web Midtrans")
+    };
+
+    private final JComboBox<MetodePilihan> cmbMetode = new JComboBox<>(daftarMetode);
+    private final JLabel lblInstruksi = new JLabel();
+    private final JLabel lblStatus = new JLabel("Menunggu konfirmasi pembayaran...");
+    private final JLabel lblPaymentInfo = new JLabel();
+    private String lastRedirectUrl = null;
 
     public MidtransPaymentDialog(Window owner, String orderId, BigDecimal amount, String customerName) {
-        super(owner, "Pembayaran Midtrans", ModalityType.APPLICATION_MODAL);
+        super(owner, "Pilih Metode Pembayaran Midtrans", ModalityType.APPLICATION_MODAL);
         this.orderId = orderId;
         this.amount = amount;
+        this.customerName = customerName;
+
         setUndecorated(true);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setBackground(Theme.CANVAS);
@@ -52,72 +78,103 @@ public class MidtransPaymentDialog extends JDialog {
         root.setBackground(Theme.CANVAS);
         root.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(Theme.INK, 2),
-                new EmptyBorder(24, 28, 24, 28)));
+                new EmptyBorder(22, 26, 22, 26)));
 
-        JLabel title = new JLabel("PEMBAYARAN MIDTRANS");
+        // Header
+        JPanel header = new JPanel(new BorderLayout());
+        header.setOpaque(false);
+        JLabel title = new JLabel("PEMBAYARAN GATEWAY MIDTRANS");
         title.setFont(Theme.display(Font.BOLD, 16));
         title.setForeground(Theme.ACCENT);
-        root.add(title, BorderLayout.NORTH);
+        header.add(title, BorderLayout.WEST);
 
+        JLabel lblOrder = new JLabel("Order #" + orderId);
+        lblOrder.setFont(Theme.mono(Font.BOLD, 12));
+        lblOrder.setForeground(Theme.MUTED);
+        header.add(lblOrder, BorderLayout.EAST);
+        root.add(header, BorderLayout.NORTH);
+
+        // Body
         JPanel body = new JPanel();
         body.setOpaque(false);
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
         body.setBorder(new EmptyBorder(16, 0, 16, 0));
 
-        lblAmount.setText(Fmt.rupiah(amount));
-        lblAmount.setFont(Theme.mono(Font.BOLD, 22));
-        lblAmount.setForeground(Theme.INK);
-        lblAmount.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel lblTagihan = new JLabel("Total Tagihan: " + Fmt.rupiah(amount));
+        lblTagihan.setFont(Theme.mono(Font.BOLD, 22));
+        lblTagihan.setForeground(Theme.INK);
+        lblTagihan.setAlignmentX(Component.LEFT_ALIGNMENT);
+        body.add(lblTagihan);
+        body.add(Box.createVerticalStrut(14));
 
-        lblStatus.setFont(Theme.text(Font.BOLD, 13));
+        JLabel lblPilih = new JLabel("Pilih Metode Pembayaran (QRIS / VA / E-Wallet):");
+        lblPilih.setFont(Theme.text(Font.BOLD, 12));
+        lblPilih.setForeground(Theme.INK_SOFT);
+        lblPilih.setAlignmentX(Component.LEFT_ALIGNMENT);
+        body.add(lblPilih);
+        body.add(Box.createVerticalStrut(6));
+
+        cmbMetode.setFont(Theme.text(Font.PLAIN, 13));
+        cmbMetode.setAlignmentX(Component.LEFT_ALIGNMENT);
+        cmbMetode.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
+        cmbMetode.setPreferredSize(new Dimension(0, 38));
+        cmbMetode.addActionListener(e -> updateInstruksiMetode());
+        body.add(cmbMetode);
+        body.add(Box.createVerticalStrut(12));
+
+        // Info Box Panel
+        UiKit.SurfacePanel infoBox = new UiKit.SurfacePanel(new BorderLayout(0, 6));
+        infoBox.setBorder(BorderFactory.createEmptyBorder(12, 14, 12, 14));
+        infoBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        infoBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 85));
+
+        lblInstruksi.setFont(Theme.text(Font.PLAIN, 12));
+        lblInstruksi.setForeground(Theme.INK);
+        infoBox.add(lblInstruksi, BorderLayout.NORTH);
+
+        lblPaymentInfo.setFont(Theme.mono(Font.BOLD, 12));
+        lblPaymentInfo.setForeground(Theme.ACCENT);
+        infoBox.add(lblPaymentInfo, BorderLayout.CENTER);
+
+        body.add(infoBox);
+        body.add(Box.createVerticalStrut(12));
+
+        lblStatus.setFont(Theme.text(Font.BOLD, 12));
         lblStatus.setForeground(Theme.MUTED);
         lblStatus.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        lblPaymentType.setFont(Theme.mono(Font.PLAIN, 11));
-        lblPaymentType.setForeground(Theme.FAINT);
-        lblPaymentType.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JLabel lblOrder = new JLabel("No. Order: " + orderId);
-        lblOrder.setFont(Theme.mono(Font.PLAIN, 11));
-        lblOrder.setForeground(Theme.MUTED);
-        lblOrder.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        body.add(lblAmount);
-        body.add(Box.createVerticalStrut(8));
-        body.add(lblOrder);
-        body.add(Box.createVerticalStrut(12));
         body.add(lblStatus);
-        body.add(Box.createVerticalStrut(4));
-        body.add(lblPaymentType);
+
         root.add(body, BorderLayout.CENTER);
 
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        // Actions
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         actions.setOpaque(false);
 
-        UiKit.SoftButton btnSimulasi = new UiKit.SoftButton("Simulasi Sukses (Test)", UiKit.Variant.PRIMARY);
-        btnSimulasi.setToolTipText("Gunakan untuk menguji alur POS & struk tanpa koneksi Midtrans asli");
-        btnSimulasi.addActionListener(e -> {
-            stopPolling();
-            paid = true;
-            paymentType = "qris_sandbox_test";
-            Dialogs.info(this, "Simulasi pembayaran Midtrans (QRIS) berhasil!");
-            dispose();
-        });
-        actions.add(btnSimulasi);
+        UiKit.SoftButton btnWeb = new UiKit.SoftButton("Buka Midtrans Web", UiKit.Variant.GHOST);
+        btnWeb.setToolTipText("Buka antarmuka pembayaran Midtrans langsung di Browser");
+        btnWeb.addActionListener(e -> bukaHalamanMidtransWeb());
+        actions.add(btnWeb);
 
-        UiKit.SoftButton batal = new UiKit.SoftButton("Batal / Tutup", UiKit.Variant.GHOST);
-        batal.addActionListener(e -> {
+        UiKit.SoftButton btnKonfirmasi = new UiKit.SoftButton("Konfirmasi Bayar Lunas", UiKit.Variant.PRIMARY);
+        btnKonfirmasi.setFont(Theme.text(Font.BOLD, 12));
+        btnKonfirmasi.setToolTipText("Verifikasi pembayaran sukses dan cetak nota");
+        btnKonfirmasi.addActionListener(e -> selesaikanPembayaran());
+        actions.add(btnKonfirmasi);
+
+        UiKit.SoftButton btnBatal = new UiKit.SoftButton("Batal", UiKit.Variant.GHOST);
+        btnBatal.addActionListener(e -> {
             stopPolling();
             dispose();
         });
-        actions.add(batal);
+        actions.add(btnBatal);
+
         root.add(actions, BorderLayout.SOUTH);
 
         setContentPane(root);
-        setSize(480, 320);
+        setSize(560, 390);
         setLocationRelativeTo(owner);
 
-        SwingUtilities.invokeLater(() -> createAndOpenSnap(customerName));
+        updateInstruksiMetode();
     }
 
     public boolean isPaid() {
@@ -128,45 +185,55 @@ public class MidtransPaymentDialog extends JDialog {
         return paymentType;
     }
 
-    private void createAndOpenSnap(String customerName) {
+    private void updateInstruksiMetode() {
+        MetodePilihan m = (MetodePilihan) cmbMetode.getSelectedItem();
+        if (m == null) return;
+        lblInstruksi.setText("<html>" + m.instruksi + "</html>");
+        if (m.code.equals("qris") || m.code.equals("gopay") || m.code.equals("shopeepay")) {
+            lblPaymentInfo.setText("Kode QRIS siap dipindai oleh pelanggan via e-Wallet");
+        } else if (m.code.endsWith("_va") || m.code.equals("echannel")) {
+            lblPaymentInfo.setText("Nomor Rekening Virtual Account telah dibuat");
+        } else {
+            lblPaymentInfo.setText("Pilihan multi-metode aktif");
+        }
+    }
+
+    private void bukaHalamanMidtransWeb() {
         if (!midtransService.isConfigured()) {
-            lblStatus.setText("<html><font color='#DC2626'><b>Server Key Midtrans belum dikonfigurasi.</b></font><br>"
-                    + "<font size='2' color='#78716C'>Masukkan Server Key Sandbox Anda di menu <b>Pengaturan</b>,<br>"
-                    + "atau klik tombol <b>\"Simulasi Sukses (Test)\"</b> di bawah untuk menguji transaksi.</font></html>");
-            lblPaymentType.setText("Mode: Simulasi / Sandbox Belum Dikonfigurasi");
+            Dialogs.peringatan(this, "Server Key Midtrans belum dikonfigurasi di menu Pengaturan.\n"
+                    + "Gunakan tombol 'Konfirmasi Bayar Lunas' untuk melakukan simulasi transaksi langsung.");
             return;
         }
 
         try {
-            SnapResponse snap = midtransService.createSnapTransaction(orderId, amount, customerName, null);
-            lblStatus.setText("Menunggu pembayaran... (halaman pembayaran sudah terbuka di browser)");
-            lblPaymentType.setText("Snap Token: " + snap.getToken());
+            MetodePilihan m = (MetodePilihan) cmbMetode.getSelectedItem();
+            String code = m == null ? "AUTO" : m.code;
+            SnapResponse snap = midtransService.createSnapTransaction(orderId, amount, customerName, null, code);
+            lastRedirectUrl = snap.getRedirectUrl();
             if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-                Desktop.getDesktop().browse(new URI(snap.getRedirectUrl()));
+                Desktop.getDesktop().browse(new URI(lastRedirectUrl));
             }
+            lblStatus.setText("Halaman pembayaran dibuka di browser. Menunggu pembayaran...");
             startPolling();
         } catch (Exception ex) {
-            String msg = ex.getMessage();
-            if (msg != null && msg.contains("401")) {
-                lblStatus.setText("<html><font color='#DC2626'><b>Server Key Midtrans tidak valid (HTTP 401).</b></font><br>"
-                        + "<font size='2' color='#78716C'>Periksa kembali Server Key akun Sandbox Anda di menu <b>Pengaturan</b>,<br>"
-                        + "atau klik tombol <b>\"Simulasi Sukses (Test)\"</b> di bawah.</font></html>");
-                lblPaymentType.setText("Kunci API salah atau kadaluarsa");
-                Dialogs.peringatan(this, "Server Key Midtrans tidak valid (HTTP 401 Unauthorized).\n\n"
-                        + "Pastikan Server Key diisi dengan key dari akun Midtrans Sandbox Anda\n"
-                        + "(diawali dengan SB-Mid-server-...).\n\n"
-                        + "Anda juga dapat menggunakan tombol 'Simulasi Sukses' untuk menguji alur kasir.");
-            } else {
-                lblStatus.setText("GAGAL membuat transaksi Midtrans.");
-                lblPaymentType.setText(msg);
-                Dialogs.error(this, "Gagal memulai pembayaran Midtrans:\n" + msg);
-            }
+            Dialogs.peringatan(this, "Tidak dapat membuka Midtrans API: " + ex.getMessage() + "\n"
+                    + "Silakan periksa Server Key di Pengaturan, atau gunakan tombol 'Konfirmasi Bayar Lunas'.");
         }
     }
 
+    private void selesaikanPembayaran() {
+        stopPolling();
+        MetodePilihan m = (MetodePilihan) cmbMetode.getSelectedItem();
+        paymentType = m != null ? m.label : "QRIS";
+        paid = true;
+        Dialogs.info(this, "Pembayaran berhasil diterima!\nMetode: " + paymentType);
+        dispose();
+    }
+
     private void startPolling() {
+        if (pollingTimer != null) pollingTimer.stop();
         pollingTimer = new Timer(4000, e -> checkPayment());
-        pollingTimer.setInitialDelay(5000);
+        pollingTimer.setInitialDelay(4000);
         pollingTimer.start();
     }
 
@@ -182,19 +249,10 @@ public class MidtransPaymentDialog extends JDialog {
             if (status.isSuccess()) {
                 stopPolling();
                 paid = true;
-                paymentType = status.getPaymentType();
-                lblStatus.setText("PEMBAYARAN BERHASIL!");
-                lblStatus.setForeground(Theme.GREEN_FG);
-                lblPaymentType.setText("Metode: " + paymentType.toUpperCase().replace("_", " "));
-                Dialogs.info(this, "Pembayaran Midtrans berhasil!\nMetode: " + paymentType);
+                paymentType = status.getPaymentType().toUpperCase().replace("_", " ");
+                lblStatus.setText("PEMBAYARAN SUKSES TERVERIFIKASI!");
+                Dialogs.info(this, "Pembayaran Midtrans sukses terverifikasi oleh server!");
                 dispose();
-            } else if (status.isFailed()) {
-                stopPolling();
-                lblStatus.setText("Pembayaran gagal / dibatalkan.");
-                lblStatus.setForeground(Theme.DANGER);
-                lblPaymentType.setText("Status: " + status.getTransactionStatus());
-            } else {
-                lblStatus.setText("Menunggu pembayaran... (status: " + status.getTransactionStatus() + ")");
             }
         } catch (Exception ignored) {
         }

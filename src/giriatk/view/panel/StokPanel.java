@@ -136,6 +136,7 @@ public class StokPanel extends BasePanel {
             actions.setOpaque(false);
             actions.add(button("Tambah Barang", UiKit.Variant.PRIMARY, this::tambah));
             actions.add(button("Restock", UiKit.Variant.GHOST, openRestock));
+            actions.add(button("Koreksi / Rusak", UiKit.Variant.GHOST, this::koreksiStok));
             UiKit.IconButton refresh = new UiKit.IconButton(Icons.Name.REFRESH, Theme.MUTED, 16, true);
             refresh.setToolTipText("Muat ulang");
             refresh.addActionListener(e -> reload());
@@ -301,6 +302,56 @@ public class StokPanel extends BasePanel {
             dialog.setVisible(true);
             if (dialog.isTersimpan()) {
                 reload();
+            }
+        }
+
+        private void koreksiStok() {
+            Barang barang = terpilih();
+            if (barang == null) {
+                return;
+            }
+            JTextField txtDelta = UiKit.textField("Contoh: -2 (untuk barang rusak) atau +5");
+            JTextField txtAlasan = UiKit.textField("Contoh: Barang rusak / cacat / selisih opname");
+
+            JPanel panel = new JPanel(new java.awt.GridLayout(0, 1, 0, 8));
+            panel.add(new JLabel("Barang: " + barang.getNama() + " (Stok Saat Ini: " + barang.getStok() + " " + barang.getSatuan() + ")"));
+            panel.add(new JLabel("Jumlah Penyesuaian (Gunakan tanda minus '-' jika mengurangi):"));
+            panel.add(txtDelta);
+            panel.add(new JLabel("Alasan Pengurangan / Koreksi:"));
+            panel.add(txtAlasan);
+
+            int res = javax.swing.JOptionPane.showConfirmDialog(owner(), panel, "Koreksi Stok / Catat Barang Rusak",
+                    javax.swing.JOptionPane.OK_CANCEL_OPTION, javax.swing.JOptionPane.PLAIN_MESSAGE);
+            if (res != javax.swing.JOptionPane.OK_OPTION) {
+                return;
+            }
+
+            Integer delta = Fmt.parseBulat(txtDelta.getText());
+            String alasan = txtAlasan.getText().trim();
+            if (delta == null || delta == 0) {
+                Dialogs.peringatan(this, "Jumlah penyesuaian harus angka selain 0 (misal: -1 atau -2 jika rusak).");
+                return;
+            }
+            if (alasan.isEmpty()) {
+                Dialogs.peringatan(this, "Alasan koreksi stok wajib diisi.");
+                return;
+            }
+            if (delta < 0 && (barang.getStok() + delta) < 0) {
+                Dialogs.peringatan(this, "Pengurangan melebihi stok yang ada (stok saat ini: " + barang.getStok() + ").");
+                return;
+            }
+
+            if (!Dialogs.konfirmasi(this, "Simpan penyesuaian stok " + (delta > 0 ? "+" : "") + delta
+                    + " untuk " + barang.getNama() + "?\nAlasan: " + alasan)) {
+                return;
+            }
+
+            try {
+                new RestockService().catatKoreksi(barang.getId(), delta, alasan, Session.getUserId());
+                Dialogs.info(this, "Stok barang berhasil disesuaikan!\nStok baru: " + (barang.getStok() + delta));
+                reload();
+            } catch (Exception ex) {
+                Dialogs.error(this, "Gagal melakukan koreksi stok: " + ex.getMessage());
             }
         }
 

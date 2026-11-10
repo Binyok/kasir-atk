@@ -135,6 +135,10 @@ public class MidtransService {
     }
 
     public SnapResponse createSnapTransaction(String orderId, BigDecimal amount, String customerName, List<TransaksiItem> items) throws Exception {
+        return createSnapTransaction(orderId, amount, customerName, items, "AUTO");
+    }
+
+    public SnapResponse createSnapTransaction(String orderId, BigDecimal amount, String customerName, List<TransaksiItem> items, String paymentMethod) throws Exception {
         String url = getSnapApiUrl();
         long grossAmount = amount.longValue();
 
@@ -145,6 +149,9 @@ public class MidtransService {
         json.append("\"gross_amount\":").append(grossAmount);
         json.append("},");
         json.append("\"credit_card\":{\"secure\":true}");
+        if (paymentMethod != null && !paymentMethod.equals("AUTO")) {
+            json.append(",\"enabled_payments\":[\"").append(escapeJson(paymentMethod)).append("\"]");
+        }
         if (customerName != null && !customerName.isBlank()) {
             json.append(",\"customer_details\":{\"first_name\":\"").append(escapeJson(customerName)).append("\"}");
         }
