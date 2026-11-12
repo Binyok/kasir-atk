@@ -3,11 +3,14 @@ package giriatk.service;
 import giriatk.dao.PengaturanDao;
 import giriatk.model.TransaksiItem;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
@@ -80,6 +83,10 @@ public class MidtransService {
                     || "cancel".equalsIgnoreCase(transactionStatus)
                     || "expire".equalsIgnoreCase(transactionStatus);
         }
+
+        public boolean isNotFound() {
+            return "404".equals(statusCode);
+        }
     }
 
     public MidtransService() {
@@ -138,7 +145,20 @@ public class MidtransService {
         return createSnapTransaction(orderId, amount, customerName, items, "AUTO");
     }
 
+    private Exception offline(String aksi, Exception e) {
+        if (e instanceof HttpTimeoutException) {
+            return new Exception(aksi + " timeout — koneksi internet terlalu lambat atau server Midtrans tidak merespons. Coba lagi saat internet stabil.", e);
+        }
+        return new Exception(aksi + " gagal — tidak dapat terhubung ke Midtrans. Periksa koneksi internet komputer ini, lalu coba lagi. (" + e.getMessage() + ")", e);
+    }
+
     public SnapResponse createSnapTransaction(String orderId, BigDecimal amount, String customerName, List<TransaksiItem> items, String paymentMethod) throws Exception {
+        if (!isConfigured()) {
+            throw new Exception("Server Key Midtrans belum diisi atau masih placeholder. Isi Server Key Sandbox di menu Pengaturan terlebih dahulu.");
+        }
+        if (amount == null || amount.signum() <= 0) {
+            throw new Exception("Nominal transaksi tidak valid untuk Midtrans.");
+        }
         String url = getSnapApiUrl();
         long grossAmount = amount.longValue();
 
@@ -166,7 +186,18 @@ public class MidtransService {
                 .POST(HttpRequest.BodyPublishers.ofString(json.toString()))
                 .build();
 
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response;
+        try {
+            response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException e) {
+            throw offline("Membuat pembayaran Midtrans", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new Exception("Membuat pembayaran Midtrans dibatalkan.", e);
+        }
+        if (response.statusCode() == 401) {
+            throw new Exception("Server Key Midtrans tidak valid (HTTP 401). Periksa Server Key Sandbox di menu Pengaturan — pastikan key dari dashboard SANDBOX (awalan SB-Mid-server-) dan Environment di Pengaturan juga Sandbox.");
+        }
         if (response.statusCode() != 200 && response.statusCode() != 201) {
             String err = extractJsonVal(response.body(), "error_messages");
             if (err.isEmpty()) {
@@ -185,7 +216,8 @@ public class MidtransService {
     }
 
     public StatusResponse checkStatus(String orderId) throws Exception {
-        String url = getCoreApiUrl() + "/" + URI.create(orderId).toASCIIString() + "/status";
+        String encodedOrderId = URLEncoder.encode(orderId, StandardCharsets.UTF_8).replace("+", "%20");
+        String url = getCoreApiUrl() + "/" + encodedOrderId + "/status";
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -195,7 +227,18 @@ public class MidtransService {
                 .GET()
                 .build();
 
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response;
+        try {
+            response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException e) {
+            throw offline("Cek status Midtrans", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new Exception("Cek status Midtrans dibatalkan.", e);
+        }
+        if (response.statusCode() == 401) {
+            throw new Exception("Server Key Midtrans tidak valid (HTTP 401). Periksa Server Key Sandbox di menu Pengaturan.");
+        }
         String body = response.body();
         String statusCode = extractJsonVal(body, "status_code");
         String statusMessage = extractJsonVal(body, "status_message");
@@ -206,6 +249,9 @@ public class MidtransService {
     }
 
     public boolean testConnection() throws Exception {
+        if (!isConfigured()) {
+            throw new Exception("Server Key Midtrans belum diisi atau masih placeholder (SB-Mid-server-YOUR_SERVER_KEY). Isi Server Key Sandbox asli dari dashboard.sandbox.midtrans.com > Settings > Access Keys.");
+        }
         String url = getCoreApiUrl() + "/DUMMY-TEST-CONN/status";
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -215,11 +261,24 @@ public class MidtransService {
                 .GET()
                 .build();
 
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() == 401) {
-            throw new Exception("Server Key Midtrans tidak valid (HTTP 401 Unauthorized).");
+        HttpResponse<String> response;
+        try {
+            response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException e) {
+            throw offline("Tes koneksi Midtrans", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new Exception("Tes koneksi Midtrans dibatalkan.", e);
         }
-        return true;
+        if (response.statusCode() == 401) {
+            throw new Exception("Server Key Midtrans tidak valid (HTTP 401 Unauthorized). Pastikan key dari dashboard SANDBOX dan Environment di Pengaturan juga Sandbox (bukan Production).");
+        }
+        // Order dummy memang tidak ada, jadi 404 dari Midtrans justru berarti
+        // Server Key DITERIMA (request lolos autentikasi). 200 juga diterima.
+        if (response.statusCode() == 404 || response.statusCode() == 200) {
+            return true;
+        }
+        throw new Exception("Midtrans merespons HTTP " + response.statusCode() + ": " + response.body());
     }
 
     private String escapeJson(String text) {

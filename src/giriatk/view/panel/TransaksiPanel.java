@@ -795,7 +795,12 @@ public class TransaksiPanel extends BasePanel {
         }
 
         Window owner = SwingUtilities.getWindowAncestor(this);
-        String tempKode = "TRX-M" + System.currentTimeMillis() % 100000;
+        // Order ID Midtrans harus unik per transaksi — format lama
+        // ("TRX-M" + millis % 100000) cuma 5 angka dan gampang tabrakan,
+        // order_id yang dobel ditolak Midtrans. Pakai timestamp penuh + acak.
+        String tempKode = "TRX-M"
+                + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
+                + "-" + String.format("%04d", java.util.concurrent.ThreadLocalRandom.current().nextInt(10000));
         String namaPlg = txtPelanggan.getText().trim().isEmpty() ? "Pelanggan Toko" : txtPelanggan.getText().trim();
 
         MidtransPaymentDialog dlg = new MidtransPaymentDialog(owner, tempKode, total, namaPlg);
@@ -810,7 +815,10 @@ public class TransaksiPanel extends BasePanel {
         transaksi.setUserId(Session.user() == null ? null : Session.user().getId());
         transaksi.setDiskon(BigDecimal.ZERO);
         transaksi.setBayar(total);
-        transaksi.setMetodeBayar("MIDTRANS_" + dlg.getPaymentCode().toUpperCase());
+        // Simulasi lokal tidak boleh tercatat sebagai pembayaran Midtrans asli.
+        transaksi.setMetodeBayar(dlg.isSimulation()
+                ? "SIMULASI_" + dlg.getPaymentCode().toUpperCase()
+                : "MIDTRANS_" + dlg.getPaymentCode().toUpperCase());
         transaksi.setPaymentRef(tempKode);
         transaksi.setBuatAntrian(chkBuatAntrian.isVisible() && chkBuatAntrian.isSelected());
         transaksi.setNamaPelanggan(txtPelanggan.getText().trim().isEmpty() ? null : txtPelanggan.getText().trim());
