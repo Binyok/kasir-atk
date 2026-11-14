@@ -181,7 +181,8 @@ public class ThermalPrintService {
             // Metadata Row (2 kolom)
             Font fMeta = new Font("Monospaced", Font.PLAIN, is80mm ? 8 : 7);
             String kasirName = shortName(transaksi.getUserName());
-            String noStrukText = (is80mm ? "NO. STRUK : " : "NO : ") + (transaksi.getKode() == null ? "-" : transaksi.getKode());
+            String kodeStruk = transaksi.getKode() == null ? "-" : transaksi.getKode();
+            String noStrukText = (is80mm ? "NO. STRUK : " : "NO : ") + fitText(g2, kodeStruk, width / 2 - 10);
             String kasirText = (is80mm ? "KASIR : " : "KSR : ") + kasirName;
             y = drawTwoCols(g2, noStrukText, kasirText, width, y, fMeta);
 
@@ -247,7 +248,8 @@ public class ThermalPrintService {
 
             // Code caption
             Font fCap = new Font("Monospaced", Font.PLAIN, is80mm ? 7 : 6);
-            drawCenteredText(g2, spaced(transaksi.getKode()), width, y, fCap);
+            String receiptCode = transaksi.getKode() == null ? "-" : transaksi.getKode();
+            drawCenteredText(g2, receiptCode, width, y, fCap);
 
             return PAGE_EXISTS;
         }
@@ -315,10 +317,21 @@ public class ThermalPrintService {
         private int drawTwoCols(Graphics2D g2, String left, String right, int width, int y, Font font) {
             g2.setFont(font);
             FontMetrics fm = g2.getFontMetrics();
-            g2.drawString(left, 0, y);
             int rWidth = fm.stringWidth(right);
+            int maxLeft = Math.max(20, width - rWidth - 8);
+            String safeLeft = fitText(g2, left, maxLeft);
+            g2.drawString(safeLeft, 0, y);
             g2.drawString(right, width - rWidth, y);
             return y + fm.getHeight() - 1;
+        }
+
+        private String fitText(Graphics2D g2, String text, int maxWidth) {
+            if (text == null || g2.getFontMetrics().stringWidth(text) <= maxWidth) return text;
+            String value = text;
+            while (value.length() > 3 && g2.getFontMetrics().stringWidth(value + "..") > maxWidth) {
+                value = value.substring(0, value.length() - 1);
+            }
+            return value + "..";
         }
 
         private int drawLeftRight(Graphics2D g2, String left, String right, int width, int y, Font fontL, Font fontR, boolean isItem) {

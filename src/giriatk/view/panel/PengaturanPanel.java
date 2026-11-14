@@ -47,7 +47,7 @@ public class PengaturanPanel extends BasePanel {
     private final JCheckBox chkMidtransEnable = UiKit.checkBox("Aktifkan Pembayaran Gateway Midtrans (QRIS / GoPay / Snap)", true);
     private final JTextField txtMidtransServerKey = UiKit.textField("Server Key Midtrans");
     private final JTextField txtMidtransClientKey = UiKit.textField("Client Key Midtrans");
-    private final JComboBox<String> cmbMidtransEnv = new JComboBox<>(new String[]{"Sandbox (Uji Coba)", "Production (Live)"});
+    private final JComboBox<String> cmbMidtransEnv = new JComboBox<>(new String[]{"Sandbox (Uji Coba)", "Production (Live)", "Simulasi (Offline)"});
 
     public PengaturanPanel() {
         super(new BorderLayout());
@@ -107,7 +107,8 @@ public class PengaturanPanel extends BasePanel {
             chkMidtransEnable.setSelected("1".equals(data.getOrDefault("midtrans_enabled", "1")));
             txtMidtransServerKey.setText(data.getOrDefault("midtrans_server_key", "SB-Mid-server-YOUR_SERVER_KEY"));
             txtMidtransClientKey.setText(data.getOrDefault("midtrans_client_key", "SB-Mid-client-YOUR_CLIENT_KEY"));
-            cmbMidtransEnv.setSelectedIndex("1".equals(data.getOrDefault("midtrans_is_production", "0")) ? 1 : 0);
+            String midtransEnv = data.getOrDefault("midtrans_is_production", "0");
+            cmbMidtransEnv.setSelectedIndex("1".equals(midtransEnv) ? 1 : ("2".equals(midtransEnv) ? 2 : 0));
         } catch (Exception ex) {
             Dialogs.error(this, "Gagal memuat pengaturan: " + ex.getMessage());
         }
@@ -281,7 +282,7 @@ public class PengaturanPanel extends BasePanel {
         data.put("midtrans_enabled", chkMidtransEnable.isSelected() ? "1" : "0");
         data.put("midtrans_server_key", txtMidtransServerKey.getText().trim());
         data.put("midtrans_client_key", txtMidtransClientKey.getText().trim());
-        data.put("midtrans_is_production", cmbMidtransEnv.getSelectedIndex() == 1 ? "1" : "0");
+        data.put("midtrans_is_production", String.valueOf(cmbMidtransEnv.getSelectedIndex()));
         try {
             dao.simpanSemua(data);
             Dialogs.info(this, "Konfigurasi Midtrans berhasil disimpan.");

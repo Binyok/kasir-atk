@@ -84,10 +84,12 @@ public final class Db {
     }
 
     private static void checkAndAddColumn(Connection conn, java.sql.DatabaseMetaData meta, String tableName, String colName, String colType) throws SQLException {
-        try (var rs = meta.getColumns(null, null, tableName, colName)) {
-            if (!rs.next()) {
-                try (var st = conn.createStatement()) {
-                    st.executeUpdate("ALTER TABLE `" + tableName + "` ADD COLUMN `" + colName + "` " + colType);
+        try (var st = conn.createStatement()) {
+            try {
+                st.executeUpdate("ALTER TABLE `" + tableName + "` ADD COLUMN `" + colName + "` " + colType);
+            } catch (SQLException ex) {
+                if (!ex.getMessage().toLowerCase(java.util.Locale.ROOT).contains("duplicate column")) {
+                    throw ex;
                 }
             }
         }

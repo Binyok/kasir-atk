@@ -115,6 +115,10 @@ public class MidtransService {
         return "1".equals(getConfig("midtrans_is_production", "0"));
     }
 
+    public boolean isSimulation() {
+        return "2".equals(getConfig("midtrans_is_production", "0"));
+    }
+
     public boolean isEnabled() {
         return "1".equals(getConfig("midtrans_enabled", "1"));
     }

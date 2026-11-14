@@ -83,7 +83,7 @@ public class MidtransPaymentDialog extends JDialog {
 
     private final UiKit.SoftButton btnWeb = new UiKit.SoftButton("Buka Halaman Pembayaran Midtrans", UiKit.Variant.PRIMARY);
     private final UiKit.SoftButton btnCek = new UiKit.SoftButton("Cek Status Pembayaran", UiKit.Variant.GHOST);
-    private final UiKit.SoftButton btnSimulasi = new UiKit.SoftButton("Mode Simulasi (Offline)", UiKit.Variant.GHOST);
+    private final UiKit.SoftButton btnSimulasi = new UiKit.SoftButton("SELESAIKAN SIMULASI", UiKit.Variant.PRIMARY);
 
     public MidtransPaymentDialog(Window owner, String orderId, BigDecimal amount, String customerName) {
         super(owner, "Pilih Metode Pembayaran Midtrans", ModalityType.APPLICATION_MODAL);
@@ -109,15 +109,25 @@ public class MidtransPaymentDialog extends JDialog {
 
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
-        JLabel title = new JLabel("PEMBAYARAN GATEWAY MIDTRANS");
-        title.setFont(Theme.display(Font.BOLD, 16));
+        JLabel title = new JLabel("PEMBAYARAN MIDTRANS");
+        title.setFont(Theme.display(Font.BOLD, 13));
         title.setForeground(Theme.ACCENT);
         header.add(title, BorderLayout.WEST);
 
         JLabel lblOrder = new JLabel("Order #" + orderId);
         lblOrder.setFont(Theme.mono(Font.BOLD, 11));
         lblOrder.setForeground(Theme.MUTED);
-        header.add(lblOrder, BorderLayout.EAST);
+
+        JPanel headerActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        headerActions.setOpaque(false);
+        headerActions.add(lblOrder);
+        UiKit.SoftButton btnTutup = new UiKit.SoftButton("Tutup", UiKit.Variant.GHOST);
+        btnTutup.addActionListener(e -> {
+            stopPolling();
+            dispose();
+        });
+        headerActions.add(btnTutup);
+        header.add(headerActions, BorderLayout.EAST);
         root.add(header, BorderLayout.NORTH);
 
         JPanel body = new JPanel();
@@ -157,8 +167,10 @@ public class MidtransPaymentDialog extends JDialog {
         body.add(infoBox);
         body.add(Box.createVerticalStrut(12));
 
-        boolean configured = midtransService.isConfigured();
-        JLabel lblMode = new JLabel(configured
+        boolean configured = midtransService.isConfigured() && !midtransService.isSimulation();
+        JLabel lblMode = new JLabel(midtransService.isSimulation()
+                ? "<html>Mode: <b>SIMULASI</b> - pembayaran offline tanpa koneksi Midtrans.</html>"
+                : configured
                 ? "<html>Mode: <b>MIDTRANS ASLI</b> (" + (midtransService.isProduction() ? "Production" : "Sandbox") + ") - butuh koneksi internet. QR / nomor VA asli ada di halaman Midtrans, bukan di dialog ini.</html>"
                 : "<html>Mode: <b>SIMULASI</b> - Server Key Midtrans belum diisi di menu Pengaturan, jadi pembayaran asli belum bisa dipakai. Transaksi simulasi akan ditandai SIMULASI di riwayat.</html>");
         lblMode.setFont(Theme.text(Font.PLAIN, 12));
@@ -174,22 +186,24 @@ public class MidtransPaymentDialog extends JDialog {
 
         root.add(body, BorderLayout.CENTER);
 
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         actions.setOpaque(false);
 
         btnWeb.setFont(Theme.text(Font.BOLD, 12));
         btnWeb.setToolTipText("Buat transaksi Snap ke Midtrans lalu buka halaman pembayarannya di browser");
         btnWeb.setEnabled(configured);
+        btnWeb.setVisible(!midtransService.isSimulation());
         btnWeb.addActionListener(e -> bukaHalamanMidtransWeb());
         actions.add(btnWeb);
 
         btnCek.setToolTipText("Tanya status terbaru transaksi ini langsung ke server Midtrans");
         btnCek.setEnabled(false);
+        btnCek.setVisible(!midtransService.isSimulation());
         btnCek.addActionListener(e -> checkPaymentAsync(true));
         actions.add(btnCek);
 
-        btnSimulasi.setToolTipText("Hanya untuk demo offline tanpa Server Key. Hasilnya ditandai SIMULASI, bukan pembayaran asli.");
-        btnSimulasi.setVisible(!configured);
+        btnSimulasi.setToolTipText("Selesaikan pembayaran percobaan tanpa memanggil Midtrans.");
+        btnSimulasi.setVisible(true);
         btnSimulasi.addActionListener(e -> selesaikanSimulasi());
         actions.add(btnSimulasi);
 
