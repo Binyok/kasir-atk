@@ -1,21 +1,24 @@
 package giriatk.view.dialog;
 
+import giriatk.dao.PengaturanDao;
 import giriatk.dao.TransaksiDao;
 import giriatk.model.StatusTransaksi;
 import giriatk.model.TipeItem;
 import giriatk.model.Transaksi;
 import giriatk.model.TransaksiItem;
 import giriatk.service.ThermalPrintService;
-import giriatk.service.NotaImageService;
 import giriatk.util.Dialogs;
 import giriatk.util.Fmt;
+import giriatk.util.LogoUtil;
 import giriatk.util.Session;
 import giriatk.util.Theme;
 import giriatk.util.UiKit;
 
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -25,24 +28,46 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Window;
 import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
+/**
+ * Pratinjau nota setelah transaksi.
+ *
+ * Lebar nota mengikuti pengaturan kertas (58mm / 80mm) dan seluruh isi
+ * dibatasi pada lebar konten yang tetap:
+ * - Nama item selalu wrap ke baris berikutnya (HTML width tetap), tidak
+ *   lagi mendorong angka total keluar dari nota.
+ * - Nama item dan qty x harga / subtotal dipisah dua baris.
+ * - Stempel LUNAS/VOID adalah komponen baris sendiri di bawah total,
+ *   tidak digambar pada koordinat tetap yang bisa menimpa item.
+ * - Logo toko tampil di header bila sudah diatur; tanpa logo tetap rapi.
+ * - Tombol SIMPAN JPG mengekspor panel nota persis seperti tampil.
+ */
 public class TransaksiDetailDialog extends JDialog {
 
     private final Transaksi transaksi;
+    private final boolean kertas58;
+    private final int lebarKonten;
+    private JPanel receiptPanel;
     private boolean voided = false;
 
     public boolean isVoided() {
@@ -52,6 +77,8 @@ public class TransaksiDetailDialog extends JDialog {
     public TransaksiDetailDialog(Window owner, Transaksi transaksi) {
         super(owner, "Detail Transaksi " + transaksi.getKode(), ModalityType.APPLICATION_MODAL);
         this.transaksi = transaksi;
+        this.kertas58 = !"80mm".equalsIgnoreCase(bacaPengaturan("printer_lebar", "58mm"));
+        this.lebarKonten = kertas58 ? 296 : 424;
         setUndecorated(true);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setBackground(Theme.CANVAS);
@@ -69,8 +96,7 @@ public class TransaksiDetailDialog extends JDialog {
         receiptWrap.setOpaque(false);
         receiptWrap.setLayout(new BoxLayout(receiptWrap, BoxLayout.Y_AXIS));
 
-        JComponent receipt = buildReceipt(transaksi);
-        receiptWrap.add(receipt);
+        receiptWrap.add(buildReceipt(transaksi));
         receiptWrap.add(new Perforation());
         receiptWrap.add(Box.createVerticalStrut(14));
         receiptWrap.add(buildActions());
@@ -87,92 +113,149 @@ public class TransaksiDetailDialog extends JDialog {
 
         setContentPane(root);
         pack();
-        int targetW = 600;
+        int targetW = lebarKonten + (kertas58 ? 104 : 108);
         int targetH = Math.min(getHeight(), owner == null ? 800 : owner.getHeight() - 40);
         setSize(targetW, targetH);
         setLocationRelativeTo(owner);
     }
 
+    private String bacaPengaturan(String kunci, String fallback) {
+        try {
+            return new PengaturanDao().get(kunci, fallback);
+        } catch (Exception ex) {
+            return fallback;
+        }
+    }
+
+    private Map<String, String> semuaPengaturan() {
+        try {
+            return new PengaturanDao().semua();
+        } catch (Exception ex) {
+            return Map.of();
+        }
+    }
+
     private JComponent buildReceipt(Transaksi transaksi) {
         boolean isVoid = transaksi.getStatus() == StatusTransaksi.VOID;
-        JPanel receipt = new ReceiptPanel(isVoid);
-        receipt.setLayout(new BoxLayout(receipt, BoxLayout.Y_AXIS));
-        receipt.setBorder(new EmptyBorder(24, 30, 8, 30));
+        Map<String, String> cfg = semuaPengaturan();
+        String namaToko = cfg.getOrDefault("nama_toko", "GiriATK & Print");
+        String alamat = cfg.getOrDefault("alamat", "Jl. Raya Giri No. 88, Banyuwangi");
+        if (alamat.isBlank() || alamat.equalsIgnoreCase("Jl. Contoh No. 1")) {
+            alamat = "Jl. Raya Giri No. 88, Banyuwangi";
+        }
+        String telepon = cfg.getOrDefault("telepon", "0812-3456-7890");
+        if (telepon.isBlank() || telepon.equals("0812-0000-0000")) {
+            telepon = "0812-3456-7890";
+        }
+        String footer = cfg.getOrDefault("footer_struk", "Terima kasih sudah berbelanja");
 
-        JLabel shop = new JLabel("<html><div style='text-align:center'><font face='Georgia' size='6'><b>GiriATK "
-                + "<i><font color='#C93A1E'>&amp; Print</font></i></b></font></div></html>");
-        shop.setFont(Theme.display(Font.BOLD, 25));
-        shop.setForeground(Theme.INK);
+        JPanel receipt = new ReceiptPanel();
+        receipt.setLayout(new BoxLayout(receipt, BoxLayout.Y_AXIS));
+        receipt.setBorder(new EmptyBorder(20, 24, 10, 24));
+        receipt.setMaximumSize(new Dimension(lebarKonten + 48, Integer.MAX_VALUE));
+        receipt.setMinimumSize(new Dimension(lebarKonten + 48, 0));
+        this.receiptPanel = receipt;
+
+        // Logo toko (opsional) — slot di tengah header.
+        ImageIcon logo = LogoUtil.muatLogoIcon(kertas58 ? 84 : 120, kertas58 ? 46 : 62);
+        if (logo != null) {
+            JLabel lblLogo = new JLabel(logo);
+            lblLogo.setAlignmentX(Component.CENTER_ALIGNMENT);
+            receipt.add(lblLogo);
+            receipt.add(Box.createVerticalStrut(6));
+        }
+
+        // Nama & alamat memakai komponen WrapText (lebar tetap, wrap dihitung
+        // dari FontMetrics). JLabel HTML tidak dipakai untuk teks panjang:
+        // ukuran minimumnya selebar teks satu baris, sehingga mendorong
+        // seluruh nota melebar dan memotong sisi kanan.
+        String namaBersih = namaToko == null || namaToko.isBlank() ? "GiriATK & Print" : namaToko.trim();
+        int idxAmp = namaBersih.indexOf('&');
+        WrapText shop = new WrapText(namaBersih,
+                Theme.display(Font.BOLD, kertas58 ? 19 : 23), Theme.INK,
+                idxAmp >= 0 ? idxAmp : -1, Theme.ACCENT,
+                SwingConstants.CENTER, lebarKonten);
         shop.setAlignmentX(Component.CENTER_ALIGNMENT);
         receipt.add(shop);
 
-        JLabel addr = new JLabel("<html><div style='text-align:center'>Jl. Raya Giri No. 88, Banyuwangi · Telp 0812-3456-7890<br>"
-                + "Buka setiap hari 07.00–21.00</div></html>");
-        addr.setFont(Theme.text(Font.PLAIN, 11));
-        addr.setForeground(Theme.MUTED);
+        WrapText addr = new WrapText(alamat + " · Telp " + telepon,
+                Theme.text(Font.PLAIN, kertas58 ? 10 : 11), Theme.MUTED,
+                -1, null, SwingConstants.CENTER, lebarKonten);
         addr.setAlignmentX(Component.CENTER_ALIGNMENT);
         receipt.add(Box.createVerticalStrut(3));
         receipt.add(addr);
+        WrapText jam = new WrapText("Buka setiap hari 07.00–21.00",
+                Theme.text(Font.PLAIN, kertas58 ? 10 : 11), Theme.MUTED,
+                -1, null, SwingConstants.CENTER, lebarKonten);
+        jam.setAlignmentX(Component.CENTER_ALIGNMENT);
+        receipt.add(jam);
 
-        receipt.add(Box.createVerticalStrut(12));
-        receipt.add(new DashedDivider(Theme.INK, 1.5f));
         receipt.add(Box.createVerticalStrut(10));
+        receipt.add(new DashedDivider(Theme.INK, 1.5f));
+        receipt.add(Box.createVerticalStrut(8));
 
+        // Metadata: satu field per baris (label kiri, nilai kanan) —
+        // tidak ada lagi dua kolom yang saling memotong di kertas sempit.
         DateTimeFormatter date = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.of("id", "ID"));
-        receipt.add(metaRow(
-                "<span style='color:#78716C'>NO. STRUK :</span> " + transaksi.getKode(),
-                "<span style='color:#78716C'>KASIR :</span> " + shortName(transaksi.getUserName())));
-        receipt.add(metaRow(
-                "<span style='color:#78716C'>TANGGAL :</span> "
-                        + (transaksi.getTanggal() == null ? "-" : date.format(transaksi.getTanggal()).toUpperCase()),
-                "<span style='color:#78716C'>PUKUL :</span> " + Fmt.jam(transaksi.getTanggal()) + " WIB"));
+        receipt.add(metaRow("NO. STRUK", transaksi.getKode()));
+        receipt.add(metaRow("TANGGAL",
+                transaksi.getTanggal() == null ? "-" : date.format(transaksi.getTanggal()).toUpperCase(Locale.of("id", "ID"))));
+        receipt.add(metaRow("KASIR", shortName(transaksi.getUserName())));
+        receipt.add(metaRow("PUKUL", Fmt.jam(transaksi.getTanggal()) + " WIB"));
 
         if (isVoid) {
-            receipt.add(Box.createVerticalStrut(6));
-            receipt.add(metaRow(
-                    "<span style='color:#DC2626'>STATUS :</span> <b style='color:#DC2626'>VOID / BATAL</b>",
-                    "<span style='color:#78716C'>VOID OLEH :</span> " + shortName(transaksi.getVoidByName())));
+            receipt.add(Box.createVerticalStrut(4));
+            WrapText status = new WrapText("STATUS : VOID / BATAL",
+                    Theme.mono(Font.BOLD, kertas58 ? 8 : 9), Theme.DANGER,
+                    -1, null, SwingConstants.LEFT, lebarKonten);
+            receipt.add(status);
+            receipt.add(metaRow("VOID OLEH", shortName(transaksi.getVoidByName())));
             if (transaksi.getVoidAlasan() != null && !transaksi.getVoidAlasan().isBlank()) {
-                receipt.add(metaRow(
-                        "<span style='color:#DC2626'>ALASAN :</span> " + escape(transaksi.getVoidAlasan()),
-                        "<span style='color:#78716C'>WAKTU :</span> " + Fmt.jam(transaksi.getVoidAt())));
+                WrapText alasan = new WrapText("ALASAN : " + transaksi.getVoidAlasan(),
+                        Theme.mono(Font.PLAIN, kertas58 ? 8 : 9), Theme.DANGER,
+                        -1, null, SwingConstants.LEFT, lebarKonten);
+                receipt.add(alasan);
             }
         }
 
-        receipt.add(Box.createVerticalStrut(8));
+        receipt.add(Box.createVerticalStrut(6));
         receipt.add(new DashedDivider(Theme.INK, 1.5f));
         receipt.add(Box.createVerticalStrut(6));
 
         for (TransaksiItem item : transaksi.getItems()) {
-            receipt.add(itemRow(item));
+            receipt.add(itemBlock(item));
+            receipt.add(Box.createVerticalStrut(3));
         }
 
-        receipt.add(Box.createVerticalStrut(4));
+        receipt.add(Box.createVerticalStrut(2));
         receipt.add(new DashedDivider(Theme.BORDER_STRONG, 1f));
         receipt.add(Box.createVerticalStrut(6));
 
-        if (transaksi.getDiskon() != null && transaksi.getDiskon().compareTo(java.math.BigDecimal.ZERO) > 0) {
-            receipt.add(totalRow("SUBTOTAL", Fmt.rupiah(transaksi.getSubtotal()), false, Theme.INK_SOFT));
-            receipt.add(totalRow("DISKON GROSIR", "- " + Fmt.rupiah(transaksi.getDiskon()), false, Theme.DANGER));
-            receipt.add(Box.createVerticalStrut(2));
+        if (transaksi.getDiskon() != null && transaksi.getDiskon().signum() > 0) {
+            receipt.add(totalRow("Subtotal", Fmt.rupiah(transaksi.getSubtotal()), false, Theme.INK));
+            receipt.add(totalRow("Diskon", "- " + Fmt.rupiah(transaksi.getDiskon()), false, Theme.DANGER));
         }
-
         receipt.add(totalRow("TOTAL", Fmt.rupiah(transaksi.getTotal()), true, Theme.INK));
-        receipt.add(totalRow("BAYAR (TUNAI)", Fmt.rupiah(transaksi.getBayar()), false, Theme.INK));
+        receipt.add(totalRow(labelBayar(), Fmt.rupiah(transaksi.getBayar()), false, Theme.INK));
         receipt.add(totalRow("KEMBALI", Fmt.rupiah(transaksi.getKembali()), false, Theme.GREEN_FG));
 
-        receipt.add(Box.createVerticalStrut(10));
-        receipt.add(new DashedDivider(Theme.INK, 1.5f));
+        // Stempel sebagai baris sendiri — tidak menimpa item/total dan
+        // tidak terpotong tepi nota.
+        receipt.add(Box.createVerticalStrut(6));
+        receipt.add(new StampBadge(isVoid ? "VOID" : "LUNAS", isVoid));
         receipt.add(Box.createVerticalStrut(4));
 
-        JLabel thanks = new JLabel("— Terima kasih sudah berbelanja —");
-        thanks.setFont(Theme.display(Font.ITALIC, 14));
-        thanks.setForeground(Theme.INK_SOFT);
+        receipt.add(new DashedDivider(Theme.INK, 1.5f));
+        receipt.add(Box.createVerticalStrut(6));
+
+        WrapText thanks = new WrapText("— " + footer + " —",
+                Theme.display(Font.ITALIC, kertas58 ? 12 : 14), Theme.INK_SOFT,
+                -1, null, SwingConstants.CENTER, lebarKonten);
         thanks.setAlignmentX(Component.CENTER_ALIGNMENT);
         receipt.add(thanks);
         receipt.add(Box.createVerticalStrut(6));
 
-        JPanel barcode = new Barcode();
+        JPanel barcode = new Barcode(kertas58 ? 180 : 250);
         barcode.setAlignmentX(Component.CENTER_ALIGNMENT);
         receipt.add(barcode);
         receipt.add(Box.createVerticalStrut(3));
@@ -182,60 +265,79 @@ public class TransaksiDetailDialog extends JDialog {
         cap.setForeground(Theme.FAINT);
         cap.setAlignmentX(Component.CENTER_ALIGNMENT);
         receipt.add(cap);
-        receipt.add(Box.createVerticalStrut(8));
+        receipt.add(Box.createVerticalStrut(6));
         return receipt;
     }
 
-    private JComponent metaRow(String left, String right) {
-        JPanel row = new JPanel(new BorderLayout(14, 0));
-        row.setOpaque(false);
-        row.setAlignmentX(Component.CENTER_ALIGNMENT);
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 18));
-        JLabel l = new JLabel("<html><div style='font-size:9px'>" + left + "</div></html>");
-        l.setFont(Theme.mono(Font.PLAIN, 9));
-        l.setForeground(Theme.INK);
-        JLabel r = new JLabel("<html><div style='font-size:9px'>" + right + "</div></html>");
-        r.setFont(Theme.mono(Font.PLAIN, 9));
-        r.setForeground(Theme.INK);
-        row.add(l, BorderLayout.WEST);
-        row.add(r, BorderLayout.EAST);
-        return row;
+    private String labelBayar() {
+        String metode = transaksi.getMetodeBayar();
+        if (metode == null || metode.isBlank() || "TUNAI".equalsIgnoreCase(metode)) {
+            return "BAYAR (TUNAI)";
+        }
+        String bersih = metode.replace("MIDTRANS_", "").replace("SIMULASI_", "SIMULASI ")
+                .replace('_', ' ').trim();
+        return "BAYAR (" + bersih + ")";
     }
 
-    private JComponent itemRow(TransaksiItem item) {
+    private JComponent metaRow(String label, String value) {
         JPanel row = new JPanel(new BorderLayout(10, 0));
         row.setOpaque(false);
         row.setAlignmentX(Component.CENTER_ALIGNMENT);
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        row.setBorder(new EmptyBorder(3, 0, 3, 0));
-
-        String tipe = item.getTipe() == TipeItem.JASA
-                ? " <font color='#2456A6'>[JASA]</font>" : "";
-        JLabel left = new JLabel("<html><b>" + escape(item.getNamaItem()) + "</b>" + tipe
-                + "<br><font face='Cascadia Mono, Consolas' color='#78716C'>"
-                + item.getQty() + " × " + Fmt.angka(item.getHarga()) + "</font></html>");
-        left.setFont(Theme.text(Font.PLAIN, 12));
-        left.setForeground(Theme.INK);
-        row.add(left, BorderLayout.CENTER);
-
-        JLabel right = new JLabel(Fmt.angka(item.getSubtotal()));
-        right.setFont(Theme.mono(Font.BOLD, 11));
-        right.setForeground(Theme.INK);
-        right.setVerticalAlignment(SwingConstants.TOP);
-        row.add(right, BorderLayout.EAST);
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
+        JLabel l = new JLabel(label + " :");
+        l.setFont(Theme.mono(Font.PLAIN, kertas58 ? 8 : 9));
+        l.setForeground(Theme.MUTED);
+        JLabel v = new JLabel(value == null || value.isBlank() ? "-" : value);
+        v.setFont(Theme.mono(Font.BOLD, kertas58 ? 8 : 9));
+        v.setForeground(Theme.INK);
+        row.add(l, BorderLayout.WEST);
+        row.add(v, BorderLayout.EAST);
         return row;
+    }
+
+    /** Satu item = blok dua baris: nama (wrap penuh) lalu qty x harga + subtotal. */
+    private JComponent itemBlock(TransaksiItem item) {
+        JPanel block = new JPanel();
+        block.setOpaque(false);
+        block.setLayout(new BoxLayout(block, BoxLayout.Y_AXIS));
+        block.setAlignmentX(Component.CENTER_ALIGNMENT);
+        block.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+
+        boolean jasa = item.getTipe() == TipeItem.JASA;
+        String namaItem = item.getNamaItem() == null ? "-" : item.getNamaItem();
+        WrapText nama = new WrapText(jasa ? namaItem + " [JASA]" : namaItem,
+                Theme.text(Font.BOLD, kertas58 ? 11 : 12), Theme.INK,
+                jasa ? namaItem.length() : -1, new Color(0x2456A6),
+                SwingConstants.LEFT, lebarKonten);
+        nama.setAlignmentX(Component.LEFT_ALIGNMENT);
+        block.add(nama);
+
+        JPanel detail = new JPanel(new BorderLayout(10, 0));
+        detail.setOpaque(false);
+        detail.setAlignmentX(Component.LEFT_ALIGNMENT);
+        detail.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
+        JLabel qty = new JLabel(item.getQty() + " × " + Fmt.angka(item.getHarga()));
+        qty.setFont(Theme.mono(Font.PLAIN, kertas58 ? 9 : 10));
+        qty.setForeground(Theme.MUTED);
+        JLabel sub = new JLabel(Fmt.angka(item.getSubtotal()));
+        sub.setFont(Theme.mono(Font.BOLD, kertas58 ? 10 : 11));
+        sub.setForeground(Theme.INK);
+        detail.add(qty, BorderLayout.WEST);
+        detail.add(sub, BorderLayout.EAST);
+        block.add(detail);
+        return block;
     }
 
     private JComponent totalRow(String label, String value, boolean grand, Color valueColor) {
         JPanel row = new JPanel(new BorderLayout());
         row.setOpaque(false);
         row.setAlignmentX(Component.CENTER_ALIGNMENT);
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, grand ? 26 : 20));
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, grand ? 24 : 18));
         JLabel l = new JLabel(label);
         l.setFont(Theme.text(Font.BOLD, grand ? 13 : 11));
         l.setForeground(grand ? Theme.INK : Theme.MUTED);
         JLabel v = new JLabel(value);
-        v.setFont(Theme.mono(Font.BOLD, grand ? 17 : 11));
+        v.setFont(Theme.mono(Font.BOLD, grand ? (kertas58 ? 15 : 17) : 11));
         v.setForeground(valueColor);
         row.add(l, BorderLayout.WEST);
         row.add(v, BorderLayout.EAST);
@@ -244,24 +346,33 @@ public class TransaksiDetailDialog extends JDialog {
 
     private JComponent buildActions() {
         boolean canVoid = transaksi.getStatus() == StatusTransaksi.SUKSES;
-        int btnCount = canVoid ? 4 : 3;
-        JPanel actions = new JPanel(new java.awt.GridLayout(1, btnCount, 10, 0));
+        int jumlah = canVoid ? 4 : 3;
+        JPanel actions = new JPanel(new java.awt.GridLayout(1, jumlah, 8, 0));
         actions.setOpaque(false);
         actions.setAlignmentX(Component.CENTER_ALIGNMENT);
-        actions.setBorder(new EmptyBorder(0, 10, 0, 10));
-        actions.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
+        actions.setBorder(new EmptyBorder(0, 6, 0, 6));
+        actions.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
 
         if (canVoid) {
-            UiKit.SoftButton btnVoid = new UiKit.SoftButton("Void Transaksi", UiKit.Variant.DANGER);
+            UiKit.SoftButton btnVoid = new UiKit.SoftButton("Void", UiKit.Variant.DANGER);
+            btnVoid.setToolTipText("Void / batalkan transaksi ini");
+            btnVoid.setFont(Theme.text(Font.BOLD, 10));
+            btnVoid.setBorder(new EmptyBorder(8, 6, 9, 6));
             btnVoid.addActionListener(e -> konfirmasiVoid());
             actions.add(btnVoid);
         }
 
-        UiKit.SoftButton btnJpg = new UiKit.SoftButton("Simpan Nota (JPG)", UiKit.Variant.GHOST);
+        UiKit.SoftButton btnJpg = new UiKit.SoftButton("Simpan JPG", UiKit.Variant.GHOST);
+        btnJpg.setToolTipText("Simpan nota ini sebagai gambar JPG");
+        btnJpg.setFont(Theme.text(Font.BOLD, 10));
+        btnJpg.setBorder(new EmptyBorder(8, 6, 9, 6));
         btnJpg.addActionListener(e -> simpanNotaJpg());
         actions.add(btnJpg);
 
-        UiKit.SoftButton print = new UiKit.SoftButton("Cetak Ulang Struk", UiKit.Variant.GHOST);
+        UiKit.SoftButton print = new UiKit.SoftButton("Cetak Ulang", UiKit.Variant.GHOST);
+        print.setToolTipText("Cetak ulang struk ke printer thermal");
+        print.setFont(Theme.text(Font.BOLD, 10));
+        print.setBorder(new EmptyBorder(8, 6, 9, 6));
         print.addActionListener(e -> {
             try {
                 new ThermalPrintService().cetakStruk(transaksi);
@@ -273,42 +384,51 @@ public class TransaksiDetailDialog extends JDialog {
         actions.add(print);
 
         UiKit.SoftButton tutup = new UiKit.SoftButton("Tutup", UiKit.Variant.PRIMARY);
+        tutup.setFont(Theme.text(Font.BOLD, 10));
+        tutup.setBorder(new EmptyBorder(8, 6, 9, 6));
         tutup.addActionListener(e -> dispose());
         actions.add(tutup);
         return actions;
     }
 
+    /** Ekspor panel nota persis seperti yang tampil menjadi file JPG (skala 2x). */
     private void simpanNotaJpg() {
-        JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Simpan Nota sebagai Gambar JPG");
-        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Gambar JPEG (*.jpg)", "jpg"));
-        String defaultName = "Nota_" + (transaksi.getKode() == null ? "nota" : transaksi.getKode()) + ".jpg";
-        chooser.setSelectedFile(new File(defaultName));
-
-        int result = chooser.showSaveDialog(this);
-        if (result != JFileChooser.APPROVE_OPTION) {
+        if (receiptPanel == null) {
             return;
         }
-
-        File file = chooser.getSelectedFile();
-        if (!file.getName().toLowerCase().endsWith(".jpg")) {
-            file = new File(file.getAbsolutePath() + ".jpg");
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Simpan Nota sebagai JPG");
+        chooser.setFileFilter(new FileNameExtensionFilter("Gambar JPG", "jpg", "jpeg"));
+        chooser.setSelectedFile(new File("Nota-" + transaksi.getKode() + ".jpg"));
+        if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
+            return;
         }
-
+        File target = chooser.getSelectedFile();
+        if (!target.getName().toLowerCase().endsWith(".jpg") && !target.getName().toLowerCase().endsWith(".jpeg")) {
+            target = new File(target.getParentFile(), target.getName() + ".jpg");
+        }
         try {
-            new NotaImageService().simpanNotaJpg(transaksi, file);
-            int open = javax.swing.JOptionPane.showConfirmDialog(this,
-                    "Nota berhasil disimpan sebagai:\n" + file.getAbsolutePath()
-                    + "\n\nBuka lokasi file?",
-                    "Nota JPG Tersimpan",
-                    javax.swing.JOptionPane.YES_NO_OPTION,
-                    javax.swing.JOptionPane.INFORMATION_MESSAGE);
-            if (open == javax.swing.JOptionPane.YES_OPTION) {
-                try {
-                    java.awt.Desktop.getDesktop().open(file.getParentFile());
-                } catch (Exception ignored) {
-                }
+            Dimension ukuran = receiptPanel.getSize();
+            if (ukuran.width <= 0 || ukuran.height <= 0) {
+                ukuran = receiptPanel.getPreferredSize();
+                receiptPanel.setSize(ukuran);
+                receiptPanel.doLayout();
             }
+            int skala = 2;
+            BufferedImage img = new BufferedImage(ukuran.width * skala, ukuran.height * skala,
+                    BufferedImage.TYPE_INT_RGB);
+            Graphics2D g2 = img.createGraphics();
+            g2.setColor(Theme.SURFACE);
+            g2.fillRect(0, 0, img.getWidth(), img.getHeight());
+            g2.scale(skala, skala);
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            receiptPanel.printAll(g2);
+            g2.dispose();
+            if (!ImageIO.write(img, "jpg", target)) {
+                throw new IllegalStateException("Format JPG tidak didukung.");
+            }
+            Dialogs.info(this, "Nota berhasil disimpan ke:\n" + target.getAbsolutePath());
         } catch (Exception ex) {
             Dialogs.error(this, "Gagal menyimpan nota JPG: " + ex.getMessage());
         }
@@ -351,6 +471,9 @@ public class TransaksiDetailDialog extends JDialog {
     }
 
     private String spaced(String text) {
+        if (text == null) {
+            return "-";
+        }
         StringBuilder sb = new StringBuilder();
         for (char c : text.toCharArray()) {
             sb.append(c).append(' ');
@@ -359,16 +482,135 @@ public class TransaksiDetailDialog extends JDialog {
     }
 
     private String escape(String text) {
-        return text == null ? "" : text.replace("&", "&amp;").replace("<", "&lt;");
+        return text == null ? "" : text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 
-    private static final class ReceiptPanel extends JPanel {
-        private final boolean isVoid;
+    /**
+     * Teks dengan lebar tetap yang wrap-nya dihitung dari FontMetrics —
+     * pengganti JLabel HTML untuk semua teks panjang di nota. Ukuran
+     * minimum/preferensinya tidak pernah melebihi lebar konten, jadi
+     * komponen ini tidak bisa mendorong nota melebar.
+     * Mendukung satu segmen ekor berwarna lain (mis. "& Print" / "[JASA]").
+     */
+    private static final class WrapText extends JComponent {
+        private static final Graphics2D UKUR =
+                new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics();
 
-        ReceiptPanel(boolean isVoid) {
-            this.isVoid = isVoid;
+        private final String text;
+        private final int suffixStart;
+        private final Color suffixColor;
+        private final int align;
+        private final int lebar;
+
+        WrapText(String text, Font font, Color color, int suffixStart, Color suffixColor,
+                 int align, int lebar) {
+            this.text = text == null ? "" : text;
+            this.suffixStart = suffixStart;
+            this.suffixColor = suffixColor;
+            this.align = align;
+            this.lebar = lebar;
+            setFont(font);
+            setForeground(color);
+            int tinggi = baris().size() * (fontMetrics().getHeight());
+            Dimension d = new Dimension(lebar, tinggi);
+            setPreferredSize(d);
+            setMinimumSize(d);
+            setMaximumSize(new Dimension(lebar, Integer.MAX_VALUE));
+        }
+
+        private FontMetrics fontMetrics() {
+            UKUR.setFont(getFont());
+            return UKUR.getFontMetrics();
+        }
+
+        private List<String> baris() {
+            return wrapTeks(fontMetrics(), text, lebar);
+        }
+
+        private static List<String> wrapTeks(FontMetrics fm, String teks, int maxW) {
+            List<String> hasil = new ArrayList<>();
+            if (teks == null || teks.isBlank()) {
+                hasil.add("");
+                return hasil;
+            }
+            StringBuilder baris = new StringBuilder();
+            for (String kata : teks.trim().split("\\s+")) {
+                while (fm.stringWidth(kata) > maxW && kata.length() > 1) {
+                    int potong = kata.length() - 1;
+                    while (potong > 1 && fm.stringWidth(kata.substring(0, potong)) > maxW) {
+                        potong--;
+                    }
+                    if (baris.length() > 0) {
+                        hasil.add(baris.toString());
+                        baris.setLength(0);
+                    }
+                    hasil.add(kata.substring(0, potong));
+                    kata = kata.substring(potong);
+                }
+                String calon = baris.length() == 0 ? kata : baris + " " + kata;
+                if (fm.stringWidth(calon) <= maxW) {
+                    baris.setLength(0);
+                    baris.append(calon);
+                } else {
+                    if (baris.length() > 0) {
+                        hasil.add(baris.toString());
+                    }
+                    baris.setLength(0);
+                    baris.append(kata);
+                }
+            }
+            if (baris.length() > 0) {
+                hasil.add(baris.toString());
+            }
+            return hasil;
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            g2.setFont(getFont());
+            FontMetrics fm = g2.getFontMetrics();
+            int w = Math.min(getWidth(), lebar);
+            int offset = 0; // posisi karakter global untuk pewarnaan segmen ekor
+            int y = fm.getAscent();
+            for (String baris : baris()) {
+                int x = align == SwingConstants.CENTER
+                        ? Math.max(0, (w - fm.stringWidth(baris)) / 2) : 0;
+                if (suffixStart < 0 || suffixColor == null) {
+                    g2.setColor(getForeground());
+                    g2.drawString(baris, x, y);
+                } else {
+                    int mulai = offset;
+                    int selesai = offset + baris.length();
+                    if (selesai <= suffixStart) {
+                        g2.setColor(getForeground());
+                        g2.drawString(baris, x, y);
+                    } else if (mulai >= suffixStart) {
+                        g2.setColor(suffixColor);
+                        g2.drawString(baris, x, y);
+                    } else {
+                        int potong = suffixStart - mulai;
+                        String kiri = baris.substring(0, potong);
+                        String kanan = baris.substring(potong);
+                        g2.setColor(getForeground());
+                        g2.drawString(kiri, x, y);
+                        g2.setColor(suffixColor);
+                        g2.drawString(kanan, x + fm.stringWidth(kiri), y);
+                    }
+                }
+                offset += baris.length() + 1; // +1 untuk spasi pemisah yang hilang saat wrap
+                y += fm.getHeight();
+            }
+            g2.dispose();
+        }
+    }
+
+    /** Panel kertas nota: latar + bingkai. Stempel tidak digambar di sini lagi. */
+    private static final class ReceiptPanel extends JPanel {
+
+        ReceiptPanel() {
             setOpaque(false);
-            setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         }
 
         @Override
@@ -389,19 +631,44 @@ public class TransaksiDetailDialog extends JDialog {
             g2.setColor(Theme.INK);
             g2.drawRect(0, 0, getWidth() - 7, getHeight() - 7);
             g2.drawRect(1, 1, getWidth() - 9, getHeight() - 9);
+            g2.dispose();
+        }
+    }
 
+    /** Stempel LUNAS/VOID sebagai komponen baris sendiri, selalu utuh di dalam nota. */
+    private static final class StampBadge extends JPanel {
+        private final String text;
+        private final boolean isVoid;
+
+        StampBadge(String text, boolean isVoid) {
+            this.text = text;
+            this.isVoid = isVoid;
+            setOpaque(false);
+            setAlignmentX(Component.CENTER_ALIGNMENT);
+            setPreferredSize(new Dimension(0, 38));
+            setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            Color warna = isVoid ? Theme.DANGER : Theme.ACCENT;
+            g2.setColor(warna);
+            g2.setFont(Theme.text(Font.BOLD, 17));
+            int sw = g2.getFontMetrics().stringWidth(text);
+            int boxW = sw + 30;
+            int boxH = 32;
             AffineTransform old = g2.getTransform();
-            g2.rotate(Math.toRadians(-6), getWidth() - 120, 210);
-            g2.setFont(Theme.text(Font.BOLD, 26));
-            g2.setColor(isVoid ? Theme.DANGER : Theme.ACCENT);
-            String stamp = isVoid ? "VOID" : "LUNAS";
-            int sw = g2.getFontMetrics().stringWidth(stamp);
-            g2.drawString(stamp, getWidth() - 116 - sw / 2, 208);
-            g2.setStroke(new java.awt.BasicStroke(3f));
-            g2.drawRect(getWidth() - 116 - sw / 2 - 14, 176, sw + 28, 44);
-            g2.setStroke(new java.awt.BasicStroke(1.5f));
-            g2.drawRect(getWidth() - 116 - sw / 2 - 9, 181, sw + 18, 34);
+            g2.rotate(Math.toRadians(-5), getWidth() / 2.0, getHeight() / 2.0);
+            int bx = (getWidth() - boxW) / 2;
+            int by = (getHeight() - boxH) / 2;
+            g2.setStroke(new java.awt.BasicStroke(2.5f));
+            g2.drawRect(bx, by, boxW, boxH);
+            g2.setStroke(new java.awt.BasicStroke(1.2f));
+            g2.drawRect(bx + 3, by + 3, boxW - 6, boxH - 6);
+            g2.drawString(text, (getWidth() - sw) / 2, by + boxH / 2 + 6);
             g2.setTransform(old);
             g2.dispose();
         }
@@ -461,10 +728,10 @@ public class TransaksiDetailDialog extends JDialog {
     }
 
     private static final class Barcode extends JPanel {
-        Barcode() {
+        Barcode(int lebar) {
             setOpaque(false);
-            setPreferredSize(new Dimension(250, 38));
-            setMaximumSize(new Dimension(250, 38));
+            setPreferredSize(new Dimension(lebar, 38));
+            setMaximumSize(new Dimension(lebar, 38));
         }
 
         @Override

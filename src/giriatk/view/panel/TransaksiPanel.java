@@ -87,12 +87,13 @@ public class TransaksiPanel extends BasePanel {
     private final UiKit.ToggleButton tabJasa = new UiKit.ToggleButton("Jasa Cetak / Print", Theme.ACCENT);
 
     private boolean modeBarang = true;
+    private BigDecimal subtotal = BigDecimal.ZERO;
     private BigDecimal total = BigDecimal.ZERO;
 
     public TransaksiPanel() {
         super(new BorderLayout());
 
-        modelKatalog = new DefaultTableModel(new String[]{"", "Item Katalog", "Satuan", "Harga Satuan", "Stok", "Aksi"}, 0) {
+        modelKatalog = new DefaultTableModel(new String[]{"", "Item Katalog", "Satuan", "Harga", "Stok", "Aksi"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -131,18 +132,25 @@ public class TransaksiPanel extends BasePanel {
     // ================= KATALOG =================
 
     private JPanel buildKatalogCard() {
-        UiKit.SurfacePanel card = new UiKit.SurfacePanel(new BorderLayout(0, 14));
-        card.setBorder(BorderFactory.createEmptyBorder(18, 20, 18, 20));
+        UiKit.SurfacePanel card = new UiKit.SurfacePanel(new BorderLayout(0, 10));
+        card.setBorder(BorderFactory.createEmptyBorder(14, 16, 14, 16));
 
         tabBarang.addActionListener(e -> pilihMode(true));
         tabJasa.addActionListener(e -> pilihMode(false));
-        
+
         JPanel modeRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         modeRow.setOpaque(false);
+        modeRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         modeRow.add(tabBarang);
         modeRow.add(tabJasa);
 
-        txtCariKatalog.setPreferredSize(new Dimension(240, 38));
+        // Kolom pencarian dibuat satu baris penuh di bawah tab. Pola lama
+        // (tab di kiri + pencarian di kanan dalam satu baris BorderLayout)
+        // saling menekan di jendela sempit: teks tab dan placeholder
+        // pencarian tumpang tindih dan tabel ikut bergeser.
+        txtCariKatalog.setPreferredSize(new Dimension(0, 36));
+        txtCariKatalog.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+        txtCariKatalog.setAlignmentX(Component.LEFT_ALIGNMENT);
         txtCariKatalog.addActionListener(e -> scanBarcodeAtauPilihFirstItem());
         txtCariKatalog.getDocument().addDocumentListener(new DocumentListener() {
             @Override
@@ -153,13 +161,41 @@ public class TransaksiPanel extends BasePanel {
             public void changedUpdate(DocumentEvent e) { reloadKatalog(); }
         });
 
-        JPanel toolbar = new JPanel(new BorderLayout());
+        JPanel toolbar = new JPanel();
         toolbar.setOpaque(false);
-        toolbar.add(modeRow, BorderLayout.WEST);
-        toolbar.add(txtCariKatalog, BorderLayout.EAST);
+        toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.Y_AXIS));
+        toolbar.add(modeRow);
+        toolbar.add(Box.createVerticalStrut(8));
+        toolbar.add(txtCariKatalog);
         card.add(toolbar, BorderLayout.NORTH);
 
-        tableKatalog.setRowHeight(54);
+        tableKatalog.setRowHeight(64);
+        // AppTable bawaan memakai AUTO_RESIZE_ALL_COLUMNS yang membagi
+        // penyusutan ke semua kolom. Di sini diganti supaya hanya kolom
+        // Item yang menyerap perubahan lebar.
+        tableKatalog.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
+        tableKatalog.getTableHeader().setResizingAllowed(false);
+        tableKatalog.getTableHeader().setReorderingAllowed(false);
+        // Renderer header bawaan AppTable memakai padding kiri-kanan 14px,
+        // sehingga "SATUAN" dan "STOK" terpotong di kolomnya yang sempit.
+        // Khusus tabel katalog, padding dipersempit.
+        tableKatalog.getTableHeader().setDefaultRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(javax.swing.JTable table, Object value, boolean isSelected,
+                    boolean hasFocus, int row, int column) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                label.setOpaque(true);
+                label.setBackground(Theme.SURFACE_ELEVATED);
+                label.setForeground(Theme.MUTED);
+                label.setFont(Theme.text(Font.BOLD, 10));
+                label.setHorizontalAlignment(SwingConstants.LEFT);
+                label.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createMatteBorder(0, 0, 1, 0, Theme.BORDER),
+                        BorderFactory.createEmptyBorder(0, 8, 0, 6)));
+                label.setText(value == null ? "" : value.toString().toUpperCase());
+                return label;
+            }
+        });
         tableKatalog.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(javax.swing.JTable table, Object value, boolean isSelected,
@@ -174,9 +210,16 @@ public class TransaksiPanel extends BasePanel {
         tableKatalog.getColumnModel().getColumn(0).setMinWidth(44);
         tableKatalog.getColumnModel().getColumn(0).setMaxWidth(46);
         tableKatalog.getColumnModel().getColumn(0).setPreferredWidth(44);
-        int[] lebarKatalog = {44, 232, 62, 96, 52, 92};
+        // Lebar kolom dikunci dengan min/max supaya Satuan, Harga, dan Stok
+        // tidak menyusut jadi "S...", "HARG...", "..." di jendela sempit.
+        // Hanya kolom Item Katalog yang fleksibel menyerap sisa lebar.
+        int[] lebarKatalog = {44, 170, 56, 90, 44, 80};
+        int[] minKatalog = {44, 100, 56, 86, 44, 74};
+        int[] maxKatalog = {46, Integer.MAX_VALUE, 60, 96, 48, 84};
         for (int i = 0; i < lebarKatalog.length; i++) {
             tableKatalog.getColumnModel().getColumn(i).setPreferredWidth(lebarKatalog[i]);
+            tableKatalog.getColumnModel().getColumn(i).setMinWidth(minKatalog[i]);
+            tableKatalog.getColumnModel().getColumn(i).setMaxWidth(maxKatalog[i]);
         }
         tableKatalog.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
@@ -206,9 +249,9 @@ public class TransaksiPanel extends BasePanel {
                 return cell;
             }
         });
-        tableKatalog.getColumnModel().getColumn(KOLOM_AKSI).setMinWidth(88);
-        tableKatalog.getColumnModel().getColumn(KOLOM_AKSI).setMaxWidth(94);
-        tableKatalog.getColumnModel().getColumn(KOLOM_AKSI).setPreferredWidth(92);
+        tableKatalog.getColumnModel().getColumn(KOLOM_AKSI).setMinWidth(74);
+        tableKatalog.getColumnModel().getColumn(KOLOM_AKSI).setMaxWidth(84);
+        tableKatalog.getColumnModel().getColumn(KOLOM_AKSI).setPreferredWidth(80);
 
         tableKatalog.setEmptyState("Katalog tidak ditemukan", "Coba kata kunci lain atau tambahkan item.");
         tableKatalog.addMouseListener(new MouseAdapter() {
@@ -249,7 +292,7 @@ public class TransaksiPanel extends BasePanel {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             int h = 28;
-            int w = Math.min(getWidth() - 14, 82);
+            int w = Math.min(getWidth() - 6, 80);
             int x = (getWidth() - w) / 2;
             int y = (getHeight() - h) / 2;
             
@@ -259,14 +302,24 @@ public class TransaksiPanel extends BasePanel {
             g2.drawRoundRect(x, y, w - 1, h - 1, Theme.RADIUS_CONTROL, Theme.RADIUS_CONTROL);
 
             Graphics2D gi = (Graphics2D) g2.create();
-            gi.translate(x + 8, y + (h - 12) / 2);
+            gi.translate(x + 6, y + (h - 12) / 2);
             Icons.paint(gi, Icons.Name.PLUS, 12, Theme.ACCENT);
             gi.dispose();
 
+            // Ukuran font teks dipilih yang paling besar tapi tetap muat di
+            // dalam kotak tombol, supaya "Tambah" tidak pernah terpotong
+            // di kolom sempit.
             g2.setColor(Theme.ACCENT);
-            g2.setFont(Theme.text(Font.BOLD, 11));
+            Font fontTombol = Theme.text(Font.BOLD, 11);
+            for (int ukuran : new int[]{11, 10, 9}) {
+                fontTombol = Theme.text(Font.BOLD, ukuran);
+                if (g2.getFontMetrics(fontTombol).stringWidth("Tambah") <= w - 28) {
+                    break;
+                }
+            }
+            g2.setFont(fontTombol);
             FontMetrics fm = g2.getFontMetrics();
-            g2.drawString("Tambah", x + 26, y + (h - fm.getHeight()) / 2 + fm.getAscent());
+            g2.drawString("Tambah", x + 22, y + (h - fm.getHeight()) / 2 + fm.getAscent());
             g2.dispose();
         }
     }
@@ -274,8 +327,8 @@ public class TransaksiPanel extends BasePanel {
     // ================= KERANJANG =================
 
     private JPanel buildKeranjangCard() {
-        UiKit.SurfacePanel card = new UiKit.SurfacePanel(new BorderLayout(0, 12));
-        card.setBorder(BorderFactory.createEmptyBorder(18, 20, 18, 20));
+        UiKit.SurfacePanel card = new UiKit.SurfacePanel(new BorderLayout(0, 10));
+        card.setBorder(BorderFactory.createEmptyBorder(14, 16, 14, 16));
 
         JPanel head = new JPanel(new BorderLayout());
         head.setOpaque(false);
@@ -318,77 +371,78 @@ public class TransaksiPanel extends BasePanel {
         panel.setOpaque(false);
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-        panel.add(Box.createVerticalStrut(10));
+        panel.add(Box.createVerticalStrut(8));
         panel.add(barisInfo("Subtotal", lblSubtotal, 13, Theme.MUTED, Theme.INK_SOFT));
-        panel.add(Box.createVerticalStrut(6));
+        panel.add(Box.createVerticalStrut(4));
 
-        // Diskon Manual (Grosir/Potongan)
+        // Diskon manual (Rp) — satu baris ramping sejajar label, bukan
+        // field tinggi penuh, supaya daftar keranjang tidak terdesak.
         JPanel diskonRow = new JPanel(new BorderLayout(10, 0));
         diskonRow.setOpaque(false);
-        diskonRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-
+        diskonRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
         JLabel lblDiskon = new JLabel("Diskon Manual (Rp)");
         lblDiskon.setFont(Theme.text(Font.BOLD, 12));
         lblDiskon.setForeground(Theme.INK);
-        lblDiskon.setPreferredSize(new Dimension(130, 26));
-
+        lblDiskon.setPreferredSize(new Dimension(118, 26));
         txtDiskon.setHorizontalAlignment(SwingConstants.RIGHT);
         txtDiskon.setFont(Theme.mono(Font.BOLD, 13));
+        txtDiskon.setPreferredSize(new Dimension(0, 30));
         txtDiskon.getDocument().addDocumentListener(new DocumentListener() {
-            @Override public void insertUpdate(DocumentEvent e) { refreshKeranjang(); }
-            @Override public void removeUpdate(DocumentEvent e) { refreshKeranjang(); }
-            @Override public void changedUpdate(DocumentEvent e) { refreshKeranjang(); }
+            @Override public void insertUpdate(DocumentEvent e) { hitungTotal(); }
+            @Override public void removeUpdate(DocumentEvent e) { hitungTotal(); }
+            @Override public void changedUpdate(DocumentEvent e) { hitungTotal(); }
         });
         diskonRow.add(lblDiskon, BorderLayout.WEST);
         diskonRow.add(txtDiskon, BorderLayout.CENTER);
         panel.add(diskonRow);
         panel.add(Box.createVerticalStrut(6));
-        
+
         // Total Box
         JPanel totalBox = new JPanel(new BorderLayout());
         totalBox.setBackground(Theme.SURFACE_ELEVATED);
         totalBox.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(Theme.BORDER_STRONG),
-                BorderFactory.createEmptyBorder(8, 12, 8, 12)));
-        totalBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
-        
+                BorderFactory.createEmptyBorder(6, 10, 6, 10)));
+        totalBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+
         JLabel lblTotalTag = new JLabel("TOTAL TAGIHAN");
         lblTotalTag.setFont(Theme.mono(Font.BOLD, 11));
         lblTotalTag.setForeground(Theme.MUTED);
-        
-        lblTotal.setFont(Theme.mono(Font.BOLD, 20));
+
+        lblTotal.setFont(Theme.mono(Font.BOLD, 18));
         lblTotal.setForeground(Theme.ACCENT);
         lblTotal.setHorizontalAlignment(SwingConstants.RIGHT);
-        
+
         totalBox.add(lblTotalTag, BorderLayout.WEST);
         totalBox.add(lblTotal, BorderLayout.EAST);
         panel.add(totalBox);
-        panel.add(Box.createVerticalStrut(12));
+        panel.add(Box.createVerticalStrut(8));
 
         // Quick Cash Buttons (Uang Pas, 10k, 20k, 50k, 100k)
         JPanel quickCash = new JPanel(new GridLayout(1, 5, 4, 0));
         quickCash.setOpaque(false);
-        quickCash.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
+        quickCash.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
         quickCash.add(quickCashBtn("Pas", () -> txtBayar.setText(Fmt.angka(total))));
         quickCash.add(quickCashBtn("10k", () -> txtBayar.setText("10000")));
         quickCash.add(quickCashBtn("20k", () -> txtBayar.setText("20000")));
         quickCash.add(quickCashBtn("50k", () -> txtBayar.setText("50000")));
         quickCash.add(quickCashBtn("100k", () -> txtBayar.setText("100000")));
         panel.add(quickCash);
-        panel.add(Box.createVerticalStrut(8));
+        panel.add(Box.createVerticalStrut(6));
 
         // Uang Diterima / Bayar
         JPanel bayarRow = new JPanel(new BorderLayout(10, 0));
         bayarRow.setOpaque(false);
-        bayarRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        
+        bayarRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
+
         JLabel lblBayar = new JLabel("Uang Diterima");
         lblBayar.setFont(Theme.text(Font.BOLD, 12));
         lblBayar.setForeground(Theme.INK);
         lblBayar.setPreferredSize(new Dimension(95, 26));
-        
+
         txtBayar.setHorizontalAlignment(SwingConstants.RIGHT);
-        txtBayar.setFont(Theme.mono(Font.BOLD, 15));
+        txtBayar.setFont(Theme.mono(Font.BOLD, 14));
+        txtBayar.setPreferredSize(new Dimension(0, 32));
         txtBayar.getDocument().addDocumentListener(new DocumentListener() {
             @Override public void insertUpdate(DocumentEvent e) { updateKembali(); }
             @Override public void removeUpdate(DocumentEvent e) { updateKembali(); }
@@ -397,39 +451,60 @@ public class TransaksiPanel extends BasePanel {
         bayarRow.add(lblBayar, BorderLayout.WEST);
         bayarRow.add(txtBayar, BorderLayout.CENTER);
         panel.add(bayarRow);
-        panel.add(Box.createVerticalStrut(6));
+        panel.add(Box.createVerticalStrut(4));
 
         // Kembali
         panel.add(barisInfo("Kembali", lblKembali, 14, Theme.MUTED, Theme.GREEN_FG));
-        panel.add(Box.createVerticalStrut(10));
+        panel.add(Box.createVerticalStrut(8));
 
-        // Info Pelanggan & Checkbox Antrian
+        // Info Pelanggan & Checkbox Antrian — tingginya TETAP dan selalu
+        // tampil. Pola lama menyembunyikan/menampilkan area ini tiap isi
+        // keranjang berubah, sehingga panel checkout berubah tinggi dan
+        // seluruh tampilan terasa bergeser/membesar sendiri. Sekarang
+        // checkbox hanya di-nonaktifkan bila tidak ada item jasa.
         JPanel antrianRow = new JPanel(new BorderLayout(0, 4));
         antrianRow.setOpaque(false);
-        antrianRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 74));
-        txtPelanggan.setPreferredSize(new Dimension(0, 36));
+        antrianRow.setPreferredSize(new Dimension(0, 60));
+        antrianRow.setMinimumSize(new Dimension(0, 60));
+        antrianRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+        txtPelanggan.setPreferredSize(new Dimension(0, 30));
         antrianRow.add(txtPelanggan, BorderLayout.NORTH);
         antrianRow.add(chkBuatAntrian, BorderLayout.CENTER);
         panel.add(antrianRow);
-        panel.add(Box.createVerticalStrut(14));
+        panel.add(Box.createVerticalStrut(10));
 
         UiKit.SoftButton bayarMidtrans = new UiKit.SoftButton("BAYAR VIA MIDTRANS (QRIS/GoPay)", UiKit.Variant.GHOST);
         bayarMidtrans.setAlignmentX(Component.CENTER_ALIGNMENT);
-        bayarMidtrans.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        bayarMidtrans.setPreferredSize(new Dimension(0, 40));
-        bayarMidtrans.setFont(Theme.text(Font.BOLD, 12));
+        bayarMidtrans.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
+        bayarMidtrans.setPreferredSize(new Dimension(0, 34));
+        bayarMidtrans.setFont(Theme.text(Font.BOLD, 11));
         bayarMidtrans.addActionListener(e -> simpanTransaksiMidtrans());
         panel.add(bayarMidtrans);
-        panel.add(Box.createVerticalStrut(6));
+        panel.add(Box.createVerticalStrut(5));
 
         UiKit.SoftButton simpan = new UiKit.SoftButton("PROSES TRANSAKSI (TUNAI) & CETAK", UiKit.Variant.PRIMARY);
         simpan.setAlignmentX(Component.CENTER_ALIGNMENT);
-        simpan.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
-        simpan.setPreferredSize(new Dimension(0, 46));
-        simpan.setFont(Theme.text(Font.BOLD, 13));
+        simpan.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        simpan.setPreferredSize(new Dimension(0, 40));
+        simpan.setFont(Theme.text(Font.BOLD, 12));
         simpan.addActionListener(e -> simpanTransaksi());
         panel.add(simpan);
         return panel;
+    }
+
+    /** Diskon manual dari field, dibatasi 0..subtotal. */
+    private BigDecimal bacaDiskon() {
+        BigDecimal d = Fmt.parseAngka(txtDiskon.getText());
+        if (d == null || d.signum() < 0) {
+            return BigDecimal.ZERO;
+        }
+        return d.min(subtotal);
+    }
+
+    private void hitungTotal() {
+        total = subtotal.subtract(bacaDiskon()).max(BigDecimal.ZERO);
+        lblTotal.setText(Fmt.rupiah(total));
+        updateKembali();
     }
 
     private UiKit.SoftButton quickCashBtn(String label, Runnable act) {
@@ -467,12 +542,18 @@ public class TransaksiPanel extends BasePanel {
         row.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, Theme.BORDER),
                 BorderFactory.createEmptyBorder(8, 10, 8, 10)));
-        row.setPreferredSize(new Dimension(0, 78));
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 78));
+        row.setPreferredSize(new Dimension(0, 70));
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
 
+        // Nama item bisa sangat panjang (label lengkap barang). JLabel di
+        // BorderLayout.CENTER akan terpotong ellipsis secara otomatis asal
+        // lebar minimumnya kecil; nama lengkap tetap terbaca via tooltip,
+        // dan angka subtotal di sisi kanan tidak pernah terdesak keluar.
         JLabel nama = new JLabel(item.getNamaItem());
         nama.setFont(Theme.text(Font.BOLD, 13));
         nama.setForeground(Theme.INK);
+        nama.setToolTipText(item.getNamaItem());
+        nama.setMinimumSize(new Dimension(40, 16));
 
         JLabel subtotal = new JLabel(Fmt.rupiah(item.getSubtotal()));
         subtotal.setFont(Theme.mono(Font.BOLD, 13));
@@ -693,33 +774,32 @@ public class TransaksiPanel extends BasePanel {
     }
 
     private void refreshKeranjang() {
-        BigDecimal subtotal = BigDecimal.ZERO;
+        BigDecimal sub = BigDecimal.ZERO;
         int count = 0;
         for (TransaksiItem item : keranjang) {
             BigDecimal harga = item.getHarga() == null ? BigDecimal.ZERO : item.getHarga();
             item.setSubtotal(harga.multiply(BigDecimal.valueOf(item.getQty())));
-            subtotal = subtotal.add(item.getSubtotal());
+            sub = sub.add(item.getSubtotal());
             count += item.getQty();
         }
-
-        BigDecimal diskon = Fmt.parseAngka(txtDiskon.getText());
-        if (diskon == null) {
-            diskon = BigDecimal.ZERO;
-        }
-
-        total = subtotal.subtract(diskon).max(BigDecimal.ZERO);
+        subtotal = sub;
         lblSubtotal.setText(Fmt.rupiah(subtotal));
-        lblTotal.setText(Fmt.rupiah(total));
         lblItemCount.setText(count + " item");
 
         rebuildKeranjangRows();
-        updateKembali();
+        hitungTotal();
 
-        boolean tampilAntrian = !keranjang.isEmpty() && adaJasa();
-        chkBuatAntrian.setVisible(tampilAntrian);
-        txtPelanggan.setVisible(tampilAntrian);
-        revalidate();
-        repaint();
+        // Area antrian TIDAK lagi disembunyikan/ditampilkan — tingginya
+        // tetap, jadi tampilan tidak bergeser saat item dipilih. Checkbox
+        // cukup diaktifkan saat ada item jasa di keranjang.
+        boolean adaJasa = adaJasa();
+        boolean wasEnabled = chkBuatAntrian.isEnabled();
+        chkBuatAntrian.setEnabled(adaJasa);
+        if (!adaJasa) {
+            chkBuatAntrian.setSelected(false);
+        } else if (!wasEnabled) {
+            chkBuatAntrian.setSelected(true);
+        }
     }
 
     private void rebuildKeranjangRows() {
@@ -779,16 +859,11 @@ public class TransaksiPanel extends BasePanel {
             return;
         }
 
-        BigDecimal diskon = Fmt.parseAngka(txtDiskon.getText());
-        if (diskon == null) {
-            diskon = BigDecimal.ZERO;
-        }
-
         Transaksi transaksi = new Transaksi();
         transaksi.setUserId(Session.user() == null ? null : Session.user().getId());
-        transaksi.setDiskon(diskon);
+        transaksi.setDiskon(bacaDiskon());
         transaksi.setBayar(bayar);
-        transaksi.setBuatAntrian(chkBuatAntrian.isVisible() && chkBuatAntrian.isSelected());
+        transaksi.setBuatAntrian(chkBuatAntrian.isEnabled() && chkBuatAntrian.isSelected());
         transaksi.setNamaPelanggan(txtPelanggan.getText().trim().isEmpty() ? null : txtPelanggan.getText().trim());
         transaksi.getItems().addAll(keranjang);
 
@@ -847,21 +922,16 @@ public class TransaksiPanel extends BasePanel {
             return;
         }
 
-        BigDecimal diskon = Fmt.parseAngka(txtDiskon.getText());
-        if (diskon == null) {
-            diskon = BigDecimal.ZERO;
-        }
-
         Transaksi transaksi = new Transaksi();
         transaksi.setUserId(Session.user() == null ? null : Session.user().getId());
-        transaksi.setDiskon(diskon);
+        transaksi.setDiskon(bacaDiskon());
         transaksi.setBayar(total);
         // Simulasi lokal tidak boleh tercatat sebagai pembayaran Midtrans asli.
         transaksi.setMetodeBayar(dlg.isSimulation()
                 ? "SIMULASI_" + dlg.getPaymentCode().toUpperCase()
                 : "MIDTRANS_" + dlg.getPaymentCode().toUpperCase());
         transaksi.setPaymentRef(tempKode);
-        transaksi.setBuatAntrian(chkBuatAntrian.isVisible() && chkBuatAntrian.isSelected());
+        transaksi.setBuatAntrian(chkBuatAntrian.isEnabled() && chkBuatAntrian.isSelected());
         transaksi.setNamaPelanggan(txtPelanggan.getText().trim().isEmpty() ? null : txtPelanggan.getText().trim());
         transaksi.getItems().addAll(keranjang);
 

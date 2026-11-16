@@ -39,6 +39,7 @@ public class PengaturanPanel extends BasePanel {
     private final JTextField txtTelepon = UiKit.textField("Nomor telepon");
     private final JTextField txtAlamat = UiKit.textField("Alamat toko");
     private final JTextField txtFooter = UiKit.textField("Catatan kaki struk");
+    private final JTextField txtLogo = UiKit.textField("Path file logo (PNG/JPG) — boleh kosong");
 
     private final JComboBox<String> cmbPrinter = new JComboBox<>();
     private final JComboBox<String> cmbKertas = new JComboBox<>(new String[]{"58mm", "80mm"});
@@ -88,6 +89,7 @@ public class PengaturanPanel extends BasePanel {
             txtTelepon.setText(telp);
             txtAlamat.setText(alamat);
             txtFooter.setText(data.getOrDefault("footer_struk", "Terima kasih sudah berbelanja"));
+            txtLogo.setText(data.getOrDefault("logo_path", ""));
 
             cmbPrinter.removeAllItems();
             cmbPrinter.addItem("— Default System Printer —");
@@ -118,7 +120,7 @@ public class PengaturanPanel extends BasePanel {
         UiKit.SurfacePanel card = new UiKit.SurfacePanel(new BorderLayout(0, 14));
         card.setBorder(BorderFactory.createEmptyBorder(18, 20, 18, 20));
         card.setAlignmentX(Component.LEFT_ALIGNMENT);
-        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 360));
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 450));
 
         JPanel top = new JPanel(new BorderLayout());
         top.setOpaque(false);
@@ -128,12 +130,32 @@ public class PengaturanPanel extends BasePanel {
         top.add(title, BorderLayout.WEST);
         card.add(top, BorderLayout.NORTH);
 
-        JPanel form = new JPanel(new GridLayout(4, 1, 0, 12));
+        JPanel form = new JPanel(new GridLayout(5, 1, 0, 12));
         form.setOpaque(false);
         form.add(field("Nama Toko / Usaha", txtNama));
         form.add(field("Nomor Kontak / Telepon", txtTelepon));
         form.add(field("Alamat Lengkap Toko", txtAlamat));
         form.add(field("Catatan Kaki (Footer Struk)", txtFooter));
+
+        // Slot logo nota: pilih file logo (PNG latar transparan paling
+        // bagus untuk printer thermal). Bila dikosongkan, aplikasi juga
+        // mencari images/logo.png|jpg di folder aplikasi. Tanpa logo pun
+        // nota tetap tampil rapi.
+        JPanel logoRow = new JPanel(new BorderLayout(8, 0));
+        logoRow.setOpaque(false);
+        logoRow.add(txtLogo, BorderLayout.CENTER);
+        UiKit.SoftButton btnLogo = new UiKit.SoftButton("Pilih Logo", UiKit.Variant.GHOST);
+        btnLogo.addActionListener(e -> {
+            JFileChooser chooser = new JFileChooser();
+            chooser.setDialogTitle("Pilih File Logo Toko");
+            chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+                    "Gambar (PNG, JPG)", "png", "jpg", "jpeg"));
+            if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                txtLogo.setText(chooser.getSelectedFile().getAbsolutePath());
+            }
+        });
+        logoRow.add(btnLogo, BorderLayout.EAST);
+        form.add(field("Logo Nota (opsional — tampil di header struk & nota JPG)", logoRow));
         card.add(form, BorderLayout.CENTER);
 
         UiKit.SoftButton simpan = new UiKit.SoftButton("SIMPAN PROFIL TOKO", UiKit.Variant.PRIMARY);
@@ -366,6 +388,7 @@ public class PengaturanPanel extends BasePanel {
         data.put("telepon", txtTelepon.getText().trim());
         data.put("alamat", txtAlamat.getText().trim());
         data.put("footer_struk", txtFooter.getText().trim());
+        data.put("logo_path", txtLogo.getText().trim());
         try {
             dao.simpanSemua(data);
             Dialogs.info(this, "Profil toko berhasil diperbarui.");
