@@ -229,6 +229,11 @@ public class ThermalPrintService {
             Font fPlainLabel = new Font("SansSerif", Font.PLAIN, is80mm ? 8 : 7);
             Font fPlainVal = new Font("Monospaced", Font.PLAIN, is80mm ? 8 : 7);
 
+            if (transaksi.getDiskon() != null && transaksi.getDiskon().compareTo(BigDecimal.ZERO) > 0) {
+                y = drawLeftRight(g2, "SUBTOTAL", Fmt.rupiah(transaksi.getSubtotal()), width, y, fPlainLabel, fPlainVal, false);
+                y = drawLeftRight(g2, "DISKON", "- " + Fmt.rupiah(transaksi.getDiskon()), width, y, fPlainLabel, fPlainVal, false);
+            }
+
             y = drawLeftRight(g2, "TOTAL", Fmt.rupiah(transaksi.getTotal()), width, y, fTotalLabel, fTotalVal, false);
             y = drawLeftRight(g2, "BAYAR (TUNAI)", Fmt.rupiah(transaksi.getBayar()), width, y, fPlainLabel, fPlainVal, false);
             y = drawLeftRight(g2, "KEMBALI", Fmt.rupiah(transaksi.getKembali()), width, y, fPlainLabel, fPlainVal, false);

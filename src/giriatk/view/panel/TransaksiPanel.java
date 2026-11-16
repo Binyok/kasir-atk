@@ -79,6 +79,7 @@ public class TransaksiPanel extends BasePanel {
     private final JLabel lblKembali = new JLabel("Rp 0");
     private final JLabel lblItemCount = new JLabel("0 item");
     private final JTextField txtBayar = UiKit.textField("0");
+    private final JTextField txtDiskon = UiKit.textField("0");
     private final JTextField txtPelanggan = UiKit.textField("Nama Pelanggan (untuk antrian jasa)");
     private final JCheckBox chkBuatAntrian = UiKit.checkBox("Otomatis masukkan item jasa ke Antrian", true);
 
@@ -319,6 +320,28 @@ public class TransaksiPanel extends BasePanel {
 
         panel.add(Box.createVerticalStrut(10));
         panel.add(barisInfo("Subtotal", lblSubtotal, 13, Theme.MUTED, Theme.INK_SOFT));
+        panel.add(Box.createVerticalStrut(6));
+
+        // Diskon Manual (Grosir/Potongan)
+        JPanel diskonRow = new JPanel(new BorderLayout(10, 0));
+        diskonRow.setOpaque(false);
+        diskonRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+
+        JLabel lblDiskon = new JLabel("Diskon Manual (Rp)");
+        lblDiskon.setFont(Theme.text(Font.BOLD, 12));
+        lblDiskon.setForeground(Theme.INK);
+        lblDiskon.setPreferredSize(new Dimension(130, 26));
+
+        txtDiskon.setHorizontalAlignment(SwingConstants.RIGHT);
+        txtDiskon.setFont(Theme.mono(Font.BOLD, 13));
+        txtDiskon.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { refreshKeranjang(); }
+            @Override public void removeUpdate(DocumentEvent e) { refreshKeranjang(); }
+            @Override public void changedUpdate(DocumentEvent e) { refreshKeranjang(); }
+        });
+        diskonRow.add(lblDiskon, BorderLayout.WEST);
+        diskonRow.add(txtDiskon, BorderLayout.CENTER);
+        panel.add(diskonRow);
         panel.add(Box.createVerticalStrut(6));
         
         // Total Box
@@ -664,6 +687,7 @@ public class TransaksiPanel extends BasePanel {
         }
         keranjang.clear();
         txtBayar.setText("");
+        txtDiskon.setText("");
         txtPelanggan.setText("");
         refreshKeranjang();
     }
@@ -677,7 +701,13 @@ public class TransaksiPanel extends BasePanel {
             subtotal = subtotal.add(item.getSubtotal());
             count += item.getQty();
         }
-        total = subtotal;
+
+        BigDecimal diskon = Fmt.parseAngka(txtDiskon.getText());
+        if (diskon == null) {
+            diskon = BigDecimal.ZERO;
+        }
+
+        total = subtotal.subtract(diskon).max(BigDecimal.ZERO);
         lblSubtotal.setText(Fmt.rupiah(subtotal));
         lblTotal.setText(Fmt.rupiah(total));
         lblItemCount.setText(count + " item");
@@ -749,9 +779,14 @@ public class TransaksiPanel extends BasePanel {
             return;
         }
 
+        BigDecimal diskon = Fmt.parseAngka(txtDiskon.getText());
+        if (diskon == null) {
+            diskon = BigDecimal.ZERO;
+        }
+
         Transaksi transaksi = new Transaksi();
         transaksi.setUserId(Session.user() == null ? null : Session.user().getId());
-        transaksi.setDiskon(BigDecimal.ZERO);
+        transaksi.setDiskon(diskon);
         transaksi.setBayar(bayar);
         transaksi.setBuatAntrian(chkBuatAntrian.isVisible() && chkBuatAntrian.isSelected());
         transaksi.setNamaPelanggan(txtPelanggan.getText().trim().isEmpty() ? null : txtPelanggan.getText().trim());
@@ -778,6 +813,7 @@ public class TransaksiPanel extends BasePanel {
             Window owner = SwingUtilities.getWindowAncestor(this);
             keranjang.clear();
             txtBayar.setText("");
+            txtDiskon.setText("");
             txtPelanggan.setText("");
             refreshKeranjang();
             reloadKatalog();
@@ -811,9 +847,14 @@ public class TransaksiPanel extends BasePanel {
             return;
         }
 
+        BigDecimal diskon = Fmt.parseAngka(txtDiskon.getText());
+        if (diskon == null) {
+            diskon = BigDecimal.ZERO;
+        }
+
         Transaksi transaksi = new Transaksi();
         transaksi.setUserId(Session.user() == null ? null : Session.user().getId());
-        transaksi.setDiskon(BigDecimal.ZERO);
+        transaksi.setDiskon(diskon);
         transaksi.setBayar(total);
         // Simulasi lokal tidak boleh tercatat sebagai pembayaran Midtrans asli.
         transaksi.setMetodeBayar(dlg.isSimulation()
@@ -844,6 +885,7 @@ public class TransaksiPanel extends BasePanel {
 
             keranjang.clear();
             txtBayar.setText("");
+            txtDiskon.setText("");
             txtPelanggan.setText("");
             refreshKeranjang();
             reloadKatalog();

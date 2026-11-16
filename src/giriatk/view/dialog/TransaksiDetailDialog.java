@@ -6,6 +6,7 @@ import giriatk.model.TipeItem;
 import giriatk.model.Transaksi;
 import giriatk.model.TransaksiItem;
 import giriatk.service.ThermalPrintService;
+import giriatk.service.NotaImageService;
 import giriatk.util.Dialogs;
 import giriatk.util.Fmt;
 import giriatk.util.Session;
@@ -17,6 +18,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -34,6 +36,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Window;
 import java.awt.geom.AffineTransform;
+import java.io.File;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
@@ -84,7 +87,7 @@ public class TransaksiDetailDialog extends JDialog {
 
         setContentPane(root);
         pack();
-        int targetW = 540;
+        int targetW = 600;
         int targetH = Math.min(getHeight(), owner == null ? 800 : owner.getHeight() - 40);
         setSize(targetW, targetH);
         setLocationRelativeTo(owner);
@@ -147,6 +150,12 @@ public class TransaksiDetailDialog extends JDialog {
         receipt.add(Box.createVerticalStrut(4));
         receipt.add(new DashedDivider(Theme.BORDER_STRONG, 1f));
         receipt.add(Box.createVerticalStrut(6));
+
+        if (transaksi.getDiskon() != null && transaksi.getDiskon().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            receipt.add(totalRow("SUBTOTAL", Fmt.rupiah(transaksi.getSubtotal()), false, Theme.INK_SOFT));
+            receipt.add(totalRow("DISKON GROSIR", "- " + Fmt.rupiah(transaksi.getDiskon()), false, Theme.DANGER));
+            receipt.add(Box.createVerticalStrut(2));
+        }
 
         receipt.add(totalRow("TOTAL", Fmt.rupiah(transaksi.getTotal()), true, Theme.INK));
         receipt.add(totalRow("BAYAR (TUNAI)", Fmt.rupiah(transaksi.getBayar()), false, Theme.INK));
@@ -235,7 +244,8 @@ public class TransaksiDetailDialog extends JDialog {
 
     private JComponent buildActions() {
         boolean canVoid = transaksi.getStatus() == StatusTransaksi.SUKSES;
-        JPanel actions = new JPanel(new java.awt.GridLayout(1, canVoid ? 3 : 2, 10, 0));
+        int btnCount = canVoid ? 4 : 3;
+        JPanel actions = new JPanel(new java.awt.GridLayout(1, btnCount, 10, 0));
         actions.setOpaque(false);
         actions.setAlignmentX(Component.CENTER_ALIGNMENT);
         actions.setBorder(new EmptyBorder(0, 10, 0, 10));
@@ -246,6 +256,10 @@ public class TransaksiDetailDialog extends JDialog {
             btnVoid.addActionListener(e -> konfirmasiVoid());
             actions.add(btnVoid);
         }
+
+        UiKit.SoftButton btnJpg = new UiKit.SoftButton("Simpan Nota (JPG)", UiKit.Variant.GHOST);
+        btnJpg.addActionListener(e -> simpanNotaJpg());
+        actions.add(btnJpg);
 
         UiKit.SoftButton print = new UiKit.SoftButton("Cetak Ulang Struk", UiKit.Variant.GHOST);
         print.addActionListener(e -> {
@@ -262,6 +276,42 @@ public class TransaksiDetailDialog extends JDialog {
         tutup.addActionListener(e -> dispose());
         actions.add(tutup);
         return actions;
+    }
+
+    private void simpanNotaJpg() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Simpan Nota sebagai Gambar JPG");
+        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Gambar JPEG (*.jpg)", "jpg"));
+        String defaultName = "Nota_" + (transaksi.getKode() == null ? "nota" : transaksi.getKode()) + ".jpg";
+        chooser.setSelectedFile(new File(defaultName));
+
+        int result = chooser.showSaveDialog(this);
+        if (result != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        File file = chooser.getSelectedFile();
+        if (!file.getName().toLowerCase().endsWith(".jpg")) {
+            file = new File(file.getAbsolutePath() + ".jpg");
+        }
+
+        try {
+            new NotaImageService().simpanNotaJpg(transaksi, file);
+            int open = javax.swing.JOptionPane.showConfirmDialog(this,
+                    "Nota berhasil disimpan sebagai:\n" + file.getAbsolutePath()
+                    + "\n\nBuka lokasi file?",
+                    "Nota JPG Tersimpan",
+                    javax.swing.JOptionPane.YES_NO_OPTION,
+                    javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            if (open == javax.swing.JOptionPane.YES_OPTION) {
+                try {
+                    java.awt.Desktop.getDesktop().open(file.getParentFile());
+                } catch (Exception ignored) {
+                }
+            }
+        } catch (Exception ex) {
+            Dialogs.error(this, "Gagal menyimpan nota JPG: " + ex.getMessage());
+        }
     }
 
     private void konfirmasiVoid() {
