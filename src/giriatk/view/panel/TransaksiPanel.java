@@ -574,7 +574,7 @@ public class TransaksiPanel extends BasePanel {
         minus.setToolTipText("Kurangi");
         minus.addActionListener(e -> ubahQty(item, -1));
 
-        QtyPill qty = new QtyPill(item.getQty());
+        JTextField qty = buatFieldQty(item);
 
         UiKit.IconButton plus = new UiKit.IconButton(Icons.Name.PLUS, Theme.ACCENT, 12, true);
         plus.setToolTipText("Tambah");
@@ -732,6 +732,95 @@ public class TransaksiPanel extends BasePanel {
             }
         }
         return null;
+    }
+
+    /**
+     * Field jumlah di baris keranjang yang bisa diketik langsung, supaya
+     * kasir tidak perlu menekan tombol + berkali-kali untuk jumlah besar
+     * (mis. print 100 lembar). Nilai diterapkan saat Enter atau field
+     * kehilangan fokus; selama mengetik keranjang tidak digambar ulang.
+     */
+    private JTextField buatFieldQty(TransaksiItem item) {
+        JTextField field = new JTextField(String.valueOf(item.getQty()));
+        field.setHorizontalAlignment(SwingConstants.CENTER);
+        field.setFont(Theme.mono(Font.BOLD, 12));
+        field.setForeground(Theme.INK);
+        field.setBackground(Theme.SURFACE_ELEVATED);
+        field.setCaretColor(Theme.INK);
+        field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Theme.BORDER, 1, true),
+                BorderFactory.createEmptyBorder(2, 2, 2, 2)));
+        field.setPreferredSize(new Dimension(42, 26));
+        field.setMaximumSize(new Dimension(42, 26));
+        field.setToolTipText("Ketik jumlah, lalu Enter");
+        // Hanya angka, maksimal 5 digit.
+        ((javax.swing.text.AbstractDocument) field.getDocument()).setDocumentFilter(
+                new javax.swing.text.DocumentFilter() {
+                    @Override
+                    public void insertString(FilterBypass fb, int offset, String text, javax.swing.text.AttributeSet attr)
+                            throws javax.swing.text.BadLocationException {
+                        if (text != null && text.chars().allMatch(Character::isDigit)
+                                && fb.getDocument().getLength() + text.length() <= 5) {
+                            super.insertString(fb, offset, text, attr);
+                        }
+                    }
+
+                    @Override
+                    public void replace(FilterBypass fb, int offset, int length, String text, javax.swing.text.AttributeSet attr)
+                            throws javax.swing.text.BadLocationException {
+                        if (text == null || text.isEmpty()
+                                || (text.chars().allMatch(Character::isDigit)
+                                        && fb.getDocument().getLength() - length + text.length() <= 5)) {
+                            super.replace(fb, offset, length, text, attr);
+                        }
+                    }
+                });
+        field.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent e) {
+                field.selectAll();
+            }
+
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                terapkanQtyKetik(item, field);
+            }
+        });
+        field.addActionListener(e -> terapkanQtyKetik(item, field));
+        return field;
+    }
+
+    private void terapkanQtyKetik(TransaksiItem item, JTextField field) {
+        String teks = field.getText().trim();
+        int qtyBaru;
+        try {
+            qtyBaru = Integer.parseInt(teks);
+        } catch (NumberFormatException ex) {
+            field.setText(String.valueOf(item.getQty()));
+            return;
+        }
+        if (qtyBaru == item.getQty()) {
+            field.setText(String.valueOf(qtyBaru));
+            return;
+        }
+        if (qtyBaru < 1) {
+            field.setText(String.valueOf(item.getQty()));
+            return;
+        }
+        if (item.getTipe() == TipeItem.BARANG && item.getBarangId() != null) {
+            try {
+                Barang barang = barangDao.findById(item.getBarangId());
+                if (barang != null && qtyBaru > barang.getStok()) {
+                    Dialogs.peringatan(this, "Stok \"" + barang.getNama() + "\" hanya tersisa " + barang.getStok() + ".");
+                    field.setText(String.valueOf(item.getQty()));
+                    return;
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        item.setQty(qtyBaru);
+        refreshKeranjang();
     }
 
     private void ubahQty(TransaksiItem item, int delta) {
@@ -969,30 +1058,6 @@ public class TransaksiPanel extends BasePanel {
     @Override
     public void onShow() {
         reloadKatalog();
-    }
-
-    private static class QtyPill extends JLabel {
-
-        QtyPill(int qty) {
-            super(String.valueOf(qty));
-            setHorizontalAlignment(SwingConstants.CENTER);
-            setFont(Theme.mono(Font.BOLD, 12));
-            setForeground(Theme.INK);
-            setPreferredSize(new Dimension(30, 26));
-            setMaximumSize(new Dimension(30, 26));
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(Theme.SURFACE_ELEVATED);
-            g2.fillRoundRect(0, 0, getWidth(), getHeight(), Theme.RADIUS_CONTROL, Theme.RADIUS_CONTROL);
-            g2.setColor(Theme.BORDER);
-            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, Theme.RADIUS_CONTROL, Theme.RADIUS_CONTROL);
-            g2.dispose();
-            super.paintComponent(g);
-        }
     }
 
     private record Katalog(TipeItem tipe, int id, String nama, String label, String satuan,
