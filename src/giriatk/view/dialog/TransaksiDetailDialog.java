@@ -39,6 +39,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Window;
+import java.awt.image.BufferedImage;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -156,12 +157,15 @@ public class TransaksiDetailDialog extends JDialog {
         receipt.setMinimumSize(new Dimension(lebarKonten + 48, 0));
         this.receiptPanel = receipt;
 
-        // Logo toko (opsional) — slot di tengah header.
-        ImageIcon logo = LogoUtil.muatLogoIcon(kertas58 ? 84 : 120, kertas58 ? 46 : 62);
-        if (logo != null) {
-            JLabel lblLogo = new JLabel(logo);
-            lblLogo.setAlignmentX(Component.CENTER_ALIGNMENT);
-            receipt.add(lblLogo);
+        // Logo toko (opsional) — slot di tengah header. Dipakai LogoView
+        // yang menggambar dari gambar resolusi penuh, bukan ikon yang
+        // sudah dikecilkan: hasil layar maupun Simpan JPG (render 2x)
+        // sama-sama tajam.
+        BufferedImage logoAsli = LogoUtil.muatLogo();
+        if (logoAsli != null && logoAsli.getWidth() > 0 && logoAsli.getHeight() > 0) {
+            LogoView logoView = new LogoView(logoAsli, kertas58 ? 84 : 120, kertas58 ? 46 : 62);
+            logoView.setAlignmentX(Component.CENTER_ALIGNMENT);
+            receipt.add(logoView);
             receipt.add(Box.createVerticalStrut(6));
         }
 
@@ -747,6 +751,40 @@ public class TransaksiDetailDialog extends JDialog {
                 x += w + 3;
                 i++;
             }
+            g2.dispose();
+        }
+    }
+
+    /**
+     * Penampil logo yang menggambar dari gambar resolusi penuh dengan
+     * interpolasi bicubic. Ukuran tampil dibatasi maxW x maxH (tidak
+     * pernah diperbesar). Karena sumbernya tidak dikecilkan lebih dulu,
+     * logo tetap tajam saat panel dirender 2x untuk Simpan JPG.
+     */
+    private static final class LogoView extends JComponent {
+        private final BufferedImage img;
+        private final Dimension ukuran;
+
+        LogoView(BufferedImage img, int maxW, int maxH) {
+            this.img = img;
+            double skala = Math.min((double) maxW / img.getWidth(), (double) maxH / img.getHeight());
+            skala = Math.min(skala, 1.0);
+            int w = Math.max(1, (int) Math.round(img.getWidth() * skala));
+            int h = Math.max(1, (int) Math.round(img.getHeight() * skala));
+            this.ukuran = new Dimension(w, h);
+            setPreferredSize(ukuran);
+            setMaximumSize(ukuran);
+            setMinimumSize(ukuran);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                    RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.drawImage(img, 0, 0, getWidth(), getHeight(), null);
             g2.dispose();
         }
     }

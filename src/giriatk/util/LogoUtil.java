@@ -70,6 +70,44 @@ public final class LogoUtil {
         skala = Math.min(skala, 1.0);
         int w = Math.max(1, (int) Math.round(img.getWidth() * skala));
         int h = Math.max(1, (int) Math.round(img.getHeight() * skala));
-        return new ImageIcon(img.getScaledInstance(w, h, Image.SCALE_SMOOTH));
+        return new ImageIcon(skalaTajam(img, w, h));
+    }
+
+    /**
+     * Perkecil gambar secara bertahap (setengah-setengah) dengan bicubic.
+     * Mengecilkan langsung dari resolusi besar (mis. 1760px) ke kecil
+     * (120px) dalam satu langkah membuat teks kecil di logo jadi buram;
+     * penurunan bertahap menjaga tepian tetap tajam.
+     */
+    public static BufferedImage skalaTajam(BufferedImage src, int targetW, int targetH) {
+        if (src == null || targetW <= 0 || targetH <= 0
+                || (src.getWidth() == targetW && src.getHeight() == targetH)) {
+            return src;
+        }
+        int type = src.getType() == BufferedImage.TYPE_CUSTOM ? BufferedImage.TYPE_INT_ARGB : src.getType();
+        BufferedImage cur = src;
+        int w = src.getWidth();
+        int h = src.getHeight();
+        while (w > targetW * 2 || h > targetH * 2) {
+            w = Math.max(targetW, w / 2);
+            h = Math.max(targetH, h / 2);
+            cur = gambarKe(cur, w, h, type);
+        }
+        if (w != targetW || h != targetH) {
+            cur = gambarKe(cur, targetW, targetH, type);
+        }
+        return cur;
+    }
+
+    private static BufferedImage gambarKe(BufferedImage src, int w, int h, int type) {
+        BufferedImage out = new BufferedImage(w, h, type);
+        java.awt.Graphics2D g = out.createGraphics();
+        g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
+                java.awt.RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,
+                java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+        g.drawImage(src, 0, 0, w, h, null);
+        g.dispose();
+        return out;
     }
 }
