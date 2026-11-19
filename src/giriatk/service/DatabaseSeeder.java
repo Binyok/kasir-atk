@@ -26,6 +26,21 @@ public class DatabaseSeeder {
         seedKategori();
         seedLayanan();
         seedBarang();
+        backfillGambar();
+    }
+
+    /** Isi kolom gambar untuk barang lama yang gambarnya masih kosong,
+     *  bila file <kode>.png memang ada di folder images/barang. */
+    private void backfillGambar() throws SQLException {
+        for (Barang b : barangDao.findAll()) {
+            if (b.getGambar() == null || b.getGambar().isBlank()) {
+                java.io.File f = new java.io.File("images/barang", b.getKode() + ".png");
+                if (f.exists()) {
+                    b.setGambar(b.getKode() + ".png");
+                    barangDao.update(b);
+                }
+            }
+        }
     }
 
     private void seedUsers() throws SQLException {
@@ -114,7 +129,9 @@ public class DatabaseSeeder {
     private void addBarang(String nama, Integer kategoriId, String satuan,
             double hargaBeli, double hargaJual, int stok, int stokMinimum) throws SQLException {
         Barang b = new Barang();
-        b.setKode(barangDao.kodeOtomatis());
+        String kode = barangDao.kodeOtomatis();
+        b.setKode(kode);
+        b.setGambar(kode + ".png");
         b.setNama(nama);
         b.setKategoriId(kategoriId);
         b.setSatuan(satuan);

@@ -61,9 +61,14 @@ public class StokPanel extends BasePanel {
 
     public StokPanel() {
         super(new BorderLayout());
-        tabs.addTab("barang", "Daftar Barang & Stok", new BarangTab(() -> tabs.show("restock")));
+        RestockTab restockTab = new RestockTab();
+        tabs.addTab("barang", "Daftar Barang & Stok", new BarangTab(() -> tabs.show("restock"),
+                id -> {
+                    tabs.show("restock");
+                    restockTab.pilihBarang(id);
+                }));
         tabs.addTab("kategori", "Kategori Produk", new KategoriTab());
-        tabs.addTab("restock", "Manajemen Restock", new RestockTab());
+        tabs.addTab("restock", "Manajemen Restock", restockTab);
         add(pageHeader("Inventaris & Stok Toko", "Pantau jumlah ketersediaan stok, batas minimum restock, dan kategori barang."), BorderLayout.NORTH);
         add(tabs, BorderLayout.CENTER);
     }
@@ -121,9 +126,11 @@ public class StokPanel extends BasePanel {
         private final List<Barang> data = new ArrayList<>();
 
         private final Runnable openRestock;
+        private final java.util.function.IntConsumer openRestockUntuk;
 
-        BarangTab(Runnable openRestock) {
+        BarangTab(Runnable openRestock, java.util.function.IntConsumer openRestockUntuk) {
             this.openRestock = openRestock;
+            this.openRestockUntuk = openRestockUntuk;
             txtCari.setPreferredSize(new Dimension(320, 38));
             txtCari.addActionListener(e -> scanAtauCariBarcode());
             txtCari.getDocument().addDocumentListener(new DocumentListener() {
@@ -149,7 +156,7 @@ public class StokPanel extends BasePanel {
             card.add(toolbar, BorderLayout.NORTH);
 
             table.setRowHeight(46);
-            for (int i : new int[]{0, 3, 4}) {
+            for (int i : new int[]{3, 4}) {
                 table.getColumnModel().getColumn(i).setMinWidth(0);
                 table.getColumnModel().getColumn(i).setMaxWidth(0);
                 table.getColumnModel().getColumn(i).setPreferredWidth(0);
@@ -179,7 +186,7 @@ public class StokPanel extends BasePanel {
             table.getColumnModel().getColumn(8).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.RIGHT, true));
             table.getColumnModel().getColumn(9).setCellRenderer(new UiKit.PaddedRenderer(SwingConstants.CENTER));
             table.getColumnModel().getColumn(10).setCellRenderer(new UiKit.BadgeRenderer());
-            int[] lebar = {0, 90, 230, 0, 0, 110, 62, 92, 92, 50, 78, 30, 30};
+            int[] lebar = {46, 90, 230, 0, 0, 110, 62, 92, 92, 50, 78, 30, 30};
             for (int i = 0; i < lebar.length; i++) {
                 table.getColumnModel().getColumn(i).setPreferredWidth(lebar[i]);
             }
@@ -287,7 +294,10 @@ public class StokPanel extends BasePanel {
                 } else {
                     BarangDialog dialog = new BarangDialog(owner(), null, input);
                     dialog.setVisible(true);
-                    if (dialog.isTersimpan()) {
+                    if (dialog.isMauRestock()) {
+                        txtCari.setText("");
+                        openRestockUntuk.accept(dialog.getMauRestockBarangId());
+                    } else if (dialog.isTersimpan()) {
                         txtCari.setText("");
                         reload();
                     }
@@ -300,7 +310,9 @@ public class StokPanel extends BasePanel {
         private void tambah() {
             BarangDialog dialog = new BarangDialog(owner(), null);
             dialog.setVisible(true);
-            if (dialog.isTersimpan()) {
+            if (dialog.isMauRestock()) {
+                openRestockUntuk.accept(dialog.getMauRestockBarangId());
+            } else if (dialog.isTersimpan()) {
                 reload();
             }
         }
@@ -566,22 +578,54 @@ public class StokPanel extends BasePanel {
             txtScanBarcode.addActionListener(e -> cariDenganBarcode());
         }
 
+        void pilihBarang(int barangId) {
+            reload();
+            for (int i = 0; i < cmbBarang.getItemCount(); i++) {
+                BarangItem item = cmbBarang.getItemAt(i);
+                if (item.barang.getId() == barangId) {
+                    cmbBarang.setSelectedIndex(i);
+                    updateInfoStok();
+                    txtJumlah.requestFocusInWindow();
+                    return;
+                }
+            }
+        }
+
         private void cariDenganBarcode() {
             String code = txtScanBarcode.getText().trim();
             if (code.isEmpty()) return;
             try {
                 Barang b = barangDao.findByKode(code);
                 if (b != null) {
+                    if (!b.isAktif()) {
+                        Dialogs.peringatan(this, "Barang \"" + b.getNama() + "\" ditemukan tapi statusnya nonaktif.\n"
+                                + "Aktifkan dulu lewat menu Stok & Barang.");
+                        return;
+                    }
                     for (int i = 0; i < cmbBarang.getItemCount(); i++) {
                         BarangItem item = cmbBarang.getItemAt(i);
                         if (item.barang.getId() == b.getId()) {
                             cmbBarang.setSelectedIndex(i);
+                            updateInfoStok();
                             txtJumlah.requestFocusInWindow();
                             return;
                         }
                     }
+                    Dialogs.peringatan(this, "Barang dengan kode/barcode \"" + code + "\" tidak ditemukan.");
+                    return;
                 }
-                Dialogs.peringatan(this, "Barang dengan kode/barcode \"" + code + "\" tidak ditemukan.");
+                boolean tambahBaru = Dialogs.konfirmasi(this,
+                        "Barang dengan kode \"" + code + "\" belum terdaftar.\nTambah sebagai barang baru?");
+                if (tambahBaru) {
+                    BarangDialog dialog = new BarangDialog(owner(), null, code);
+                    dialog.setVisible(true);
+                    if (dialog.isMauRestock()) {
+                        pilihBarang(dialog.getMauRestockBarangId());
+                    } else if (dialog.isTersimpan()) {
+                        txtScanBarcode.setText("");
+                        reload();
+                    }
+                }
             } catch (Exception ex) {
                 Dialogs.error(this, "Gagal mencari barcode: " + ex.getMessage());
             }

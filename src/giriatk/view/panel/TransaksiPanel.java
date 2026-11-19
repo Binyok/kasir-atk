@@ -657,7 +657,11 @@ public class TransaksiPanel extends BasePanel {
         if (modeBarang) {
             try {
                 Barang b = barangDao.findByKode(input);
-                if (b != null && b.isAktif()) {
+                if (b != null) {
+                    if (!b.isAktif()) {
+                        Dialogs.peringatan(this, "Barang \"" + b.getNama() + "\" ditemukan tapi statusnya nonaktif.");
+                        return;
+                    }
                     Katalog k = new Katalog(TipeItem.BARANG, b.getId(), b.getNama(), b.getLabelLengkap(),
                             b.getSatuan(), b.getHargaJual(), b.getStok(), b.getHargaBeli(), b.getGambar());
                     tambahKeKeranjang(k);
@@ -668,16 +672,19 @@ public class TransaksiPanel extends BasePanel {
             }
         }
 
-        if (!katalogData.isEmpty()) {
-            for (Katalog k : katalogData) {
-                if (k.label().equalsIgnoreCase(input)) {
-                    tambahKeKeranjang(k);
-                    txtCariKatalog.setText("");
-                    return;
-                }
+        // Bukan kode yang terdaftar: hanya perlakukan sebagai pencarian NAMA
+        // bila teksnya benar-benar cocok dengan nama/label salah satu hasil.
+        // Kode/barcode yang tidak ditemukan TIDAK BOLEH memasukkan barang lain
+        // ke keranjang — beri peringatan dan biarkan keranjang tidak berubah.
+        for (Katalog k : katalogData) {
+            if (k.label().equalsIgnoreCase(input) || k.nama().equalsIgnoreCase(input)) {
+                tambahKeKeranjang(k);
+                txtCariKatalog.setText("");
+                return;
             }
-            tambahKeKeranjang(katalogData.get(0));
-            txtCariKatalog.setText("");
+        }
+        if (modeBarang) {
+            Dialogs.peringatan(this, "Barang dengan kode/nama \"" + input + "\" tidak ditemukan.");
         }
     }
 

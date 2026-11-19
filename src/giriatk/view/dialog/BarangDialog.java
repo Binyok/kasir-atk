@@ -62,6 +62,16 @@ public class BarangDialog extends FormDialog {
     private final JLabel lblPreview = new JLabel();
     private File selectedImageFile;
     private String currentGambar;
+    private int mauRestockBarangId = -1;
+
+    /** Id barang yang diminta user untuk di-restock dari dialog ini, atau -1 bila tidak ada. */
+    public int getMauRestockBarangId() {
+        return mauRestockBarangId;
+    }
+
+    public boolean isMauRestock() {
+        return mauRestockBarangId > 0;
+    }
 
     public BarangDialog(Window owner, Barang existing) {
         this(owner, existing, null);
@@ -353,20 +363,19 @@ public class BarangDialog extends FormDialog {
         try {
             Barang b = dao.findByKode(kode);
             if (b != null) {
-                txtNama.setText(b.getNama());
-                txtMerk.setText(b.getMerk() != null ? b.getMerk() : "");
-                txtJenis.setText(b.getJenis() != null ? b.getJenis() : "");
-                txtWarna.setText(b.getWarna() != null ? b.getWarna() : "");
-                txtUkuran.setText(b.getUkuran() != null ? b.getUkuran() : "");
-                cmbSatuan.setSelectedItem(b.getSatuan());
-                txtHargaBeli.setText(Fmt.angka(b.getHargaBeli()));
-                txtHargaJual.setText(Fmt.angka(b.getHargaJual()));
-                txtStok.setText(String.valueOf(b.getStok()));
-                txtStokMin.setText(String.valueOf(b.getStokMinimum()));
-                chkAktif.setSelected(b.isAktif());
-                pilihKategori(b.getKategoriId());
-                currentGambar = b.getGambar();
-                updatePreview();
+                // Kode sudah terdaftar: membuat barang baru dengan kode yang sama
+                // pasti gagal (kode unik), jadi tawarkan restock barang yang ada.
+                boolean mauRestock = Dialogs.konfirmasi(this,
+                        "Barang ini sudah terdaftar: " + b.getLabelLengkap()
+                        + " (stok saat ini " + b.getStok() + " " + b.getSatuan() + ").\n"
+                        + "Mau restock barang ini?");
+                if (mauRestock) {
+                    mauRestockBarangId = b.getId();
+                    dispose();
+                } else {
+                    txtKode.setText("");
+                    txtKode.requestFocusInWindow();
+                }
             }
         } catch (Exception ignored) {
         }
