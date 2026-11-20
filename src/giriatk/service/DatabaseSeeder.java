@@ -29,17 +29,17 @@ public class DatabaseSeeder {
         backfillGambar();
     }
 
-    /** Isi kolom gambar untuk barang lama yang gambarnya masih kosong,
-     *  bila file <kode>.png memang ada di folder images/barang. */
+    /** Isi kolom gambar untuk barang lama yang gambarnya masih kosong
+     *  dengan nama file standarnya <kode>.png, langsung lewat SQL supaya
+     *  tidak tergantung nilai default dari BarangDao. Keberadaan file
+     *  fisiknya tidak dicek di sini (tergantung folder kerja saat aplikasi
+     *  jalan); ImageUtil yang mencarinya di semua lokasi yang mungkin. */
     private void backfillGambar() throws SQLException {
-        for (Barang b : barangDao.findAll()) {
-            if (b.getGambar() == null || b.getGambar().isBlank()) {
-                java.io.File f = new java.io.File("images/barang", b.getKode() + ".png");
-                if (f.exists()) {
-                    b.setGambar(b.getKode() + ".png");
-                    barangDao.update(b);
-                }
-            }
+        try (java.sql.Connection conn = giriatk.config.Db.getConnection();
+                java.sql.PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE barang SET gambar = CONCAT(kode, '.png') WHERE gambar IS NULL OR gambar = ''")) {
+            ps.executeUpdate();
+        } catch (Exception ignored) {
         }
     }
 

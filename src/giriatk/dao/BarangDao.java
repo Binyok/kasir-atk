@@ -217,7 +217,14 @@ public class BarangDao {
         b.setJenis(rs.getString("jenis"));
         b.setWarna(rs.getString("warna"));
         b.setUkuran(rs.getString("ukuran"));
-        b.setGambar(rs.getString("gambar"));
+        String gambar = rs.getString("gambar");
+        if (gambar == null || gambar.isBlank()) {
+            // Barang lama (atau yang dibuat sebelum kolom gambar dipakai)
+            // tetap dicarikan gambarnya dari nama file standarnya:
+            // <kode>.png di folder images/barang.
+            gambar = b.getKode() == null ? null : b.getKode() + ".png";
+        }
+        b.setGambar(gambar);
         int kategoriId = rs.getInt("kategori_id");
         b.setKategoriId(rs.wasNull() ? null : kategoriId);
         b.setKategoriNama(rs.getString("kategori_nama"));

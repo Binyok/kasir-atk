@@ -48,8 +48,40 @@ public final class ImageUtil {
         if (cache.containsKey(cacheKey)) {
             return cache.get(cacheKey);
         }
-        File file = new File(DIR, fileName);
+        File file = cariFileGambar(fileName);
         return loadFromFile(file, width, height, cacheKey);
+    }
+
+    /**
+     * Cari file gambar bukan hanya di folder kerja saat aplikasi dijalankan.
+     * Aplikasi bisa dijalankan dari NetBeans (folder kerja = root projek),
+     * dari jar di dist/ (folder kerja bisa dist/ atau root), atau dari
+     * build/classes — folder images/barang selalu relatif terhadap salah
+     * satu lokasi itu, jadi semua kandidat diperiksa berurutan.
+     */
+    static File cariFileGambar(String fileName) {
+        java.util.List<File> kandidat = new java.util.ArrayList<>();
+        kandidat.add(new File(DIR, fileName));
+        try {
+            java.net.URL lokasi = ImageUtil.class.getProtectionDomain().getCodeSource().getLocation();
+            File appDir = new File(lokasi.toURI());
+            if (appDir.isFile()) {
+                appDir = appDir.getParentFile();
+            }
+            // appDir bisa: root projek (classes di root), dist/, build/, atau build/classes/
+            File d = appDir;
+            for (int i = 0; i < 4 && d != null; i++) {
+                kandidat.add(new File(new File(d, DIR), fileName));
+                d = d.getParentFile();
+            }
+        } catch (Exception ignored) {
+        }
+        for (File f : kandidat) {
+            if (f.exists()) {
+                return f;
+            }
+        }
+        return new File(DIR, fileName);
     }
 
     public static ImageIcon getThumbnail(File file, int width, int height) {

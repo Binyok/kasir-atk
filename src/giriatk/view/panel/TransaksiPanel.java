@@ -76,9 +76,7 @@ public class TransaksiPanel extends BasePanel {
 
     private final JLabel lblSubtotal = new JLabel("Rp 0");
     private final JLabel lblTotal = new JLabel("Rp 0");
-    private final JLabel lblKembali = new JLabel("Rp 0");
     private final JLabel lblItemCount = new JLabel("0 item");
-    private final JTextField txtBayar = UiKit.textField("0");
     private final JTextField txtDiskon = UiKit.textField("0");
     private final JTextField txtPelanggan = UiKit.textField("Nama Pelanggan (untuk antrian jasa)");
     private final JCheckBox chkBuatAntrian = UiKit.checkBox("Otomatis masukkan item jasa ke Antrian", true);
@@ -418,44 +416,12 @@ public class TransaksiPanel extends BasePanel {
         panel.add(totalBox);
         panel.add(Box.createVerticalStrut(8));
 
-        // Quick Cash Buttons (Uang Pas, 10k, 20k, 50k, 100k)
-        JPanel quickCash = new JPanel(new GridLayout(1, 5, 4, 0));
-        quickCash.setOpaque(false);
-        quickCash.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
-        quickCash.add(quickCashBtn("Pas", () -> txtBayar.setText(Fmt.angka(total))));
-        quickCash.add(quickCashBtn("10k", () -> txtBayar.setText("10000")));
-        quickCash.add(quickCashBtn("20k", () -> txtBayar.setText("20000")));
-        quickCash.add(quickCashBtn("50k", () -> txtBayar.setText("50000")));
-        quickCash.add(quickCashBtn("100k", () -> txtBayar.setText("100000")));
-        panel.add(quickCash);
-        panel.add(Box.createVerticalStrut(6));
-
-        // Uang Diterima / Bayar
-        JPanel bayarRow = new JPanel(new BorderLayout(10, 0));
-        bayarRow.setOpaque(false);
-        bayarRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
-
-        JLabel lblBayar = new JLabel("Uang Diterima");
-        lblBayar.setFont(Theme.text(Font.BOLD, 12));
-        lblBayar.setForeground(Theme.INK);
-        lblBayar.setPreferredSize(new Dimension(95, 26));
-
-        txtBayar.setHorizontalAlignment(SwingConstants.RIGHT);
-        txtBayar.setFont(Theme.mono(Font.BOLD, 14));
-        txtBayar.setPreferredSize(new Dimension(0, 32));
-        txtBayar.getDocument().addDocumentListener(new DocumentListener() {
-            @Override public void insertUpdate(DocumentEvent e) { updateKembali(); }
-            @Override public void removeUpdate(DocumentEvent e) { updateKembali(); }
-            @Override public void changedUpdate(DocumentEvent e) { updateKembali(); }
-        });
-        bayarRow.add(lblBayar, BorderLayout.WEST);
-        bayarRow.add(txtBayar, BorderLayout.CENTER);
-        panel.add(bayarRow);
-        panel.add(Box.createVerticalStrut(4));
-
-        // Kembali
-        panel.add(barisInfo("Kembali", lblKembali, 14, Theme.MUTED, Theme.GREEN_FG));
-        panel.add(Box.createVerticalStrut(8));
+        // Area uang (tombol cepat Pas/10k-100k, Uang Diterima, Kembali)
+        // sengaja dihapus atas permintaan pemilik toko: pembayaran tunai
+        // dianggap uang pas sebesar total tagihan, dan ruang vertikalnya
+        // dipakai untuk memperpanjang daftar keranjang di atasnya
+        // (panel checkout ini berada di BorderLayout.SOUTH, jadi makin
+        // pendek checkout-nya makin panjang area keranjangnya).
 
         // Info Pelanggan & Checkbox Antrian — tingginya TETAP dan selalu
         // tampil. Pola lama menyembunyikan/menampilkan area ini tiap isi
@@ -504,15 +470,6 @@ public class TransaksiPanel extends BasePanel {
     private void hitungTotal() {
         total = subtotal.subtract(bacaDiskon()).max(BigDecimal.ZERO);
         lblTotal.setText(Fmt.rupiah(total));
-        updateKembali();
-    }
-
-    private UiKit.SoftButton quickCashBtn(String label, Runnable act) {
-        UiKit.SoftButton b = new UiKit.SoftButton(label, UiKit.Variant.GHOST);
-        b.setFont(Theme.mono(Font.PLAIN, 10));
-        b.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-        b.addActionListener(e -> act.run());
-        return b;
     }
 
     private JPanel barisInfo(String label, JLabel value, int valSize, Color labelColor, Color valColor) {
@@ -863,7 +820,6 @@ public class TransaksiPanel extends BasePanel {
             return;
         }
         keranjang.clear();
-        txtBayar.setText("");
         txtDiskon.setText("");
         txtPelanggan.setText("");
         refreshKeranjang();
@@ -921,21 +877,6 @@ public class TransaksiPanel extends BasePanel {
         daftarKeranjang.repaint();
     }
 
-    private void updateKembali() {
-        BigDecimal bayar = Fmt.parseAngka(txtBayar.getText());
-        if (bayar == null) {
-            bayar = BigDecimal.ZERO;
-        }
-        BigDecimal kembali = bayar.subtract(total);
-        if (kembali.signum() < 0) {
-            lblKembali.setText("Kurang " + Fmt.rupiah(kembali.abs()));
-            lblKembali.setForeground(Theme.DANGER);
-        } else {
-            lblKembali.setText(Fmt.rupiah(kembali));
-            lblKembali.setForeground(Theme.GREEN_FG);
-        }
-    }
-
     private boolean adaJasa() {
         return keranjang.stream().anyMatch(i -> i.getTipe() == TipeItem.JASA);
     }
@@ -945,20 +886,12 @@ public class TransaksiPanel extends BasePanel {
             Dialogs.peringatan(this, "Keranjang masih kosong.");
             return;
         }
-        BigDecimal bayar = Fmt.parseAngka(txtBayar.getText());
-        if (bayar == null) {
-            Dialogs.peringatan(this, "Masukkan jumlah uang yang diterima.");
-            return;
-        }
-        if (bayar.compareTo(total) < 0) {
-            Dialogs.peringatan(this, "Jumlah bayar kurang dari total tagihan.");
-            return;
-        }
-
+        // Tanpa kolom Uang Diterima lagi: pembayaran tunai dicatat
+        // sebagai uang pas sebesar total tagihan (kembali Rp 0).
         Transaksi transaksi = new Transaksi();
         transaksi.setUserId(Session.user() == null ? null : Session.user().getId());
         transaksi.setDiskon(bacaDiskon());
-        transaksi.setBayar(bayar);
+        transaksi.setBayar(total);
         transaksi.setBuatAntrian(chkBuatAntrian.isEnabled() && chkBuatAntrian.isSelected());
         transaksi.setNamaPelanggan(txtPelanggan.getText().trim().isEmpty() ? null : txtPelanggan.getText().trim());
         transaksi.getItems().addAll(keranjang);
@@ -983,7 +916,6 @@ public class TransaksiPanel extends BasePanel {
 
             Window owner = SwingUtilities.getWindowAncestor(this);
             keranjang.clear();
-            txtBayar.setText("");
             txtDiskon.setText("");
             txtPelanggan.setText("");
             refreshKeranjang();
@@ -1050,7 +982,6 @@ public class TransaksiPanel extends BasePanel {
             }
 
             keranjang.clear();
-            txtBayar.setText("");
             txtDiskon.setText("");
             txtPelanggan.setText("");
             refreshKeranjang();
