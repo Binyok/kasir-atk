@@ -100,20 +100,15 @@ public final class ImageUtil {
             if (img == null) {
                 return createPlaceholder(width, height);
             }
-            int srcW = img.getWidth();
-            int srcH = img.getHeight();
-            double scale = Math.min((double) width / srcW, (double) height / srcH);
-            int dw = (int) (srcW * scale);
-            int dh = (int) (srcH * scale);
-            int ox = (width - dw) / 2;
-            int oy = (height - dh) / 2;
-            BufferedImage scaled = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g2 = scaled.createGraphics();
-            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.drawImage(img, ox, oy, dw, dh, null);
-            g2.dispose();
-            ImageIcon icon = new ImageIcon(scaled);
+            // Render dua varian: ukuran normal + 2x untuk layar HiDPI
+            // (scaling Windows 125%/150%). Tanpa varian 2x, thumbnail
+            // 34px dipaksa membesar mengikuti scaling layar dan terlihat
+            // blur. BaseMultiResolutionImage membuat Swing otomatis
+            // memakai varian 2x di layar HiDPI, ukuran logisnya tetap.
+            BufferedImage base = renderKeKanvas(img, width, height);
+            BufferedImage dua = renderKeKanvas(img, width * 2, height * 2);
+            java.awt.Image mr = new java.awt.image.BaseMultiResolutionImage(base, dua);
+            ImageIcon icon = new ImageIcon(mr);
             if (cacheKey != null) {
                 cache.put(cacheKey, icon);
             }
@@ -121,6 +116,57 @@ public final class ImageUtil {
         } catch (Exception ex) {
             return createPlaceholder(width, height);
         }
+    }
+
+    /** Gambar sumber diskalakan proporsional (fit) lalu ditaruh di tengah
+     *  kanvas width x height. */
+    private static BufferedImage renderKeKanvas(BufferedImage img, int width, int height) {
+        int srcW = img.getWidth();
+        int srcH = img.getHeight();
+        double scale = Math.min((double) width / srcW, (double) height / srcH);
+        int dw = Math.max(1, (int) Math.round(srcW * scale));
+        int dh = Math.max(1, (int) Math.round(srcH * scale));
+        BufferedImage kecil = skalaBertahap(img, dw, dh);
+        BufferedImage kanvas = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = kanvas.createGraphics();
+        g2.drawImage(kecil, (width - dw) / 2, (height - dh) / 2, null);
+        g2.dispose();
+        return kanvas;
+    }
+
+    /**
+     * Perkecil gambar BERTAHAP (setengah-setengah) dengan bicubic.
+     * Mengecilkan 400px ke 34px sekali jalan dengan bilinear membuat
+     * hasil terlihat lembut/blur; penurunan bertahap menjaga detail
+     * tepi jauh lebih baik (pola yang sama dipakai LogoUtil untuk logo
+     * struk).
+     */
+    private static BufferedImage skalaBertahap(BufferedImage src, int targetW, int targetH) {
+        BufferedImage cur = src;
+        int w = src.getWidth();
+        int h = src.getHeight();
+        while (w > targetW * 2 || h > targetH * 2) {
+            int nw = Math.max(targetW, w / 2);
+            int nh = Math.max(targetH, h / 2);
+            cur = skalaSatuLangkah(cur, nw, nh);
+            w = nw;
+            h = nh;
+        }
+        if (w != targetW || h != targetH) {
+            cur = skalaSatuLangkah(cur, targetW, targetH);
+        }
+        return cur;
+    }
+
+    private static BufferedImage skalaSatuLangkah(BufferedImage src, int w, int h) {
+        BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = out.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.drawImage(src, 0, 0, w, h, null);
+        g2.dispose();
+        return out;
     }
 
     public static ImageIcon createPlaceholder(int width, int height) {
