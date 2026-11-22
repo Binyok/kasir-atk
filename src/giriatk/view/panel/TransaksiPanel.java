@@ -459,9 +459,9 @@ public class TransaksiPanel extends BasePanel {
         // checkbox hanya di-nonaktifkan bila tidak ada item jasa.
         JPanel antrianRow = new JPanel(new BorderLayout(0, 4));
         antrianRow.setOpaque(false);
-        antrianRow.setPreferredSize(new Dimension(0, 60));
-        antrianRow.setMinimumSize(new Dimension(0, 60));
-        antrianRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+        antrianRow.setPreferredSize(new Dimension(0, 56));
+        antrianRow.setMinimumSize(new Dimension(0, 56));
+        antrianRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 56));
         txtPelanggan.setPreferredSize(new Dimension(0, 30));
         antrianRow.add(txtPelanggan, BorderLayout.NORTH);
         antrianRow.add(chkBuatAntrian, BorderLayout.CENTER);
@@ -528,9 +528,12 @@ public class TransaksiPanel extends BasePanel {
         row.setLayout(new BoxLayout(row, BoxLayout.Y_AXIS));
         row.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, Theme.BORDER),
-                BorderFactory.createEmptyBorder(8, 10, 8, 10)));
-        row.setPreferredSize(new Dimension(0, 70));
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
+                BorderFactory.createEmptyBorder(5, 10, 5, 10)));
+        // Baris dibuat ramping (56px, sebelumnya 70px) supaya daftar
+        // keranjang bisa menampilkan lebih banyak item sekaligus tanpa
+        // harus scroll untuk item ke-3 dan seterusnya.
+        row.setPreferredSize(new Dimension(0, 56));
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 56));
 
         // Nama item bisa sangat panjang (label lengkap barang). JLabel di
         // BorderLayout.CENTER akan terpotong ellipsis secara otomatis asal
@@ -549,7 +552,7 @@ public class TransaksiPanel extends BasePanel {
         JPanel baris1 = new JPanel(new BorderLayout(8, 0));
         baris1.setOpaque(false);
         baris1.setAlignmentX(Component.CENTER_ALIGNMENT);
-        baris1.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
+        baris1.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
         baris1.add(nama, BorderLayout.CENTER);
         baris1.add(subtotal, BorderLayout.EAST);
 
@@ -582,12 +585,12 @@ public class TransaksiPanel extends BasePanel {
         JPanel baris2 = new JPanel(new BorderLayout(8, 0));
         baris2.setOpaque(false);
         baris2.setAlignmentX(Component.CENTER_ALIGNMENT);
-        baris2.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        baris2.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
         baris2.add(harga, BorderLayout.WEST);
         baris2.add(stepper, BorderLayout.EAST);
 
         row.add(baris1);
-        row.add(Box.createVerticalStrut(4));
+        row.add(Box.createVerticalStrut(2));
         row.add(baris2);
         return row;
     }

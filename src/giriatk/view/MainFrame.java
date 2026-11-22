@@ -74,6 +74,11 @@ public class MainFrame extends JFrame {
         setUndecorated(true);
         setBackground(Theme.INK);
         setSize(1400, 880);
+        // Buka langsung semaksimal layar: jendela tetap 1400x880 bisa
+        // lebih tinggi dari layar laptop (mis. 1366x768) sehingga panel
+        // bawah terpotong dan daftar keranjang/transaksi jadi pendek.
+        // Maximized membuat seluruh panel memakai tinggi layar penuh.
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setMinimumSize(new Dimension(1160, 720));
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

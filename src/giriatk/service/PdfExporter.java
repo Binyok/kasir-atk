@@ -85,6 +85,12 @@ public final class PdfExporter {
         objectBytes.add(pagesDictBytes());
         objectBytes.add(pageDictBytes(page.length));
         objectBytes.add(page);
+        // Objek Catalog WAJIB ada dan menjadi /Root trailer. Versi lama
+        // menunjuk /Root langsung ke objek Pages — pembaca PDF yang
+        // ketat (Adobe, pypdf, dsb.) menolak file seperti itu dengan
+        // "Cannot find Root object" alias file tidak bisa dibuka.
+        objectBytes.add(catalogDictBytes());
+        int rootObj = objectBytes.size();
 
         List<Integer> xrefOffsets = new ArrayList<>();
         byte[] header = sb.toString().getBytes(StandardCharsets.ISO_8859_1);
@@ -107,10 +113,10 @@ public final class PdfExporter {
         xref.append(objectBytes.size() + 1).append("\n");
         xref.append("0000000000 65535 f \n");
         for (int off : xrefOffsets) {
-            xref.append(String.format("%010d 00000 n \n", off));
+            xref.append(String.format(java.util.Locale.US, "%010d 00000 n \n", off));
         }
         xref.append("trailer\n<< /Size ").append(objectBytes.size() + 1)
-                .append(" /Root 2 0 R >>\nstartxref\n").append(pos).append("\n%%EOF");
+                .append(" /Root ").append(rootObj).append(" 0 R >>\nstartxref\n").append(pos).append("\n%%EOF");
 
         try (OutputStream os = Files.newOutputStream(target)) {
             os.write(header);
@@ -119,6 +125,10 @@ public final class PdfExporter {
             }
             os.write(xref.toString().getBytes(StandardCharsets.ISO_8859_1));
         }
+    }
+
+    private byte[] catalogDictBytes() {
+        return "<< /Type /Catalog /Pages 2 0 R >>".getBytes(StandardCharsets.ISO_8859_1);
     }
 
     private byte[] fontDictBytes() {
@@ -233,12 +243,17 @@ public final class PdfExporter {
         return i < colWidths.size() ? colWidths.get(i) * CONTENT_W : 50f;
     }
 
+    // PENTING: semua angka di stream PDF wajib memakai titik desimal.
+    // String.format tanpa locale mengikuti bahasa Windows pengguna —
+    // di Windows bahasa Indonesia desimalnya KOMA ("45,00"), dan angka
+    // berkoma membuat file PDF rusak/tidak bisa dibuka pembaca PDF.
+    // Karena itu Locale.US dikunci di semua format angka di kelas ini.
     private String hline(float y) {
-        return String.format("%.2f %.2f m %.2f %.2f l S\n", MARGIN, y, PAGE_W - MARGIN, y);
+        return String.format(java.util.Locale.US, "%.2f %.2f m %.2f %.2f l S\n", MARGIN, y, PAGE_W - MARGIN, y);
     }
 
     private String shadedRow(float y) {
-        return String.format("0.95 0.95 0.95 rg %.2f %.2f %.2f %.2f re f 0 0 0 rg\n",
+        return String.format(java.util.Locale.US, "0.95 0.95 0.95 rg %.2f %.2f %.2f %.2f re f 0 0 0 rg\n",
                 MARGIN, y - 2f, CONTENT_W, LINE_H);
     }
 
