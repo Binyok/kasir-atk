@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS pengaturan (
 
 INSERT INTO pengaturan (nama_kunci, nilai) VALUES
     ('nama_toko', 'GiriATK & Print'),
-    ('alamat', 'Jl. Raya Giri No. 88, Banyuwangi'),
+    ('alamat', 'Watugilang, Cukurguling, Lumbang, Pasuruan 67183'),
     ('telepon', '0812-3456-7890'),
     ('footer_struk', 'Terima kasih telah berbelanja'),
     ('stok_minimum_default', '5'),

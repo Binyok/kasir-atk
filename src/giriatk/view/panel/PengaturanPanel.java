@@ -83,8 +83,8 @@ public class PengaturanPanel extends BasePanel {
             String nama = data.getOrDefault("nama_toko", "GiriATK & Print");
             String telp = data.getOrDefault("telepon", "0812-3456-7890");
             if ("0812-0000-0000".equals(telp)) telp = "0812-3456-7890";
-            String alamat = data.getOrDefault("alamat", "Jl. Raya Giri No. 88, Banyuwangi");
-            if (alamat.isBlank() || alamat.equalsIgnoreCase("Jl. Contoh No. 1")) alamat = "Jl. Raya Giri No. 88, Banyuwangi";
+            String alamat = data.getOrDefault("alamat", "Watugilang, Cukurguling, Lumbang, Pasuruan 67183");
+            if (alamat.isBlank() || alamat.equalsIgnoreCase("Jl. Contoh No. 1")) alamat = "Watugilang, Cukurguling, Lumbang, Pasuruan 67183";
             txtNama.setText(nama);
             txtTelepon.setText(telp);
             txtAlamat.setText(alamat);

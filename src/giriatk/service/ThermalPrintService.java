@@ -74,9 +74,9 @@ public class ThermalPrintService {
     public void cetakStruk(Transaksi transaksi) throws Exception {
         Map<String, String> config = meDao.semua();
         String namaToko = config.getOrDefault("nama_toko", "GiriATK & Print");
-        String alamat = config.getOrDefault("alamat", "Jl. Raya Giri No. 88, Banyuwangi");
+        String alamat = config.getOrDefault("alamat", "Watugilang, Cukurguling, Lumbang, Pasuruan 67183");
         if (alamat.isBlank() || alamat.equalsIgnoreCase("Jl. Contoh No. 1")) {
-            alamat = "Jl. Raya Giri No. 88, Banyuwangi";
+            alamat = "Watugilang, Cukurguling, Lumbang, Pasuruan 67183";
         }
         String telepon = config.getOrDefault("telepon", "0812-3456-7890");
         if (telepon.isBlank() || telepon.equals("0812-0000-0000")) {

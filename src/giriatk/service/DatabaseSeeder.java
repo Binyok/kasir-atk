@@ -27,6 +27,22 @@ public class DatabaseSeeder {
         seedLayanan();
         seedBarang();
         backfillGambar();
+        perbaikiAlamatBawaan();
+    }
+
+    /** Migrasi alamat toko: instalasi lama menyimpan alamat contoh
+     *  "Jl. Raya Giri No. 88, Banyuwangi" dari seed awal database.sql.
+     *  Ganti ke alamat asli mitra bila nilai tersimpan PERSIS alamat
+     *  contoh itu; alamat yang sudah diubah manual lewat Pengaturan
+     *  tidak disentuh. */
+    private void perbaikiAlamatBawaan() {
+        try (java.sql.Connection conn = giriatk.config.Db.getConnection();
+                java.sql.PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE pengaturan SET nilai = ? WHERE nama_kunci = 'alamat' AND nilai = 'Jl. Raya Giri No. 88, Banyuwangi'")) {
+            ps.setString(1, "Watugilang, Cukurguling, Lumbang, Pasuruan 67183");
+            ps.executeUpdate();
+        } catch (Exception ignored) {
+        }
     }
 
     /** Isi kolom gambar untuk barang lama yang gambarnya masih kosong

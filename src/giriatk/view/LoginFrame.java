@@ -358,7 +358,7 @@ public class LoginFrame extends JFrame {
         demo.add(demoText, BorderLayout.CENTER);
         add.accept(demo, 16);
 
-        JLabel foot = new JLabel("© 2026 Giri ATK & Print · Banyuwangi");
+        JLabel foot = new JLabel("© 2026 Giri ATK & Print · Pasuruan");
         foot.setFont(Theme.text(Font.PLAIN, 10));
         foot.setForeground(Theme.FAINT);
         foot.setAlignmentX(Component.CENTER_ALIGNMENT);

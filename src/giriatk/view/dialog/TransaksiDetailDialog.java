@@ -140,9 +140,9 @@ public class TransaksiDetailDialog extends JDialog {
         boolean isVoid = transaksi.getStatus() == StatusTransaksi.VOID;
         Map<String, String> cfg = semuaPengaturan();
         String namaToko = cfg.getOrDefault("nama_toko", "GiriATK & Print");
-        String alamat = cfg.getOrDefault("alamat", "Jl. Raya Giri No. 88, Banyuwangi");
+        String alamat = cfg.getOrDefault("alamat", "Watugilang, Cukurguling, Lumbang, Pasuruan 67183");
         if (alamat.isBlank() || alamat.equalsIgnoreCase("Jl. Contoh No. 1")) {
-            alamat = "Jl. Raya Giri No. 88, Banyuwangi";
+            alamat = "Watugilang, Cukurguling, Lumbang, Pasuruan 67183";
         }
         String telepon = cfg.getOrDefault("telepon", "0812-3456-7890");
         if (telepon.isBlank() || telepon.equals("0812-0000-0000")) {
