@@ -58,12 +58,18 @@ public final class Fmt {
         if (text == null) {
             return null;
         }
-        String digits = text.replaceAll("[^0-9]", "");
+        String trimmed = text.trim();
+        // Tanda minus di depan harus dihormati (koreksi stok "-2" berarti
+        // kurangi 2). replaceAll di bawah membuang semua non-digit termasuk
+        // tanda minus, jadi tandanya ditangkap dulu sebelum dibersihkan.
+        boolean negatif = trimmed.startsWith("-") || trimmed.startsWith("−");
+        String digits = trimmed.replaceAll("[^0-9]", "");
         if (digits.isEmpty()) {
             return null;
         }
         try {
-            return new BigDecimal(digits);
+            BigDecimal nilai = new BigDecimal(digits);
+            return negatif ? nilai.negate() : nilai;
         } catch (NumberFormatException e) {
             return null;
         }
